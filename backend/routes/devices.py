@@ -78,13 +78,16 @@ async def get_device_guide(device_id: str, db: AsyncIOMotorDatabase = Depends(ge
     if device["status"] != "active":
         raise HTTPException(status_code=403, detail="Device not activated")
     
-    # Get all channels
-    channels = await db.channels.find().to_list(1000)
+    # Get all channels (exclude MongoDB _id field)
+    channels = await db.channels.find({}, {"_id": 0}).to_list(1000)
     
-    # Get programs for next 7 days
+    # Get programs for next 7 days (exclude MongoDB _id field)
     today = datetime.now().date()
     date_list = [(today + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
-    programs = await db.programs.find({"date": {"$in": date_list}}).to_list(10000)
+    programs = await db.programs.find({"date": {"$in": date_list}}, {"_id": 0}).to_list(10000)
+    
+    # Remove _id from device as well
+    device.pop("_id", None)
     
     return {
         "channels": channels,
