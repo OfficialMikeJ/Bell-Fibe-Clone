@@ -20,6 +20,11 @@ async def create_device(device: DeviceCreate, db: AsyncIOMotorDatabase = Depends
         raise HTTPException(status_code=400, detail="Device with this MAC address already exists")
     
     device_dict = device.dict()
+    
+    # If device_uuid not provided in creation, generate one
+    if not device_dict.get('device_uuid'):
+        device_dict['device_uuid'] = str(uuid.uuid4())
+    
     device_obj = Device(**device_dict)
     
     # Generate QR code
