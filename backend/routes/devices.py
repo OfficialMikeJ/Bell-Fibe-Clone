@@ -5,6 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from utils.qr_generator import generate_qr_code
 from utils.geo_location import get_geo_location, is_canada_ip, get_client_ip
 from datetime import datetime, timedelta
+import uuid
 
 router = APIRouter(prefix="/api/devices", tags=["devices"])
 
