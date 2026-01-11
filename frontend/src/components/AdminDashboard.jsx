@@ -359,12 +359,17 @@ const AdminDashboard = () => {
                 <Card key={device.id} className="bg-[#2a2a2a] border-gray-700">
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div>
+                      <div className="flex-1">
                         <CardTitle className="text-white text-lg flex items-center gap-2">
                           {device.device_name}
                           {getStatusIcon(device.status)}
                         </CardTitle>
-                        <CardDescription className="text-gray-400">{device.mac_address}</CardDescription>
+                        <CardDescription className="text-gray-400 mt-1">
+                          MAC: {device.mac_address}
+                        </CardDescription>
+                        <CardDescription className="text-gray-400 text-xs mt-1">
+                          UUID: {device.device_uuid?.substring(0, 16)}...
+                        </CardDescription>
                       </div>
                       {device.qr_code_path && (
                         <img
@@ -380,13 +385,49 @@ const AdminDashboard = () => {
                       <p className="text-xs text-gray-400 mb-1">Activation Code:</p>
                       <code className="text-white text-sm font-mono">{device.activation_code}</code>
                     </div>
-                    <p className="text-xs text-gray-400">
-                      Status: <span className="text-white capitalize">{device.status}</span>
-                    </p>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <p className="text-gray-400">Status:</p>
+                        <p className="text-white capitalize">{device.status}</p>
+                      </div>
+                      {device.current_ip && (
+                        <div>
+                          <p className="text-gray-400">Current IP:</p>
+                          <p className="text-white font-mono text-xs">{device.current_ip}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {device.last_geo_check && (
+                      <div className="bg-[#1a1a1a] p-2 rounded">
+                        <p className="text-xs text-gray-400">Last Location:</p>
+                        <p className="text-white text-xs">
+                          {device.last_geo_check.city}, {device.last_geo_check.region}
+                        </p>
+                        <p className="text-gray-400 text-xs">{device.last_geo_check.country}</p>
+                        {device.last_geo_check.isp && (
+                          <p className="text-gray-400 text-xs">ISP: {device.last_geo_check.isp}</p>
+                        )}
+                      </div>
+                    )}
+                    
                     {device.activated_at && (
                       <p className="text-xs text-gray-400">
                         Activated: {new Date(device.activated_at).toLocaleString()}
                       </p>
+                    )}
+                    
+                    {device.last_access && (
+                      <p className="text-xs text-gray-400">
+                        Last Access: {new Date(device.last_access).toLocaleString()}
+                      </p>
+                    )}
+                    
+                    {device.ip_history && device.ip_history.length > 0 && (
+                      <div className="text-xs text-gray-400">
+                        IP History: {device.ip_history.length} entries
+                      </div>
                     )}
                   </CardContent>
                 </Card>
