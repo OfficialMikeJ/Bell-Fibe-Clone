@@ -48,10 +48,24 @@ export const AuthProvider = ({ children }) => {
         password
       });
       const { access_token } = response.data;
-      setToken(access_token);
-      localStorage.setItem('token', access_token);
-      await verifyToken();
-      return { success: true };
+      
+      // Verify the token immediately with the new token
+      try {
+        const verifyResponse = await axios.get(`${API}/auth/verify`, {
+          headers: { Authorization: `Bearer ${access_token}` }
+        });
+        setUser(verifyResponse.data);
+        setToken(access_token);
+        localStorage.setItem('token', access_token);
+        setLoading(false);
+        return { success: true };
+      } catch (verifyError) {
+        console.error('Token verification failed:', verifyError);
+        return {
+          success: false,
+          error: 'Authentication verification failed'
+        };
+      }
     } catch (error) {
       console.error('Login failed:', error);
       return {
