@@ -206,6 +206,8 @@ const AdminDashboard = () => {
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case 'deactivated':
         return <XCircle className="w-5 h-5 text-red-500" />;
+      case 'suspended':
+        return <XCircle className="w-5 h-5 text-orange-500" />;
       default:
         return <Clock className="w-5 h-5 text-yellow-500" />;
     }
