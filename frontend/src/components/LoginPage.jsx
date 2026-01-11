@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -9,6 +10,7 @@ import { Loader2 } from 'lucide-react';
 
 const LoginPage = () => {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,7 +23,10 @@ const LoginPage = () => {
 
     const result = await login(username, password);
     
-    if (!result.success) {
+    if (result.success) {
+      // Navigate to admin dashboard on successful login
+      navigate('/admin');
+    } else {
       setError(result.error);
     }
     
