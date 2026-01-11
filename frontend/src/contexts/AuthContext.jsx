@@ -20,12 +20,27 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      verifyToken();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+    const verifyStoredToken = async () => {
+      if (token) {
+        try {
+          const response = await axios.get(`${API}/auth/verify`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUser(response.data);
+        } catch (error) {
+          console.error('Token verification failed:', error);
+          logout();
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+    
+    verifyStoredToken();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const verifyToken = async () => {
     try {
