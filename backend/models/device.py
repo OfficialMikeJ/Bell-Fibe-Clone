@@ -13,12 +13,12 @@ class DeviceCreate(DeviceBase):
 
 class Device(DeviceBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    device_uuid: str = Field(default_factory=lambda: str(uuid.uuid4()))  # Unique device identifier
+    device_uuid: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))  # Unique device identifier
     activation_code: str = Field(default_factory=lambda: secrets.token_urlsafe(16))
     qr_code_path: Optional[str] = ""
     status: str = "pending"  # pending, active, deactivated, suspended
     current_ip: Optional[str] = None
-    ip_history: List[dict] = []  # [{ip: str, timestamp: str, country: str}]
+    ip_history: Optional[List[dict]] = []  # [{ip: str, timestamp: str, country: str}]
     last_geo_check: Optional[dict] = None  # {country: str, region: str, city: str, timestamp: str}
     activated_at: Optional[datetime] = None
     last_access: Optional[datetime] = None
