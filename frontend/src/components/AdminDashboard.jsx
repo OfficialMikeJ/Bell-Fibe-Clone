@@ -112,7 +112,7 @@ const AdminDashboard = () => {
         
         const uploadResponse = await axios.post(`${API}/channels/upload-logo`, formData, {
           headers: {
-            ...headers,
+            ...getHeaders(),
             'Content-Type': 'multipart/form-data'
           }
         });
@@ -123,7 +123,7 @@ const AdminDashboard = () => {
       await axios.post(`${API}/channels`, {
         ...channelForm,
         logo_path: logoPath
-      }, { headers });
+      }, { headers: getHeaders() });
 
       toast.success('Channel created successfully!');
       setIsChannelDialogOpen(false);
@@ -141,7 +141,7 @@ const AdminDashboard = () => {
     if (!window.confirm('Are you sure you want to delete this channel?')) return;
     
     try {
-      await axios.delete(`${API}/channels/${id}`, { headers });
+      await axios.delete(`${API}/channels/${id}`, { headers: getHeaders() });
       toast.success('Channel deleted successfully!');
       fetchChannels();
     } catch (error) {
@@ -154,7 +154,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     
     try {
-      await axios.post(`${API}/programs`, programForm, { headers });
+      await axios.post(`${API}/programs`, programForm, { headers: getHeaders() });
       toast.success('Program added successfully!');
       setIsProgramDialogOpen(false);
       setProgramForm({
@@ -176,7 +176,7 @@ const AdminDashboard = () => {
     if (!window.confirm('Are you sure you want to delete this program?')) return;
     
     try {
-      await axios.delete(`${API}/programs/${id}`, { headers });
+      await axios.delete(`${API}/programs/${id}`, { headers: getHeaders() });
       toast.success('Program deleted successfully!');
       fetchPrograms();
     } catch (error) {
@@ -189,7 +189,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     
     try {
-      await axios.post(`${API}/devices`, deviceForm, { headers });
+      await axios.post(`${API}/devices`, deviceForm, { headers: getHeaders() });
       toast.success('Device created with activation code!');
       setIsDeviceDialogOpen(false);
       setDeviceForm({ device_name: '', mac_address: '' });
