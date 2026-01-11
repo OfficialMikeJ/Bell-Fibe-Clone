@@ -48,38 +48,42 @@ const AdminDashboard = () => {
     mac_address: ''
   });
 
-  const headers = { Authorization: `Bearer ${token}` };
+  const getHeaders = () => ({ Authorization: `Bearer ${token}` });
 
   useEffect(() => {
     fetchChannels();
     fetchDevices();
     fetchPrograms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchChannels = async () => {
     try {
-      const response = await axios.get(`${API}/channels`, { headers });
+      const response = await axios.get(`${API}/channels`, { headers: getHeaders() });
       setChannels(response.data);
     } catch (error) {
       console.error('Error fetching channels:', error);
+      toast.error('Failed to fetch channels');
     }
   };
 
   const fetchDevices = async () => {
     try {
-      const response = await axios.get(`${API}/devices`, { headers });
+      const response = await axios.get(`${API}/devices`, { headers: getHeaders() });
       setDevices(response.data);
     } catch (error) {
       console.error('Error fetching devices:', error);
+      toast.error('Failed to fetch devices');
     }
   };
 
   const fetchPrograms = async () => {
     try {
-      const response = await axios.get(`${API}/programs`, { headers });
+      const response = await axios.get(`${API}/programs`, { headers: getHeaders() });
       setPrograms(response.data);
     } catch (error) {
       console.error('Error fetching programs:', error);
+      toast.error('Failed to fetch programs');
     }
   };
 
