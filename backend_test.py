@@ -289,9 +289,12 @@ class IPTVAPITester:
     def test_create_device(self):
         """Test creating a new device"""
         try:
+            import random
+            # Generate a unique MAC address for each test
+            mac_suffix = f"{random.randint(10, 99):02d}:{random.randint(10, 99):02d}"
             device_data = {
                 "device_name": "Test Box",
-                "mac_address": "00:11:22:33:44:55"
+                "mac_address": f"00:11:22:33:{mac_suffix}"
             }
             
             response = requests.post(f"{self.base_url}/devices", json=device_data)
