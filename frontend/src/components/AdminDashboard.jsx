@@ -278,7 +278,7 @@ const AdminDashboard = () => {
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold text-white">Channel Management</h2>
               <Button
-                onClick={() => setIsChannelDialogOpen(true)}
+                onClick={handleAddNewChannel}
                 className="bg-[#0056A8] hover:bg-[#0066c8]"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -296,20 +296,33 @@ const AdminDashboard = () => {
                           src={`${BACKEND_URL}${channel.logo_path}` || 'https://via.placeholder.com/80'}
                           alt={channel.name}
                           className="w-16 h-16 rounded-md object-cover"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/80/0056A8/ffffff?text=' + channel.number;
+                          }}
                         />
                         <div>
                           <CardTitle className="text-white text-lg">{channel.name}</CardTitle>
                           <CardDescription className="text-gray-400">Ch {channel.number}</CardDescription>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteChannel(channel.id)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditChannel(channel)}
+                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteChannel(channel.id)}
+                          className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
