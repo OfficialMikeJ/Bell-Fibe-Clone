@@ -590,7 +590,7 @@ const AdminDashboard = () => {
                   Cancel
                 </Button>
                 <Button type="submit" className="bg-[#0056A8] hover:bg-[#0066c8]">
-                  Add Channel
+                  {isEditMode ? 'Update Channel' : 'Add Channel'}
                 </Button>
               </DialogFooter>
             </form>
