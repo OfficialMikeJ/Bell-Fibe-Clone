@@ -121,22 +121,54 @@ const AdminDashboard = () => {
         logoPath = uploadResponse.data.logo_path;
       }
 
-      // Create channel
-      await axios.post(`${API}/channels`, {
-        ...channelForm,
-        logo_path: logoPath
-      }, { headers: getHeaders() });
+      if (isEditMode && editingChannelId) {
+        // Update existing channel
+        await axios.put(`${API}/channels/${editingChannelId}`, {
+          ...channelForm,
+          ...(logoPath && { logo_path: logoPath })
+        }, { headers: getHeaders() });
+        toast.success('Channel updated successfully!');
+      } else {
+        // Create new channel
+        await axios.post(`${API}/channels`, {
+          ...channelForm,
+          logo_path: logoPath
+        }, { headers: getHeaders() });
+        toast.success('Channel created successfully!');
+      }
 
-      toast.success('Channel created successfully!');
       setIsChannelDialogOpen(false);
+      setIsEditMode(false);
+      setEditingChannelId(null);
       setChannelForm({ name: '', number: '', description: '' });
       setLogoFile(null);
       setLogoPreview('');
       fetchChannels();
     } catch (error) {
-      toast.error('Failed to create channel');
-      console.error('Error creating channel:', error);
+      toast.error(isEditMode ? 'Failed to update channel' : 'Failed to create channel');
+      console.error('Error with channel:', error);
     }
+  };
+
+  const handleEditChannel = (channel) => {
+    setIsEditMode(true);
+    setEditingChannelId(channel.id);
+    setChannelForm({
+      name: channel.name,
+      number: channel.number,
+      description: channel.description || ''
+    });
+    setLogoPreview(channel.logo_path ? `${BACKEND_URL}${channel.logo_path}` : '');
+    setIsChannelDialogOpen(true);
+  };
+
+  const handleAddNewChannel = () => {
+    setIsEditMode(false);
+    setEditingChannelId(null);
+    setChannelForm({ name: '', number: '', description: '' });
+    setLogoFile(null);
+    setLogoPreview('');
+    setIsChannelDialogOpen(true);
   };
 
   const handleDeleteChannel = async (id) => {
