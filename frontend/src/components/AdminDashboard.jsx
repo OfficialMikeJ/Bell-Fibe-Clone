@@ -312,7 +312,7 @@ const AdminDashboard = () => {
                           onClick={() => handleEditChannel(channel)}
                           className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
                         >
-                          <Plus className="w-4 h-4" />
+                          <Edit className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
