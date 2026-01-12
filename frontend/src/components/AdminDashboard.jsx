@@ -22,6 +22,8 @@ const AdminDashboard = () => {
   
   // Channel form
   const [isChannelDialogOpen, setIsChannelDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingChannelId, setEditingChannelId] = useState(null);
   const [channelForm, setChannelForm] = useState({
     name: '',
     number: '',
