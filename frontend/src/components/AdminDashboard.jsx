@@ -522,7 +522,9 @@ const AdminDashboard = () => {
         <Dialog open={isChannelDialogOpen} onOpenChange={setIsChannelDialogOpen}>
           <DialogContent className="bg-[#1a1a1a] border-gray-700 max-w-2xl">
             <DialogHeader>
-              <DialogTitle className="text-2xl text-white">Add New Channel</DialogTitle>
+              <DialogTitle className="text-2xl text-white">
+                {isEditMode ? 'Edit Channel' : 'Add New Channel'}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreateChannel} className="space-y-4 py-4">
               <div className="space-y-2">
