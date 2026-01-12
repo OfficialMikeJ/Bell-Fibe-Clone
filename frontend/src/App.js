@@ -80,7 +80,7 @@ const GuideView = () => {
     <div className="min-h-screen bg-[#1a1a1a]">
       <TopBar />
       
-      <div className="pt-16 pl-20 pr-6 py-6">
+      <div className="pt-16 pl-28 pr-6 py-6">
         {selectedChannel && <ChannelFeatured channel={selectedChannel} />}
         {channels.length > 0 ? (
           <EPGGrid
