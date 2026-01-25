@@ -77,10 +77,12 @@ async def get_status_checks():
 app.include_router(api_router)
 
 # Include feature routers
+app.include_router(setup_router)
 app.include_router(channels_router)
 app.include_router(programs_router)
 app.include_router(devices_router)
 app.include_router(auth_router)
+app.include_router(users_router)
 
 # Mount uploads directory for serving files
 uploads_dir = Path("/app/backend/uploads")
