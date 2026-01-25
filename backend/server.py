@@ -132,4 +132,4 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
-    logger.info("🛑 IPTV Service API Stopped")
+    logger.info("🛑 TV Service API Stopped")
