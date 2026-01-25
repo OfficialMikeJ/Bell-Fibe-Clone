@@ -16,6 +16,8 @@ from routes.channels import router as channels_router
 from routes.programs import router as programs_router
 from routes.devices import router as devices_router
 from routes.auth import router as auth_router
+from routes.setup import router as setup_router
+from routes.users import router as users_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
