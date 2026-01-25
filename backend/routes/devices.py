@@ -47,6 +47,62 @@ async def get_device(device_id: str, db: AsyncIOMotorDatabase = Depends(get_db))
         raise HTTPException(status_code=404, detail="Device not found")
     return Device(**device)
 
+@router.post("/refresh-qr")
+async def refresh_device_qr(
+    device_id: str,
+    reset_code: bool = False,
+    db: AsyncIOMotorDatabase = Depends(get_db)
+):
+    """Refresh or reset QR code for a device"""
+    import secrets
+    from pathlib import Path
+    
+    device = await db.devices.find_one({"id": device_id})
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found")
+    
+    # Delete old QR code file
+    if device.get("qr_code_path"):
+        old_qr_path = Path(f"/app/backend{device['qr_code_path']}")
+        if old_qr_path.exists():
+            old_qr_path.unlink()
+    
+    if reset_code:
+        # Generate new activation code
+        new_code = secrets.token_urlsafe(16)
+        new_qr_path = generate_qr_code(new_code, device_id)
+        
+        await db.devices.update_one(
+            {"id": device_id},
+            {"$set": {
+                "activation_code": new_code,
+                "qr_code_path": new_qr_path,
+                "status": "pending",
+                "activated_at": None
+            }}
+        )
+        
+        return {
+            "message": "QR code and activation code reset",
+            "activation_code": new_code,
+            "qr_code_path": new_qr_path
+        }
+    else:
+        # Regenerate QR with same code
+        new_qr_path = generate_qr_code(device["activation_code"], device_id)
+        
+        await db.devices.update_one(
+            {"id": device_id},
+            {"$set": {"qr_code_path": new_qr_path}}
+        )
+        
+        return {
+            "message": "QR code refreshed",
+            "activation_code": device["activation_code"],
+            "qr_code_path": new_qr_path
+        }
+
+
 @router.post("/activate")
 async def activate_device(
     activation: DeviceActivate,
