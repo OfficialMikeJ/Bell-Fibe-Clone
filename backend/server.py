@@ -106,21 +106,28 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("🚀 IPTV Service API Started")
+    logger.info("🚀 TV Service API Started")
     logger.info(f"📊 Database: {db.name}")
     logger.info(f"📁 Upload Directory: {uploads_dir}")
     
-    # Create default admin if none exists
+    # Check if setup is needed
+    setup_check = await db.service_config.find_one({})
+    if not setup_check or not setup_check.get('setup_completed', False):
+        logger.warning("⚠️  Setup not completed - access /setup to configure")
+    
+    # Create default admin only if no admins exist and setup not completed
     admin_exists = await db.admins.find_one({})
     if not admin_exists:
-        from utils.security import get_password_hash
-        from models.admin import Admin
-        default_admin = Admin(
-            username="admin",
-            password_hash=get_password_hash("admin123")
-        )
-        await db.admins.insert_one(default_admin.dict())
-        logger.info("✅ Default admin created (username: admin, password: admin123)")
+        if not setup_check or not setup_check.get('setup_completed'):
+            from utils.security import get_password_hash
+            from models.admin import Admin
+            default_admin = Admin(
+                username="admin",
+                password_hash=get_password_hash("admin123")
+            )
+            await db.admins.insert_one(default_admin.dict())
+            logger.info("✅ Default admin created (username: admin, password: admin123)")
+            logger.warning("⚠️  Please change default credentials through setup wizard")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
