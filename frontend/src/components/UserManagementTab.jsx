@@ -26,7 +26,8 @@ const UserManagementTab = ({ token }) => {
     email: '',
     password: '',
     full_name: '',
-    max_devices: 3
+    max_devices: 3,
+    account_status: 'active'
   });
 
   const getHeaders = () => ({ Authorization: `Bearer ${token}` });
