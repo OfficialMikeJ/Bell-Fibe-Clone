@@ -3,6 +3,7 @@ import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ServiceProvider } from "./contexts/ServiceContext";
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
 import ChannelFeatured from "./components/ChannelFeatured";
@@ -207,7 +208,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ServiceProvider>
+        <AppContent />
+      </ServiceProvider>
     </AuthProvider>
   );
 }

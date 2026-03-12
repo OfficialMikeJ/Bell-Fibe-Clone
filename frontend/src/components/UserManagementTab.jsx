@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { Trash2, Edit, Eye, Plus } from 'lucide-react';
@@ -27,7 +28,8 @@ const UserManagementTab = ({ token }) => {
     password: '',
     full_name: '',
     max_devices: 3,
-    account_status: 'active'
+    account_status: 'active',
+    notes: ''
   });
 
   const getHeaders = () => ({ Authorization: `Bearer ${token}` });
@@ -68,7 +70,7 @@ const UserManagementTab = ({ token }) => {
       setIsUserDialogOpen(false);
       setIsEditMode(false);
       setEditingUserId(null);
-      setUserForm({ username: '', email: '', password: '', full_name: '', max_devices: 3 });
+      setUserForm({ username: '', email: '', password: '', full_name: '', max_devices: 3, account_status: 'active', notes: '' });
       fetchUsers();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to save user');
@@ -84,7 +86,8 @@ const UserManagementTab = ({ token }) => {
       password: '',
       full_name: user.full_name || '',
       max_devices: user.max_devices || 3,
-      account_status: user.account_status || user.subscription_status || 'active'
+      account_status: user.account_status || user.subscription_status || 'active',
+      notes: user.notes || ''
     });
     setIsUserDialogOpen(true);
   };
@@ -114,7 +117,7 @@ const UserManagementTab = ({ token }) => {
   const handleAddNewUser = () => {
     setIsEditMode(false);
     setEditingUserId(null);
-    setUserForm({ username: '', email: '', password: '', full_name: '', max_devices: 3, account_status: 'active' });
+    setUserForm({ username: '', email: '', password: '', full_name: '', max_devices: 3, account_status: 'active', notes: '' });
     setIsUserDialogOpen(true);
   };
 
@@ -305,6 +308,18 @@ const UserManagementTab = ({ token }) => {
                 <p className="text-xs text-gray-400">Account status (no payment processing)</p>
               </div>
             )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-white">Admin Notes</Label>
+              <Textarea
+                id="notes"
+                data-testid="user-notes-input"
+                value={userForm.notes}
+                onChange={(e) => setUserForm({ ...userForm, notes: e.target.value })}
+                placeholder="Internal notes about this user..."
+                className="bg-[#2a2a2a] border-gray-600 text-white min-h-16"
+              />
+            </div>
             
             <DialogFooter>
               <Button

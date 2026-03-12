@@ -31,10 +31,10 @@ async def check_setup_status(db: AsyncIOMotorDatabase = Depends(get_db)):
     channel_count = await db.channels.count_documents({})
     
     return {
-        "setup_completed": service_configured and admin_exists and channel_count >= 25,
+        "setup_completed": service_configured and admin_exists,
         "service_configured": service_configured,
         "admin_configured": admin_exists,
-        "channels_configured": channel_count >= 25,
+        "channels_configured": channel_count >= 1,
         "channel_count": channel_count,
         "system_requirements": system_status
     }
@@ -115,13 +115,9 @@ async def complete_setup(db: AsyncIOMotorDatabase = Depends(get_db)):
     
     # Verify requirements
     admin_exists = await db.admins.find_one({}) is not None
-    channel_count = await db.channels.count_documents({})
     
     if not admin_exists:
         raise HTTPException(status_code=400, detail="Admin not configured")
-    
-    if channel_count < 25:
-        raise HTTPException(status_code=400, detail="Minimum 25 channels required")
     
     # Mark as completed
     await db.service_config.update_one(
@@ -133,6 +129,17 @@ async def complete_setup(db: AsyncIOMotorDatabase = Depends(get_db)):
     )
     
     return {"message": "Setup completed successfully"}
+
+@router.get("/config")
+async def get_service_config(db: AsyncIOMotorDatabase = Depends(get_db)):
+    """Get current service configuration"""
+    config = await db.service_config.find_one({}, {"_id": 0})
+    if not config:
+        return {"service_name": "TV Service", "domain_name": None}
+    return {
+        "service_name": config.get("service_name", "TV Service"),
+        "domain_name": config.get("domain_name")
+    }
 
 @router.post("/bulk-channels")
 async def create_bulk_channels(

@@ -56,12 +56,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (username, password) => {
+  const login = async (username, password, two_fa_code = null) => {
     try {
-      const response = await axios.post(`${API}/auth/login`, {
-        username,
-        password
-      });
+      const body = { username, password };
+      if (two_fa_code) body.two_fa_code = two_fa_code;
+      const response = await axios.post(`${API}/auth/login`, body);
       const { access_token } = response.data;
       
       // Verify the token immediately with the new token

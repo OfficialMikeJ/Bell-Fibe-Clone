@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useService } from '../contexts/ServiceContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -14,6 +15,7 @@ const API = `${BACKEND_URL}/api`;
 
 const SettingsTab = ({ token }) => {
   const { user } = useAuth();
+  const { serviceName, updateServiceName } = useService();
   const [loading, setLoading] = useState(false);
   const [twoFaEnabled, setTwoFaEnabled] = useState(false);
   const [serviceConfig, setServiceConfig] = useState({
@@ -35,12 +37,10 @@ const SettingsTab = ({ token }) => {
       const authResponse = await axios.get(`${API}/auth/verify`, { headers: getHeaders() });
       setTwoFaEnabled(authResponse.data.two_fa_enabled || false);
 
-      // Get service config
-      const configResponse = await axios.get(`${API}/setup/status`);
-      // Extract service config if available
-      // For now, just set defaults
+      // Get service config from the dedicated endpoint
+      const configResponse = await axios.get(`${API}/setup/config`);
       setServiceConfig({
-        service_name: localStorage.getItem('service_name') || 'TV Service',
+        service_name: configResponse.data?.service_name || 'TV Service',
         custom_domain: '',
         guide_domain: '',
         admin_domain: ''
@@ -65,6 +65,7 @@ const SettingsTab = ({ token }) => {
         }
       );
       localStorage.setItem('service_name', serviceConfig.service_name);
+      updateServiceName(serviceConfig.service_name);
       toast.success('Service configuration saved');
     } catch (error) {
       toast.error('Failed to save configuration');

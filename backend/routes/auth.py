@@ -101,6 +101,20 @@ async def reset_password(reset_data: PasswordReset, db: AsyncIOMotorDatabase = D
     
     return {"message": "Password reset successfully"}
 
+@router.get("/security-questions/{username}")
+async def get_security_questions(username: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+    """Get security questions for password reset (questions only, no answers)"""
+    admin = await db.admins.find_one({"username": username})
+    if not admin:
+        raise HTTPException(status_code=404, detail="Admin account not found")
+    questions = admin.get("security_questions", [])
+    if not questions:
+        raise HTTPException(status_code=400, detail="No security questions configured for this account")
+    return {
+        "username": username,
+        "questions": [sq["question"] for sq in questions]
+    }
+
 @router.post("/2fa/setup")
 async def setup_2fa(
     admin: Admin = Depends(get_current_admin),

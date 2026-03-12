@@ -25,21 +25,16 @@ export const ServiceProvider = ({ children }) => {
 
   const fetchServiceConfig = async () => {
     try {
-      const response = await axios.get(`${API}/setup/status`);
-      // Try to get service config from database
-      // The setup/status endpoint doesn't return service_name directly,
-      // so we'll make another call to get it
-      try {
-        // For now, we'll use a default or check localStorage
-        const cachedName = localStorage.getItem('service_name');
-        if (cachedName) {
-          setServiceName(cachedName);
-        }
-      } catch (err) {
-        console.log('Using default service name');
+      const response = await axios.get(`${API}/setup/config`);
+      if (response.data?.service_name) {
+        setServiceName(response.data.service_name);
+        setServiceConfig(response.data);
+        localStorage.setItem('service_name', response.data.service_name);
       }
     } catch (error) {
-      console.error('Error fetching service config:', error);
+      // Fall back to cached value if available
+      const cachedName = localStorage.getItem('service_name');
+      if (cachedName) setServiceName(cachedName);
     } finally {
       setLoading(false);
     }

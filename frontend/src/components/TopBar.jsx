@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { LogOut } from 'lucide-react';
 import { Button } from './ui/button';
+import { useService } from '../contexts/ServiceContext';
 
 const TopBar = ({ onLogout }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const { serviceName } = useService();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -27,7 +29,9 @@ const TopBar = ({ onLogout }) => {
       </div>
       <div className="flex items-center gap-6">
         <span className="text-xl font-light text-white">{formatTime(currentTime)}</span>
-        <div className="text-white text-3xl font-bold tracking-wider">TV Guide</div>
+        <div className="text-white text-3xl font-bold tracking-wider" data-testid="service-name-display">
+          {serviceName}
+        </div>
         {onLogout && (
           <Button
             onClick={onLogout}

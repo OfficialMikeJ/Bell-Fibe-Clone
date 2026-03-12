@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Upload, Plus, Trash2, QrCode, CheckCircle, XCircle, Clock, Edit, RefreshCw, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import UserManagementTab from './UserManagementTab';
+import SettingsTab from './SettingsTab';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -288,22 +289,25 @@ const AdminDashboard = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="channels" className="w-full">
+        <Tabs defaultValue="channels" className="w-full" data-testid="admin-tabs">
           <TabsList className="bg-[#2a2a2a] border-gray-700">
-            <TabsTrigger value="channels" className="data-[state=active]:bg-[#0056A8]">
+            <TabsTrigger value="channels" className="data-[state=active]:bg-[#0056A8]" data-testid="channels-tab-trigger">
               Channels
             </TabsTrigger>
-            <TabsTrigger value="programs" className="data-[state=active]:bg-[#0056A8]">
+            <TabsTrigger value="programs" className="data-[state=active]:bg-[#0056A8]" data-testid="programs-tab-trigger">
               EPG Programs
             </TabsTrigger>
-            <TabsTrigger value="devices" className="data-[state=active]:bg-[#0056A8]">
+            <TabsTrigger value="devices" className="data-[state=active]:bg-[#0056A8]" data-testid="devices-tab-trigger">
               Devices
             </TabsTrigger>
-            <TabsTrigger value="users" className="data-[state=active]:bg-[#0056A8]">
+            <TabsTrigger value="users" className="data-[state=active]:bg-[#0056A8]" data-testid="users-tab-trigger">
               Users
             </TabsTrigger>
-            <TabsTrigger value="stats" className="data-[state=active]:bg-[#0056A8]">
+            <TabsTrigger value="stats" className="data-[state=active]:bg-[#0056A8]" data-testid="stats-tab-trigger">
               Statistics
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="data-[state=active]:bg-[#0056A8]" data-testid="settings-tab-trigger">
+              Settings
             </TabsTrigger>
           </TabsList>
 
@@ -538,10 +542,15 @@ const AdminDashboard = () => {
           </TabsContent>
 
           {/* Users Tab */}
-          <TabsContent value="users">
+          <TabsContent value="users" data-testid="users-tab-content">
             <UserManagementTab token={token} />
           </TabsContent>
 
+
+          {/* Settings Tab */}
+          <TabsContent value="settings">
+            <SettingsTab token={token} />
+          </TabsContent>
 
           {/* Statistics Tab */}
           <TabsContent value="stats" className="space-y-4">
