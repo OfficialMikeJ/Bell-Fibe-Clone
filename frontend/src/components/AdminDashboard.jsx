@@ -50,6 +50,10 @@ const AdminDashboard = () => {
     device_name: '',
     mac_address: ''
   });
+  
+  // QR refresh dialog
+  const [isQRDialogOpen, setIsQRDialogOpen] = useState(false);
+  const [qrDialogData, setQrDialogData] = useState(null);
 
   const getHeaders = () => ({ Authorization: `Bearer ${token}` });
 
