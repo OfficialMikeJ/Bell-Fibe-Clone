@@ -376,3 +376,18 @@ async def admin_delete_customer(
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Customer not found")
     return {"message": "Customer deleted"}
+
+
+@router.delete("/admin/lockout/clear")
+async def admin_clear_ip_lockout(
+    ip: Optional[str] = None,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    admin: Admin = Depends(get_current_admin),
+):
+    """Admin: clear PIN attempt lockout for a specific IP (or all IPs if none specified)"""
+    if ip:
+        await db.pin_attempt_log.delete_one({"ip": ip})
+        return {"message": f"Lockout cleared for IP: {ip}"}
+    else:
+        result = await db.pin_attempt_log.delete_many({})
+        return {"message": f"All IP lockouts cleared ({result.deleted_count} records)"}

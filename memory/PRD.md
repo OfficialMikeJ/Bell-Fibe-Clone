@@ -72,10 +72,22 @@ Clone of Bell Canada's TV service (IPTV + Live TV Guide). Full-stack application
 - Self-service: no admin visit required
 - Portal login: enter activation code → get user_id session
 
-### Uploads Routing
-- All uploaded files served under /api/uploads/* (Kubernetes ingress compatible)
-- Media streaming with Range headers at /api/uploads/media/{filename}
-- RAM caching for file metadata
+### Customer Registration Website (/register, /customer-login, /my-account)
+- Public landing page at /register (hero, features, CTA)
+- Registration form: first/last name, email, password, device brand (Samsung/LG/TCL/Sony/Hisense/OnePlus/Motorola/Xiaomi/Philips/Other), device type (Android Smart TV/Box/Tablet/Phone/Other)
+- Android device compatibility disclaimer (must acknowledge to proceed)
+- Auto-login after registration → redirected to /my-account
+- Customer dashboard: large 6-digit PIN display, QR code, account info, quick links
+- Customer login at /customer-login (email/password)
+- PIN refresh feature (generates new PIN, regenerates QR)
+
+### 6-Digit PIN Activation System
+- Every customer account gets a unique cryptographically-random 6-digit PIN
+- PIN displayed prominently on /my-account page as large individual digit boxes
+- QR code encodes {service_url}/activate?pin={PIN} for optional scan-to-activate
+- App enters 6-digit PIN at /activate (or /activate?pin=XXXXXX for QR pre-fill)
+- IP-based lockout: 3 failed attempts from same IP → 45-minute block (HTTP 429)
+- Admin can clear lockouts via DELETE /api/customer/admin/lockout/clear
 
 ### TV Guide (Customer-facing Sidebar - 7 items)
 - **Home** - Welcome page
