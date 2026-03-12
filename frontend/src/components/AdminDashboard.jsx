@@ -8,8 +8,9 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
-import { Upload, Plus, Trash2, QrCode, CheckCircle, XCircle, Clock, Edit } from 'lucide-react';
+import { Upload, Plus, Trash2, QrCode, CheckCircle, XCircle, Clock, Edit, RefreshCw, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
+import UserManagementTab from './UserManagementTab';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
