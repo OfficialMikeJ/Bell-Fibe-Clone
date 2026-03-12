@@ -113,11 +113,11 @@ const UserManagementTab = ({ token }) => {
   const handleAddNewUser = () => {
     setIsEditMode(false);
     setEditingUserId(null);
-    setUserForm({ username: '', email: '', password: '', full_name: '', max_devices: 3 });
+    setUserForm({ username: '', email: '', password: '', full_name: '', max_devices: 3, account_status: 'active' });
     setIsUserDialogOpen(true);
   };
 
-  const getSubscriptionColor = (status) => {
+  const getAccountStatusColor = (status) => {
     switch (status) {
       case 'active':
         return 'bg-green-500/20 text-green-400 border-green-500';
@@ -125,6 +125,8 @@ const UserManagementTab = ({ token }) => {
         return 'bg-orange-500/20 text-orange-400 border-orange-500';
       case 'cancelled':
         return 'bg-red-500/20 text-red-400 border-red-500';
+      case 'trial':
+        return 'bg-blue-500/20 text-blue-400 border-blue-500';
       default:
         return 'bg-gray-500/20 text-gray-400 border-gray-500';
     }
