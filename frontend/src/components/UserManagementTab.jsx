@@ -167,14 +167,14 @@ const UserManagementTab = ({ token }) => {
                     <td className="p-3 text-gray-400">{user.email}</td>
                     <td className="p-3 text-gray-400">{user.full_name || '-'}</td>
                     <td className="p-3">
-                      <Badge className={getSubscriptionColor(user.subscription_status)}>
-                        {user.subscription_status}
+                      <Badge className={getAccountStatusColor(user.account_status || user.subscription_status)}>
+                        {user.account_status || user.subscription_status}
                       </Badge>
                     </td>
                     <td className="p-3 text-gray-400">{user.max_devices}</td>
                     <td className="p-3">
                       <Badge className={user.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
-                        {user.is_active ? 'Active' : 'Inactive'}
+                        {user.is_active ? 'Yes' : 'No'}
                       </Badge>
                     </td>
                     <td className="p-3 text-right">
