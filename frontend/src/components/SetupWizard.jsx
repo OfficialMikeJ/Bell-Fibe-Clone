@@ -197,12 +197,12 @@ const SetupWizard = ({ onComplete }) => {
               {systemCheck?.system_requirements?.checks && (
                 <div className="space-y-3">
                   {Object.entries(systemCheck.system_requirements.checks).map(([key, check]) => (
-                    <div key={key} className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded">
+                    <div key={key} className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded transition-all duration-300">
                       <div className="flex items-center gap-3">
                         {check.status ? (
-                          <CheckCircle className="w-5 h-5 text-green-500" />
+                          <CheckCircle className="w-5 h-5 text-green-500 animate-pulse" />
                         ) : (
-                          <XCircle className="w-5 h-5 text-red-500" />
+                          <XCircle className="w-5 h-5 text-red-500 animate-pulse" />
                         )}
                         <div>
                           <p className="text-white font-medium capitalize">{key.replace('_', ' ')}</p>
@@ -212,6 +212,14 @@ const SetupWizard = ({ onComplete }) => {
                       <span className="text-xs text-gray-500">{check.required}</span>
                     </div>
                   ))}
+                </div>
+              )}
+              
+              {systemCheck && (
+                <div className="mt-4 p-3 bg-[#2a2a2a] rounded">
+                  <p className="text-sm text-gray-400">
+                    Status: {systemCheck.system_requirements.passed} / {systemCheck.system_requirements.total} checks passed
+                  </p>
                 </div>
               )}
               
