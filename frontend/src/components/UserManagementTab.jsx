@@ -154,9 +154,9 @@ const UserManagementTab = ({ token }) => {
                   <th className="text-left p-3 text-gray-300">Username</th>
                   <th className="text-left p-3 text-gray-300">Email</th>
                   <th className="text-left p-3 text-gray-300">Full Name</th>
-                  <th className="text-left p-3 text-gray-300">Subscription</th>
+                  <th className="text-left p-3 text-gray-300">Account Status</th>
                   <th className="text-left p-3 text-gray-300">Max Devices</th>
-                  <th className="text-left p-3 text-gray-300">Status</th>
+                  <th className="text-left p-3 text-gray-300">Active</th>
                   <th className="text-right p-3 text-gray-300">Actions</th>
                 </tr>
               </thead>
