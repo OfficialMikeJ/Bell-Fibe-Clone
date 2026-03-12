@@ -27,6 +27,8 @@ from routes.notifications import router as notifications_router
 from routes.recordings import router as recordings_router
 from routes.security import router as security_router
 from routes.stats import router as stats_router
+from routes.tickets import router as tickets_router
+from routes.faq import router as faq_router
 
 # Import security middleware
 from utils.https_middleware import HTTPSRedirectMiddleware, SecureHeadersMiddleware
@@ -101,6 +103,8 @@ app.include_router(notifications_router)
 app.include_router(recordings_router)
 app.include_router(security_router)
 app.include_router(stats_router)
+app.include_router(tickets_router)
+app.include_router(faq_router)
 
 # Mount uploads directory for serving files with proper caching headers
 uploads_dir = Path("/app/backend/uploads")

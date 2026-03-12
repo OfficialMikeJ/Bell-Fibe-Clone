@@ -1,0 +1,56 @@
+{
+  "summary": "Comprehensive iteration 4 testing of all new features: QR Self-Serve Activation page (/activate), Customer Support Portal (/portal with FAQ/Support/Status), Admin Tickets tab with reply system and color-coded priorities, Admin FAQ management tab, Portal login via activation code, and Uptime Kuma URL config in Settings. All 29 backend tests pass (100%). All frontend flows verified and working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "ServiceConfig model (service_config.py)",
+        "issue": "Model class doesn't define uptime_kuma_url field; it's stored/retrieved via direct MongoDB dict operations in setup.py routes. Works correctly at runtime but violates model-driven design. Not breaking but worth adding the field to ServiceConfig model for consistency."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Settings tab - Clear Uptime Kuma URL",
+        "issue": "SettingsTab.jsx line 65 uses `serviceConfig.uptime_kuma_url || undefined` - when user clears the URL field and saves, empty string is falsy so `undefined` is sent to axios which omits the param, meaning the backend won't clear the stored URL. Can set the URL but cannot clear it from the Settings tab.",
+        "affected_selectors": ["#uptime_kuma_url", "button:has-text('Save Configuration')"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_new_features_iter4.py",
+    "/app/test_reports/pytest/pytest_results_iter4.xml"
+  ],
+  "action_items": [
+    "MINOR: Fix SettingsTab.jsx uptime_kuma_url clear bug - change `serviceConfig.uptime_kuma_url || undefined` to `serviceConfig.uptime_kuma_url !== undefined ? serviceConfig.uptime_kuma_url : undefined` OR handle empty string explicitly so users can clear the value",
+    "OPTIONAL: Add uptime_kuma_url field to ServiceConfig pydantic model in service_config.py for consistency",
+    "CLEANUP: Test data was created during testing but has been cleaned up (test tickets and FAQs deleted)"
+  ],
+  "critical_code_review_comments": [
+    "MINOR BUG: SettingsTab.jsx handleSaveServiceConfig() uses `serviceConfig.uptime_kuma_url || undefined` - cannot clear uptime_kuma_url once set because empty string is falsy and becomes undefined (not sent to backend). Fix: use explicit null check.",
+    "CODE QUALITY: ServiceConfig model missing uptime_kuma_url field - field added to DB but not in Pydantic model. Should add for type safety.",
+    "NO ISSUE: portal-login endpoint correctly uses query param `activation_code` and routes correctly without conflict with other device routes."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_new_features_iter4.py"
+  ],
+  "success_rate": {
+    "backend": "100% (29/29 tests pass)",
+    "frontend": "100% - All portal pages load correctly, portal login works, FAQ accordion works, ticket submission works with session, My Tickets view shows tickets, admin Support Tickets tab shows tickets with detail panel/reply/priority update, admin FAQ tab shows items with Add/Edit dialog, Uptime Kuma URL saves and embeds in portal status page"
+  },
+  "test_credentials": "admin / admin123",
+  "seed_data_creation": "Test tickets and FAQ items created during testing have been cleaned up. Active device 'Test Box' (activation_code: Mx5JVtcXphz-d2GRT67Wvw, user_id: USR-70A904A7) used for portal login tests - this is existing data, not created during testing. FAQ 'How do I activate my device?' (pre-existing) remains. Uptime Kuma URL set to https://status.test.example.com during testing.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All iteration 4 features verified and passing. New features tested: /activate page, /portal home with QR login, /portal/faq accordion, /portal/support ticket form + My Tickets view, /portal/status with configurable Uptime Kuma embed, admin Support Tickets tab (ticket list, detail panel, admin reply, priority/status update), admin FAQ tab (CRUD with dialog). One minor bug: can't clear uptime_kuma_url from Settings tab (|| undefined issue). Backend: 29 new tests in test_new_features_iter4.py all pass. Fix applied to test: admin_token fixture now uses access_token key (API returns access_token not token).",
+  "rca_of_issue": {
+    "Uptime Kuma URL Cannot Be Cleared": {
+      "root_cause": "SettingsTab.jsx handleSaveServiceConfig() at line 65: `uptime_kuma_url: serviceConfig.uptime_kuma_url || undefined`. When user clears the input to empty string, `'' || undefined` evaluates to `undefined`. Axios omits undefined params from the request. Backend receives no uptime_kuma_url param and skips the update (if uptime_kuma_url is not None: ...).",
+      "reproduction": "1. Set uptime_kuma_url in Settings to any value. 2. Clear the input field. 3. Click Save Configuration. 4. Check /portal/status - it still shows the old URL.",
+      "mitigation": "Change line 65 to: `uptime_kuma_url: serviceConfig.uptime_kuma_url !== '' ? serviceConfig.uptime_kuma_url : ''` or simply always send the value: `uptime_kuma_url: serviceConfig.uptime_kuma_url`"
+    }
+  }
+}

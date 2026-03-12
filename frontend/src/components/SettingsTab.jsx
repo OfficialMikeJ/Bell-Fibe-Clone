@@ -22,7 +22,8 @@ const SettingsTab = ({ token }) => {
     service_name: '',
     custom_domain: '',
     guide_domain: '',
-    admin_domain: ''
+    admin_domain: '',
+    uptime_kuma_url: '',
   });
 
   const getHeaders = () => ({ Authorization: `Bearer ${token}` });
@@ -43,7 +44,8 @@ const SettingsTab = ({ token }) => {
         service_name: configResponse.data?.service_name || 'TV Service',
         custom_domain: '',
         guide_domain: '',
-        admin_domain: ''
+        admin_domain: '',
+        uptime_kuma_url: configResponse.data?.uptime_kuma_url || '',
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -59,7 +61,8 @@ const SettingsTab = ({ token }) => {
         {
           params: {
             service_name: serviceConfig.service_name,
-            domain_name: serviceConfig.custom_domain
+            domain_name: serviceConfig.custom_domain,
+            uptime_kuma_url: serviceConfig.uptime_kuma_url || undefined,
           },
           headers: getHeaders()
         }
@@ -105,6 +108,21 @@ const SettingsTab = ({ token }) => {
               className="bg-[#1a1a1a] border-gray-600 text-white"
             />
             <p className="text-xs text-gray-400">This name appears throughout the system</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="uptime_kuma_url" className="text-white">Uptime Kuma Status Page URL</Label>
+            <Input
+              id="uptime_kuma_url"
+              value={serviceConfig.uptime_kuma_url}
+              onChange={(e) => setServiceConfig({ ...serviceConfig, uptime_kuma_url: e.target.value })}
+              placeholder="https://status.yourdomain.com"
+              className="bg-[#1a1a1a] border-gray-600 text-white"
+            />
+            <p className="text-xs text-gray-400">
+              Your self-hosted Uptime Kuma URL. This is displayed on the customer support portal's Service Status page.
+              &nbsp;<a href="https://uptime.kuma.pet" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Learn more about Uptime Kuma</a>
+            </p>
           </div>
 
           <Button

@@ -14,6 +14,12 @@ import SetupWizard from "./components/SetupWizard";
 import OnDemandPage from "./components/OnDemandPage";
 import RecordingsPage from "./components/RecordingsPage";
 import NotificationsPage from "./components/NotificationsPage";
+import ActivatePage from "./pages/ActivatePage";
+import PortalLayout from "./pages/PortalLayout";
+import PortalHome from "./pages/PortalHome";
+import PortalFAQ from "./pages/PortalFAQ";
+import PortalSupport from "./pages/PortalSupport";
+import PortalStatus from "./pages/PortalStatus";
 import { Toaster } from "./components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -208,6 +214,13 @@ function AppContent() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/activate" element={<ActivatePage />} />
+          <Route path="/portal" element={<PortalLayout />}>
+            <Route index element={<PortalHome />} />
+            <Route path="faq" element={<PortalFAQ />} />
+            <Route path="support" element={<PortalSupport />} />
+            <Route path="status" element={<PortalStatus />} />
+          </Route>
           <Route path="/admin/login" element={<LoginPage />} />
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />

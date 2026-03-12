@@ -184,6 +184,52 @@ async def activate_device(
         "device": Device(**updated_device)
     }
 
+@router.get("/by-code/{activation_code}")
+async def get_device_by_code(
+    activation_code: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Public: look up a device by activation code (for the activation page preview)"""
+    device = await db.devices.find_one({"activation_code": activation_code}, {"_id": 0})
+    if not device:
+        raise HTTPException(status_code=404, detail="Invalid activation code")
+    return {
+        "device_name": device.get("device_name"),
+        "status": device.get("status"),
+        "device_id": device.get("id"),
+    }
+
+
+@router.post("/portal-login")
+async def portal_login(
+    activation_code: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Public: portal login via activation code. Returns user_id for support portal session."""
+    device = await db.devices.find_one({"activation_code": activation_code}, {"_id": 0})
+    if not device:
+        raise HTTPException(status_code=404, detail="Invalid activation code")
+    if device.get("status") != "active":
+        raise HTTPException(status_code=403, detail="Device is not yet activated. Please activate your device first.")
+
+    user_id = device.get("user_id")
+    if not user_id:
+        # Auto-assign user_id based on device id if not set
+        import uuid
+        user_id = f"USR-{device['id'][:8].upper()}"
+        await db.devices.update_one(
+            {"id": device["id"]},
+            {"$set": {"user_id": user_id}}
+        )
+
+    return {
+        "user_id": user_id,
+        "device_name": device.get("device_name"),
+        "device_id": device.get("id"),
+        "message": "Logged in successfully",
+    }
+
+
 @router.get("/guide/{device_id}")
 async def get_device_guide(
     device_id: str,

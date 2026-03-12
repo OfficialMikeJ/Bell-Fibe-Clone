@@ -18,6 +18,8 @@ import NotificationsTab from './NotificationsTab';
 import CVRTab from './CVRTab';
 import BrandingTab from './BrandingTab';
 import AnalyticsTab from './AnalyticsTab';
+import TicketsTab from './admin/TicketsTab';
+import FAQTab from './admin/FAQTab';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -344,6 +346,8 @@ const AdminDashboard = () => {
             <TabsTrigger value="users" className="data-[state=active]:bg-[#0056A8]" data-testid="users-tab-trigger">Users</TabsTrigger>
             <TabsTrigger value="notifications" className="data-[state=active]:bg-[#0056A8]" data-testid="notifications-tab-trigger">Notifications</TabsTrigger>
             <TabsTrigger value="cvr" className="data-[state=active]:bg-[#0056A8]" data-testid="cvr-tab-trigger">CVR</TabsTrigger>
+            <TabsTrigger value="tickets" className="data-[state=active]:bg-[#0056A8]" data-testid="tickets-tab-trigger">Support Tickets</TabsTrigger>
+            <TabsTrigger value="faq" className="data-[state=active]:bg-[#0056A8]" data-testid="faq-tab-trigger">FAQ</TabsTrigger>
             <TabsTrigger value="stats" className="data-[state=active]:bg-[#0056A8]" data-testid="stats-tab-trigger">Statistics</TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-[#0056A8]" data-testid="analytics-tab-trigger">Analytics</TabsTrigger>
             <TabsTrigger value="branding" className="data-[state=active]:bg-[#0056A8]" data-testid="branding-tab-trigger">Branding</TabsTrigger>
@@ -494,7 +498,7 @@ const AdminDashboard = () => {
                           MAC: {device.mac_address}
                         </CardDescription>
                         <CardDescription className="text-gray-400 text-xs mt-1">
-                          UUID: {device.device_uuid?.substring(0, 16)}...
+                          UUID: {device.device_uuid}
                         </CardDescription>
                       </div>
                       {device.qr_code_path && (
@@ -517,21 +521,46 @@ const AdminDashboard = () => {
                         <p className="text-gray-400">Status:</p>
                         <p className="text-white capitalize">{device.status}</p>
                       </div>
+                      {device.user_id && (
+                        <div>
+                          <p className="text-gray-400">User ID:</p>
+                          <p className="text-blue-300 font-mono text-xs">{device.user_id}</p>
+                        </div>
+                      )}
                       {device.current_ip && (
                         <div>
-                          <p className="text-gray-400">Current IP:</p>
-                          <p className="text-white font-mono text-xs">{device.current_ip}</p>
+                          <p className="text-gray-400">Public IP:</p>
+                          <div className="flex items-center gap-1">
+                            <p className="text-white font-mono text-xs">{device.current_ip}</p>
+                            <span className={`text-xs px-1 py-0.5 rounded ${
+                              (() => {
+                                const hist = device.ip_history || [];
+                                const uniqueIPs = [...new Set(hist.map(h => h.ip))];
+                                if (uniqueIPs.length === 1 && hist.length >= 3) return 'bg-green-900/50 text-green-400';
+                                if (uniqueIPs.length > 1) return 'bg-orange-900/50 text-orange-400';
+                                return 'bg-gray-700 text-gray-400';
+                              })()
+                            }`}>
+                              {(() => {
+                                const hist = device.ip_history || [];
+                                const uniqueIPs = [...new Set(hist.map(h => h.ip))];
+                                if (uniqueIPs.length === 1 && hist.length >= 3) return 'Static';
+                                if (uniqueIPs.length > 1) return 'Dynamic';
+                                return '?';
+                              })()}
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
                     
                     {device.last_geo_check && (
                       <div className="bg-[#1a1a1a] p-2 rounded">
-                        <p className="text-xs text-gray-400">Last Location:</p>
-                        <p className="text-white text-xs">
-                          {device.last_geo_check.city}, {device.last_geo_check.region}
+                        <p className="text-xs text-gray-400">Location:</p>
+                        <p className="text-white text-xs font-medium">
+                          {[device.last_geo_check.city, device.last_geo_check.region, device.last_geo_check.country]
+                            .filter(Boolean).join(', ')}
                         </p>
-                        <p className="text-gray-400 text-xs">{device.last_geo_check.country}</p>
                         {device.last_geo_check.isp && (
                           <p className="text-gray-400 text-xs">ISP: {device.last_geo_check.isp}</p>
                         )}
@@ -604,6 +633,16 @@ const AdminDashboard = () => {
           {/* CVR Tab */}
           <TabsContent value="cvr">
             <CVRTab token={token} />
+          </TabsContent>
+
+          {/* Tickets Tab */}
+          <TabsContent value="tickets">
+            <TicketsTab token={token} />
+          </TabsContent>
+
+          {/* FAQ Tab */}
+          <TabsContent value="faq">
+            <FAQTab token={token} />
           </TabsContent>
 
           {/* Analytics Tab */}

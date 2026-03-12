@@ -71,6 +71,7 @@ async def configure_service(
     cvr_total_storage_gb: Optional[int] = None,
     hours_request_min: Optional[int] = None,
     hours_request_max: Optional[int] = None,
+    uptime_kuma_url: Optional[str] = None,
     db: AsyncIOMotorDatabase = Depends(get_db),
     admin: Admin = Depends(get_current_admin)
 ):
@@ -88,7 +89,8 @@ async def configure_service(
         update_fields["hours_request_min"] = hours_request_min
     if hours_request_max is not None:
         update_fields["hours_request_max"] = hours_request_max
-
+    if uptime_kuma_url is not None:
+        update_fields["uptime_kuma_url"] = uptime_kuma_url
     if config:
         if update_fields:
             await db.service_config.update_one(
@@ -207,6 +209,7 @@ async def get_service_config(db: AsyncIOMotorDatabase = Depends(get_db)):
         "cvr_total_storage_gb": config.get("cvr_total_storage_gb", 500),
         "hours_request_min": config.get("hours_request_min", 96),
         "hours_request_max": config.get("hours_request_max", 105),
+        "uptime_kuma_url": config.get("uptime_kuma_url", ""),
     }
 
 @router.post("/bulk-channels")
