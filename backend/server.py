@@ -92,6 +92,10 @@ uploads_dir = Path("/app/backend/uploads")
 uploads_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
+# Add security middleware (HTTPS enforcement and security headers)
+app.add_middleware(SecureHeadersMiddleware)
+app.add_middleware(HTTPSRedirectMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
