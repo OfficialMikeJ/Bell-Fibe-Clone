@@ -219,9 +219,17 @@ const SetupWizard = ({ onComplete }) => {
                 <Button
                   onClick={checkSystemRequirements}
                   variant="outline"
-                  className="bg-transparent border-gray-600 text-white"
+                  disabled={loading}
+                  className="bg-transparent border-gray-600 text-white hover:bg-gray-700"
                 >
-                  Recheck
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Checking...
+                    </>
+                  ) : (
+                    'Recheck'
+                  )}
                 </Button>
                 <Button
                   onClick={() => setStep(2)}
