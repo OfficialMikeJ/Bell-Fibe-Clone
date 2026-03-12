@@ -512,6 +512,25 @@ const AdminDashboard = () => {
                         IP History: {device.ip_history.length} entries
                       </div>
                     )}
+                    
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        onClick={() => handleRefreshQR(device.id, false)}
+                        size="sm"
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <RefreshCw className="w-3 h-3 mr-1" />
+                        Refresh QR
+                      </Button>
+                      <Button
+                        onClick={() => handleRefreshQR(device.id, true)}
+                        size="sm"
+                        className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                      >
+                        <RotateCcw className="w-3 h-3 mr-1" />
+                        Reset Code
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
