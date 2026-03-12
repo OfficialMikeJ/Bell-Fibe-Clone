@@ -148,6 +148,41 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function AppContent() {
+  const [setupCompleted, setSetupCompleted] = useState(null);
+  const [checkingSetup, setCheckingSetup] = useState(true);
+
+  useEffect(() => {
+    checkSetupStatus();
+  }, []);
+
+  const checkSetupStatus = async () => {
+    try {
+      const response = await axios.get(`${API}/setup/status`);
+      setSetupCompleted(response.data.setup_completed);
+    } catch (error) {
+      console.error('Error checking setup:', error);
+      setSetupCompleted(false);
+    } finally {
+      setCheckingSetup(false);
+    }
+  };
+
+  const handleSetupComplete = () => {
+    setSetupCompleted(true);
+  };
+
+  if (checkingSetup) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <div className="text-white text-2xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (setupCompleted === false) {
+    return <SetupWizard onComplete={handleSetupComplete} />;
+  }
+
   return (
     <div className="App">
       <BrowserRouter>
