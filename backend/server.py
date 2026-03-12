@@ -18,6 +18,10 @@ from routes.devices import router as devices_router
 from routes.auth import router as auth_router
 from routes.setup import router as setup_router
 from routes.users import router as users_router
+from routes.media import router as media_router
+from routes.vod import router as vod_router
+from routes.notifications import router as notifications_router
+from routes.recordings import router as recordings_router
 
 # Import security middleware
 from utils.https_middleware import HTTPSRedirectMiddleware, SecureHeadersMiddleware
@@ -86,10 +90,15 @@ app.include_router(programs_router)
 app.include_router(devices_router)
 app.include_router(auth_router)
 app.include_router(users_router)
+app.include_router(media_router)
+app.include_router(vod_router)
+app.include_router(notifications_router)
+app.include_router(recordings_router)
 
 # Mount uploads directory for serving files
 uploads_dir = Path("/app/backend/uploads")
-uploads_dir.mkdir(parents=True, exist_ok=True)
+for subdir in ["media", "posters", "logos", "qr_codes", "branding", "notifications"]:
+    (uploads_dir / subdir).mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 # Add security middleware (HTTPS enforcement and security headers)

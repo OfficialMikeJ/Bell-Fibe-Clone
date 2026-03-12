@@ -12,6 +12,11 @@ import { Upload, Plus, Trash2, QrCode, CheckCircle, XCircle, Clock, Edit, Refres
 import { toast } from 'sonner';
 import UserManagementTab from './UserManagementTab';
 import SettingsTab from './SettingsTab';
+import MediaLibraryTab from './MediaLibraryTab';
+import VODTab from './VODTab';
+import NotificationsTab from './NotificationsTab';
+import CVRTab from './CVRTab';
+import BrandingTab from './BrandingTab';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -42,8 +47,10 @@ const AdminDashboard = () => {
     description: '',
     start_time: '',
     duration_minutes: 30,
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0],
+    media_id: ''
   });
+  const [mediaList, setMediaList] = useState([]);
 
   // Device form
   const [isDeviceDialogOpen, setIsDeviceDialogOpen] = useState(false);
@@ -62,6 +69,7 @@ const AdminDashboard = () => {
     fetchChannels();
     fetchDevices();
     fetchPrograms();
+    fetchMediaList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -92,6 +100,35 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error fetching programs:', error);
       toast.error('Failed to fetch programs');
+    }
+  };
+
+  const fetchMediaList = async () => {
+    try {
+      const response = await axios.get(`${API}/media`, { headers: getHeaders() });
+      setMediaList(response.data);
+    } catch (error) {
+      console.error('Error fetching media list:', error);
+    }
+  };
+
+  const handleMediaSelectForProgram = async (mediaId) => {
+    if (!mediaId) {
+      setProgramForm(f => ({ ...f, media_id: '' }));
+      return;
+    }
+    setProgramForm(f => ({ ...f, media_id: mediaId }));
+    try {
+      const res = await axios.get(`${API}/programs/media/${mediaId}/info`, { headers: getHeaders() });
+      setProgramForm(f => ({
+        ...f,
+        media_id: mediaId,
+        title: f.title || res.data.title || '',
+        description: f.description || res.data.description || '',
+        duration_minutes: res.data.duration_minutes || f.duration_minutes,
+      }));
+    } catch (e) {
+      console.error('Could not fetch media info', e);
     }
   };
 
@@ -203,7 +240,8 @@ const AdminDashboard = () => {
         description: '',
         start_time: '',
         duration_minutes: 30,
-        date: new Date().toISOString().split('T')[0]
+        date: new Date().toISOString().split('T')[0],
+        media_id: ''
       });
       fetchPrograms();
     } catch (error) {
@@ -290,25 +328,18 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="channels" className="w-full" data-testid="admin-tabs">
-          <TabsList className="bg-[#2a2a2a] border-gray-700">
-            <TabsTrigger value="channels" className="data-[state=active]:bg-[#0056A8]" data-testid="channels-tab-trigger">
-              Channels
-            </TabsTrigger>
-            <TabsTrigger value="programs" className="data-[state=active]:bg-[#0056A8]" data-testid="programs-tab-trigger">
-              EPG Programs
-            </TabsTrigger>
-            <TabsTrigger value="devices" className="data-[state=active]:bg-[#0056A8]" data-testid="devices-tab-trigger">
-              Devices
-            </TabsTrigger>
-            <TabsTrigger value="users" className="data-[state=active]:bg-[#0056A8]" data-testid="users-tab-trigger">
-              Users
-            </TabsTrigger>
-            <TabsTrigger value="stats" className="data-[state=active]:bg-[#0056A8]" data-testid="stats-tab-trigger">
-              Statistics
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="data-[state=active]:bg-[#0056A8]" data-testid="settings-tab-trigger">
-              Settings
-            </TabsTrigger>
+          <TabsList className="bg-[#2a2a2a] border-gray-700 flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="channels" className="data-[state=active]:bg-[#0056A8]" data-testid="channels-tab-trigger">Channels</TabsTrigger>
+            <TabsTrigger value="programs" className="data-[state=active]:bg-[#0056A8]" data-testid="programs-tab-trigger">EPG Programs</TabsTrigger>
+            <TabsTrigger value="media" className="data-[state=active]:bg-[#0056A8]" data-testid="media-tab-trigger">Media Library</TabsTrigger>
+            <TabsTrigger value="vod" className="data-[state=active]:bg-[#0056A8]" data-testid="vod-tab-trigger">VOD</TabsTrigger>
+            <TabsTrigger value="devices" className="data-[state=active]:bg-[#0056A8]" data-testid="devices-tab-trigger">Devices</TabsTrigger>
+            <TabsTrigger value="users" className="data-[state=active]:bg-[#0056A8]" data-testid="users-tab-trigger">Users</TabsTrigger>
+            <TabsTrigger value="notifications" className="data-[state=active]:bg-[#0056A8]" data-testid="notifications-tab-trigger">Notifications</TabsTrigger>
+            <TabsTrigger value="cvr" className="data-[state=active]:bg-[#0056A8]" data-testid="cvr-tab-trigger">CVR</TabsTrigger>
+            <TabsTrigger value="stats" className="data-[state=active]:bg-[#0056A8]" data-testid="stats-tab-trigger">Statistics</TabsTrigger>
+            <TabsTrigger value="branding" className="data-[state=active]:bg-[#0056A8]" data-testid="branding-tab-trigger">Branding</TabsTrigger>
+            <TabsTrigger value="settings" className="data-[state=active]:bg-[#0056A8]" data-testid="settings-tab-trigger">Settings</TabsTrigger>
           </TabsList>
 
           {/* Channels Tab */}
@@ -547,6 +578,31 @@ const AdminDashboard = () => {
           </TabsContent>
 
 
+          {/* Media Library Tab */}
+          <TabsContent value="media">
+            <MediaLibraryTab token={token} />
+          </TabsContent>
+
+          {/* VOD Tab */}
+          <TabsContent value="vod">
+            <VODTab token={token} />
+          </TabsContent>
+
+          {/* Notifications Tab */}
+          <TabsContent value="notifications">
+            <NotificationsTab token={token} />
+          </TabsContent>
+
+          {/* CVR Tab */}
+          <TabsContent value="cvr">
+            <CVRTab token={token} />
+          </TabsContent>
+
+          {/* Branding Tab */}
+          <TabsContent value="branding">
+            <BrandingTab token={token} />
+          </TabsContent>
+
           {/* Settings Tab */}
           <TabsContent value="settings">
             <SettingsTab token={token} />
@@ -630,24 +686,48 @@ const AdminDashboard = () => {
               <div className="space-y-2">
                 <Label htmlFor="logo" className="text-white">Channel Logo</Label>
                 <div className="flex items-center gap-4">
-                  <label
-                    htmlFor="logo"
-                    className="flex items-center gap-2 px-4 py-2 bg-[#0056A8] hover:bg-[#0066c8] text-white rounded-lg cursor-pointer transition-colors"
-                  >
+                  <label htmlFor="logo"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0056A8] hover:bg-[#0066c8] text-white rounded-lg cursor-pointer transition-colors">
                     <Upload className="w-4 h-4" />
                     <span>Upload Logo</span>
                   </label>
-                  <input
-                    id="logo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                    className="hidden"
-                  />
-                  {logoPreview && (
-                    <img src={logoPreview} alt="Preview" className="w-20 h-20 rounded border-2 border-gray-600" />
-                  )}
+                  <input id="logo" type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                  {logoPreview && <img src={logoPreview} alt="Preview" className="w-20 h-20 rounded border-2 border-gray-600" />}
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-white">Quality Label</Label>
+                  <select
+                    value={channelForm.quality_label || '1080p'}
+                    onChange={(e) => setChannelForm({ ...channelForm, quality_label: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-md text-white"
+                  >
+                    {['720p', '720p60', '1080p', '1080p60', '1440p', '1440p60', '4K', '4K60'].map(q => (
+                      <option key={q} value={q}>{q}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Channel Type</Label>
+                  <select
+                    value={channelForm.channel_type || 'live'}
+                    onChange={(e) => setChannelForm({ ...channelForm, channel_type: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-md text-white"
+                  >
+                    <option value="live">Live TV</option>
+                    <option value="vod">VOD Channel</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-white">Stream URL (optional)</Label>
+                <Input
+                  value={channelForm.stream_url || ''}
+                  onChange={(e) => setChannelForm({ ...channelForm, stream_url: e.target.value })}
+                  placeholder="https://stream.example.com/channel.m3u8"
+                  className="bg-[#2a2a2a] border-gray-600 text-white"
+                />
               </div>
               <DialogFooter>
                 <Button
@@ -672,6 +752,21 @@ const AdminDashboard = () => {
               <DialogTitle className="text-2xl text-white">Add Program to EPG</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreateProgram} className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-white text-sm font-medium">Link Media File (auto-fills title, description & duration)</Label>
+                <select
+                  value={programForm.media_id || ''}
+                  onChange={(e) => handleMediaSelectForProgram(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-md text-white text-sm"
+                >
+                  <option value="">— No media file (manual entry) —</option>
+                  {mediaList.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.title} ({m.duration_formatted || 'no duration'}) [{m.quality_label || '?'}]
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="channel" className="text-white">Channel *</Label>
                 <select

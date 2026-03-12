@@ -156,15 +156,44 @@ async def complete_setup(db: AsyncIOMotorDatabase = Depends(get_db)):
     
     return {"message": "Setup completed successfully"}
 
+@router.post("/upload-logo")
+async def upload_service_logo(
+    file: UploadFile = File(...),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    admin: Admin = Depends(get_current_admin)
+):
+    """Upload service branding logo"""
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image (.png, .jpg, .jpeg, .webp)")
+    
+    branding_dir = Path("/app/backend/uploads/branding")
+    branding_dir.mkdir(parents=True, exist_ok=True)
+    
+    suffix = Path(file.filename).suffix.lower()
+    filename = f"logo{suffix}"
+    file_path = branding_dir / filename
+    
+    with file_path.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    logo_path = f"/uploads/branding/{filename}"
+    await db.service_config.update_one(
+        {},
+        {"$set": {"logo_path": logo_path}},
+        upsert=True
+    )
+    return {"logo_path": logo_path}
+
 @router.get("/config")
 async def get_service_config(db: AsyncIOMotorDatabase = Depends(get_db)):
     """Get current service configuration"""
     config = await db.service_config.find_one({}, {"_id": 0})
     if not config:
-        return {"service_name": "TV Service", "domain_name": None}
+        return {"service_name": "TV Service", "domain_name": None, "logo_path": None}
     return {
         "service_name": config.get("service_name", "TV Service"),
-        "domain_name": config.get("domain_name")
+        "domain_name": config.get("domain_name"),
+        "logo_path": config.get("logo_path")
     }
 
 @router.post("/bulk-channels")

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Header
+from pydantic import BaseModel
 from models.admin import Admin, AdminCreate, AdminLogin, Token, PasswordReset, TwoFASetup
 from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -114,6 +115,37 @@ async def get_security_questions(username: str, db: AsyncIOMotorDatabase = Depen
         "username": username,
         "questions": [sq["question"] for sq in questions]
     }
+
+class MasterPinRequest(BaseModel):
+    current_pin: Optional[str] = None
+    new_pin: str
+
+@router.post("/master-pin")
+async def set_master_pin(
+    request: MasterPinRequest,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    admin: Admin = Depends(get_current_admin)
+):
+    """Set or update master admin PIN for sidebar locking"""
+    config = await db.service_config.find_one({})
+    if not config:
+        raise HTTPException(status_code=400, detail="Service not configured")
+    
+    current_pin_hash = config.get("master_pin_hash")
+    
+    # Verify current PIN if one exists
+    if current_pin_hash and request.current_pin:
+        from utils.security import verify_password
+        if not verify_password(request.current_pin, current_pin_hash):
+            raise HTTPException(status_code=400, detail="Current PIN is incorrect")
+    
+    from utils.security import get_password_hash
+    new_hash = get_password_hash(request.new_pin)
+    await db.service_config.update_one(
+        {"_id": config["_id"]},
+        {"$set": {"master_pin_hash": new_hash}}
+    )
+    return {"message": "Master PIN updated successfully"}
 
 @router.post("/2fa/setup")
 async def setup_2fa(

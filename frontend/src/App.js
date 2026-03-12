@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ServiceProvider } from "./contexts/ServiceContext";
@@ -11,20 +11,21 @@ import EPGGrid from "./components/EPGGrid";
 import LoginPage from "./components/LoginPage";
 import AdminDashboard from "./components/AdminDashboard";
 import SetupWizard from "./components/SetupWizard";
+import OnDemandPage from "./components/OnDemandPage";
+import RecordingsPage from "./components/RecordingsPage";
+import NotificationsPage from "./components/NotificationsPage";
 import { Toaster } from "./components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Generate time slots for 24 hours with 30-minute intervals
 const generateTimeSlots = () => {
   const slots = [];
   for (let hour = 0; hour < 24; hour++) {
     for (let min = 0; min < 60; min += 30) {
       const period = hour >= 12 ? 'p.m.' : 'a.m.';
       const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-      const time = `${displayHour}:${min.toString().padStart(2, '0')} ${period}`;
-      slots.push(time);
+      slots.push(`${displayHour}:${min.toString().padStart(2, '0')} ${period}`);
     }
   }
   return slots;
@@ -32,65 +33,66 @@ const generateTimeSlots = () => {
 
 const timeSlots = generateTimeSlots();
 
-const GuideView = () => {
+const GuideView = ({ onViewChange }) => {
   const [channels, setChannels] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchChannels();
-    fetchPrograms();
+    const fetchAll = async () => {
+      try {
+        const [chRes, prRes] = await Promise.all([
+          axios.get(`${API}/channels`),
+          axios.get(`${API}/programs`)
+        ]);
+        setChannels(chRes.data);
+        if (chRes.data.length > 0) setSelectedChannel(chRes.data[0]);
+        setPrograms(prRes.data);
+      } catch (e) {
+        console.error('Error fetching guide data:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
   }, []);
 
-  const fetchChannels = async () => {
-    try {
-      const response = await axios.get(`${API}/channels`);
-      setChannels(response.data);
-      if (response.data.length > 0 && !selectedChannel) {
-        setSelectedChannel(response.data[0]);
-      }
-    } catch (error) {
-      console.error('Error fetching channels:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPrograms = async () => {
-    try {
-      const response = await axios.get(`${API}/programs`);
-      setPrograms(response.data);
-    } catch (error) {
-      console.error('Error fetching programs:', error);
-    }
-  };
-
-  const handleChannelSelect = (channel) => {
-    setSelectedChannel(channel);
-  };
+  // Get current program for selected channel
+  const getCurrentProgram = useCallback(() => {
+    if (!selectedChannel || programs.length === 0) return null;
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const nowTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const chProgs = programs.filter(p => p.channel_id === selectedChannel.id && p.date === todayStr);
+    return chProgs.find(p => p.start_time <= nowTime) || chProgs[0] || null;
+  }, [selectedChannel, programs]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+      <div className="flex-1 bg-[#1a1a1a] flex items-center justify-center">
         <div className="text-white text-2xl">Loading guide...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a]">
+    <div className="flex-1 bg-[#1a1a1a] overflow-y-auto">
       <TopBar />
-      
-      <div className="pt-16 pl-28 pr-6 py-6">
-        {selectedChannel && <ChannelFeatured channel={selectedChannel} />}
+      <div className="pt-16 pl-8 pr-6 py-6">
+        {selectedChannel && (
+          <ChannelFeatured
+            channel={selectedChannel}
+            currentProgram={getCurrentProgram()}
+          />
+        )}
         {channels.length > 0 ? (
           <EPGGrid
             channels={channels}
             programs={programs}
-            timeSlots={timeSlots.slice(0, 14)} // Show 7 hours worth of slots
+            timeSlots={timeSlots.slice(0, 14)}
             selectedChannelId={selectedChannel?.id}
-            onChannelSelect={handleChannelSelect}
+            onChannelSelect={setSelectedChannel}
           />
         ) : (
           <div className="text-center text-gray-400 mt-20">
@@ -105,38 +107,62 @@ const GuideView = () => {
 
 const Home = () => {
   const [activeView, setActiveView] = useState('guide');
+  const navigate = useNavigate();
+
+  const handleViewChange = (viewId) => {
+    if (viewId === 'settings') {
+      navigate('/admin');
+      return;
+    }
+    setActiveView(viewId);
+  };
+
+  const renderView = () => {
+    switch (activeView) {
+      case 'guide':
+        return <GuideView onViewChange={handleViewChange} />;
+      case 'ondemand':
+        return <OnDemandPage onBack={() => setActiveView('guide')} />;
+      case 'recordings':
+        return <RecordingsPage userId={null} onBack={() => setActiveView('guide')} />;
+      case 'notifications':
+        return <NotificationsPage onBack={() => setActiveView('guide')} />;
+      case 'home':
+        return (
+          <div className="flex-1 bg-[#1a1a1a] flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-white text-4xl font-bold mb-4">Welcome</h1>
+              <p className="text-gray-400 text-lg">Select Guide to view TV channels</p>
+            </div>
+          </div>
+        );
+      case 'saved':
+        return (
+          <div className="flex-1 bg-[#1a1a1a] flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-white text-2xl mb-2">Saved</p>
+              <p className="text-gray-400 text-sm">Your saved programs will appear here</p>
+              <button onClick={() => setActiveView('guide')} className="mt-6 text-[#0056A8] hover:underline text-sm">← Back to Guide</button>
+            </div>
+          </div>
+        );
+      default:
+        return <GuideView onViewChange={handleViewChange} />;
+    }
+  };
 
   return (
-    <div className="relative">
-      <Sidebar activeView={activeView} setActiveView={setActiveView} />
-      {activeView === 'guide' ? (
-        <GuideView />
-      ) : activeView === 'settings' ? (
-        <Navigate to="/admin" replace />
-      ) : activeView === 'home' ? (
-        <div className="pl-20 pt-16 min-h-screen bg-[#1a1a1a] flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-white text-4xl font-bold mb-4">Welcome to IPTV Service</h1>
-            <p className="text-gray-400 text-lg">Select Guide to view TV channels</p>
-          </div>
-        </div>
-      ) : (
-        <div className="pl-20 pt-16 min-h-screen bg-[#1a1a1a] flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-white text-2xl">
-              {activeView.charAt(0).toUpperCase() + activeView.slice(1)} - Coming Soon
-            </p>
-            <p className="text-gray-400 text-sm mt-2">This feature will be available in future updates</p>
-          </div>
-        </div>
-      )}
+    <div className="flex min-h-screen bg-[#1a1a1a]">
+      <Sidebar activeView={activeView} onViewChange={handleViewChange} />
+      <div className="pl-20 flex-1 flex flex-col">
+        {renderView()}
+      </div>
     </div>
   );
 };
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
@@ -144,7 +170,6 @@ const ProtectedRoute = ({ children }) => {
       </div>
     );
   }
-
   return user ? children : <Navigate to="/admin/login" replace />;
 };
 
@@ -153,24 +178,18 @@ function AppContent() {
   const [checkingSetup, setCheckingSetup] = useState(true);
 
   useEffect(() => {
+    const checkSetupStatus = async () => {
+      try {
+        const response = await axios.get(`${API}/setup/status`);
+        setSetupCompleted(response.data.setup_completed);
+      } catch (error) {
+        setSetupCompleted(false);
+      } finally {
+        setCheckingSetup(false);
+      }
+    };
     checkSetupStatus();
   }, []);
-
-  const checkSetupStatus = async () => {
-    try {
-      const response = await axios.get(`${API}/setup/status`);
-      setSetupCompleted(response.data.setup_completed);
-    } catch (error) {
-      console.error('Error checking setup:', error);
-      setSetupCompleted(false);
-    } finally {
-      setCheckingSetup(false);
-    }
-  };
-
-  const handleSetupComplete = () => {
-    setSetupCompleted(true);
-  };
 
   if (checkingSetup) {
     return (
@@ -181,7 +200,7 @@ function AppContent() {
   }
 
   if (setupCompleted === false) {
-    return <SetupWizard onComplete={handleSetupComplete} />;
+    return <SetupWizard onComplete={() => setSetupCompleted(true)} />;
   }
 
   return (
@@ -190,14 +209,8 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/admin/login" element={<LoginPage />} />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
