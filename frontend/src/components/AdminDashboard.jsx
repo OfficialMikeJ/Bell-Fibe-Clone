@@ -299,6 +299,9 @@ const AdminDashboard = () => {
             <TabsTrigger value="devices" className="data-[state=active]:bg-[#0056A8]">
               Devices
             </TabsTrigger>
+            <TabsTrigger value="users" className="data-[state=active]:bg-[#0056A8]">
+              Users
+            </TabsTrigger>
             <TabsTrigger value="stats" className="data-[state=active]:bg-[#0056A8]">
               Statistics
             </TabsTrigger>
