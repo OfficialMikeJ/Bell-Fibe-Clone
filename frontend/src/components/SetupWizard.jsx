@@ -50,12 +50,19 @@ const SetupWizard = ({ onComplete }) => {
   }, []);
 
   const checkSystemRequirements = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(`${API}/setup/status`);
       setSystemCheck(response.data);
       
       const allMet = response.data.system_requirements.all_requirements_met;
       setRequirementsMet(allMet);
+      
+      if (allMet) {
+        toast.success('All system requirements met!');
+      } else {
+        toast.warning('Some requirements not met');
+      }
       
       if (response.data.setup_completed) {
         toast.info('Setup already completed');
@@ -64,6 +71,8 @@ const SetupWizard = ({ onComplete }) => {
     } catch (error) {
       console.error('Error checking system:', error);
       toast.error('Failed to check system requirements');
+    } finally {
+      setLoading(false);
     }
   };
 
