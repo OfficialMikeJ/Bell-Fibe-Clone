@@ -238,6 +238,32 @@ const AdminDashboard = () => {
       console.error('Error creating device:', error);
     }
   };
+  
+  const handleRefreshQR = async (deviceId, resetCode = false) => {
+    try {
+      const response = await axios.post(
+        `${API}/devices/refresh-qr`,
+        null,
+        {
+          params: { device_id: deviceId, reset_code: resetCode },
+          headers: getHeaders()
+        }
+      );
+      
+      setQrDialogData({
+        ...response.data,
+        device_id: deviceId,
+        action: resetCode ? 'reset' : 'refresh'
+      });
+      setIsQRDialogOpen(true);
+      
+      toast.success(resetCode ? 'QR code and activation code reset!' : 'QR code refreshed!');
+      fetchDevices();
+    } catch (error) {
+      toast.error('Failed to refresh QR code');
+      console.error('Error refreshing QR:', error);
+    }
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
