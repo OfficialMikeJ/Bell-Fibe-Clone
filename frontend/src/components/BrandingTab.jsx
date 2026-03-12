@@ -11,8 +11,6 @@ import { useService } from '../contexts/ServiceContext';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-const BRANDING_DIR = '/app/backend/uploads/branding';
-
 const BrandingTab = ({ token }) => {
   const { serviceName, updateServiceName } = useService();
   const [serviceCfg, setServiceCfg] = useState({ service_name: serviceName || '' });

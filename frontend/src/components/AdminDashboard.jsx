@@ -34,7 +34,10 @@ const AdminDashboard = () => {
   const [channelForm, setChannelForm] = useState({
     name: '',
     number: '',
-    description: ''
+    description: '',
+    quality_label: '1080p',
+    channel_type: 'live',
+    stream_url: ''
   });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
@@ -199,7 +202,10 @@ const AdminDashboard = () => {
     setChannelForm({
       name: channel.name,
       number: channel.number,
-      description: channel.description || ''
+      description: channel.description || '',
+      quality_label: channel.quality_label || '1080p',
+      channel_type: channel.channel_type || 'live',
+      stream_url: channel.stream_url || ''
     });
     setLogoPreview(channel.logo_path ? `${BACKEND_URL}${channel.logo_path}` : '');
     setIsChannelDialogOpen(true);
@@ -208,7 +214,7 @@ const AdminDashboard = () => {
   const handleAddNewChannel = () => {
     setIsEditMode(false);
     setEditingChannelId(null);
-    setChannelForm({ name: '', number: '', description: '' });
+    setChannelForm({ name: '', number: '', description: '', quality_label: '1080p', channel_type: 'live', stream_url: '' });
     setLogoFile(null);
     setLogoPreview('');
     setIsChannelDialogOpen(true);
