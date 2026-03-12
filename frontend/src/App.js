@@ -9,6 +9,7 @@ import ChannelFeatured from "./components/ChannelFeatured";
 import EPGGrid from "./components/EPGGrid";
 import LoginPage from "./components/LoginPage";
 import AdminDashboard from "./components/AdminDashboard";
+import SetupWizard from "./components/SetupWizard";
 import { Toaster } from "./components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
