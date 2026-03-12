@@ -193,8 +193,7 @@ const LoginPage = () => {
                     className="bg-[#3a3a3a] border-gray-600 text-white"
                   />
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">Demo: admin / admin123</span>
+                <div className="flex justify-end items-center">
                   <button
                     type="button"
                     data-testid="forgot-password-link"

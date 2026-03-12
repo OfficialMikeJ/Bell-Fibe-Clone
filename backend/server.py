@@ -1,15 +1,18 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import aiofiles
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List
 import uuid
 from datetime import datetime, timezone
+from functools import lru_cache
 
 # Import routes
 from routes.channels import router as channels_router
@@ -22,6 +25,8 @@ from routes.media import router as media_router
 from routes.vod import router as vod_router
 from routes.notifications import router as notifications_router
 from routes.recordings import router as recordings_router
+from routes.security import router as security_router
+from routes.stats import router as stats_router
 
 # Import security middleware
 from utils.https_middleware import HTTPSRedirectMiddleware, SecureHeadersMiddleware
@@ -94,11 +99,93 @@ app.include_router(media_router)
 app.include_router(vod_router)
 app.include_router(notifications_router)
 app.include_router(recordings_router)
+app.include_router(security_router)
+app.include_router(stats_router)
 
-# Mount uploads directory for serving files
+# Mount uploads directory for serving files with proper caching headers
 uploads_dir = Path("/app/backend/uploads")
-for subdir in ["media", "posters", "logos", "qr_codes", "branding", "notifications"]:
+for subdir in ["media", "posters", "logos", "qr_codes", "branding", "notifications", "cvr"]:
     (uploads_dir / subdir).mkdir(parents=True, exist_ok=True)
+
+# Custom media streaming with Range support, caching, and proper headers
+from fastapi.responses import FileResponse, StreamingResponse
+import aiofiles
+import hashlib
+from functools import lru_cache
+
+# In-memory metadata cache (RAM cache for file stats - avoids disk hits)
+@lru_cache(maxsize=512)
+def get_file_meta(file_path: str):
+    """Cache file metadata in RAM to avoid repeated disk stat() calls"""
+    p = Path(file_path)
+    if p.exists():
+        stat = p.stat()
+        return {"size": stat.st_size, "mtime": stat.st_mtime, "exists": True}
+    return {"exists": False}
+
+@app.get("/uploads/media/{filename}")
+async def serve_media(filename: str, request: Request):
+    """Stream media with Range support, proper caching headers for smooth playback"""
+    file_path = uploads_dir / "media" / filename
+    if not file_path.exists():
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="File not found")
+
+    file_size = file_path.stat().st_size
+    mime_type = "video/mp4"
+    if filename.endswith(".mkv"):
+        mime_type = "video/x-matroska"
+    elif filename.endswith(".ts"):
+        mime_type = "video/mp2t"
+    elif filename.endswith(".avi"):
+        mime_type = "video/x-msvideo"
+    elif filename.endswith(".mov"):
+        mime_type = "video/quicktime"
+
+    range_header = request.headers.get("range")
+    if range_header:
+        # Parse Range header: "bytes=start-end"
+        range_val = range_header.replace("bytes=", "")
+        parts = range_val.split("-")
+        start = int(parts[0]) if parts[0] else 0
+        end = int(parts[1]) if parts[1] else file_size - 1
+        end = min(end, file_size - 1)
+        chunk_size = end - start + 1
+
+        async def stream_chunk():
+            async with aiofiles.open(file_path, "rb") as f:
+                await f.seek(start)
+                remaining = chunk_size
+                while remaining > 0:
+                    read_size = min(65536, remaining)
+                    data = await f.read(read_size)
+                    if not data:
+                        break
+                    remaining -= len(data)
+                    yield data
+
+        headers = {
+            "Content-Range": f"bytes {start}-{end}/{file_size}",
+            "Accept-Ranges": "bytes",
+            "Content-Length": str(chunk_size),
+            "Content-Type": mime_type,
+            "Cache-Control": "public, max-age=86400",
+        }
+        return StreamingResponse(stream_chunk(), status_code=206, headers=headers)
+    else:
+        # Full file response with caching headers
+        return FileResponse(
+            str(file_path),
+            media_type=mime_type,
+            headers={
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(file_size),
+                "Cache-Control": "public, max-age=86400",
+                "X-Content-Type-Options": "nosniff",
+            }
+        )
+
+# Serve other uploads with caching
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 # Add security middleware (HTTPS enforcement and security headers)

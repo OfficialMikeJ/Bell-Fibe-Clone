@@ -17,6 +17,7 @@ import VODTab from './VODTab';
 import NotificationsTab from './NotificationsTab';
 import CVRTab from './CVRTab';
 import BrandingTab from './BrandingTab';
+import AnalyticsTab from './AnalyticsTab';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -344,6 +345,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="notifications" className="data-[state=active]:bg-[#0056A8]" data-testid="notifications-tab-trigger">Notifications</TabsTrigger>
             <TabsTrigger value="cvr" className="data-[state=active]:bg-[#0056A8]" data-testid="cvr-tab-trigger">CVR</TabsTrigger>
             <TabsTrigger value="stats" className="data-[state=active]:bg-[#0056A8]" data-testid="stats-tab-trigger">Statistics</TabsTrigger>
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-[#0056A8]" data-testid="analytics-tab-trigger">Analytics</TabsTrigger>
             <TabsTrigger value="branding" className="data-[state=active]:bg-[#0056A8]" data-testid="branding-tab-trigger">Branding</TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-[#0056A8]" data-testid="settings-tab-trigger">Settings</TabsTrigger>
           </TabsList>
@@ -602,6 +604,11 @@ const AdminDashboard = () => {
           {/* CVR Tab */}
           <TabsContent value="cvr">
             <CVRTab token={token} />
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <AnalyticsTab token={token} />
           </TabsContent>
 
           {/* Branding Tab */}

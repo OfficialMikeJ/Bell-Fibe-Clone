@@ -66,31 +66,41 @@ async def check_setup_status(db: AsyncIOMotorDatabase = Depends(get_db)):
 
 @router.post("/service-config")
 async def configure_service(
-    service_name: str,
-    domain_name: str = None,
+    service_name: Optional[str] = None,
+    domain_name: Optional[str] = None,
+    cvr_total_storage_gb: Optional[int] = None,
+    hours_request_min: Optional[int] = None,
+    hours_request_max: Optional[int] = None,
     db: AsyncIOMotorDatabase = Depends(get_db),
     admin: Admin = Depends(get_current_admin)
 ):
-    """Configure basic service settings"""
+    """Configure basic service settings - all fields optional, only provided fields updated"""
     config = await db.service_config.find_one({})
-    
+
+    update_fields = {}
+    if service_name is not None:
+        update_fields["service_name"] = service_name
+    if domain_name is not None:
+        update_fields["domain_name"] = domain_name
+    if cvr_total_storage_gb is not None:
+        update_fields["cvr_total_storage_gb"] = cvr_total_storage_gb
+    if hours_request_min is not None:
+        update_fields["hours_request_min"] = hours_request_min
+    if hours_request_max is not None:
+        update_fields["hours_request_max"] = hours_request_max
+
     if config:
-        # Update existing
-        await db.service_config.update_one(
-            {"_id": config["_id"]},
-            {"$set": {
-                "service_name": service_name,
-                "domain_name": domain_name
-            }}
-        )
+        if update_fields:
+            await db.service_config.update_one(
+                {"_id": config["_id"]},
+                {"$set": update_fields}
+            )
     else:
-        # Create new
-        service_config = ServiceConfig(
-            service_name=service_name,
-            domain_name=domain_name
-        )
-        await db.service_config.insert_one(service_config.dict())
-    
+        new_config = ServiceConfig(service_name=service_name or "TV Service")
+        doc = new_config.dict()
+        doc.update(update_fields)
+        await db.service_config.insert_one(doc)
+
     return {"message": "Service configured successfully"}
 
 @router.post("/admin")
@@ -193,7 +203,10 @@ async def get_service_config(db: AsyncIOMotorDatabase = Depends(get_db)):
     return {
         "service_name": config.get("service_name", "TV Service"),
         "domain_name": config.get("domain_name"),
-        "logo_path": config.get("logo_path")
+        "logo_path": config.get("logo_path"),
+        "cvr_total_storage_gb": config.get("cvr_total_storage_gb", 500),
+        "hours_request_min": config.get("hours_request_min", 96),
+        "hours_request_max": config.get("hours_request_max", 105),
     }
 
 @router.post("/bulk-channels")

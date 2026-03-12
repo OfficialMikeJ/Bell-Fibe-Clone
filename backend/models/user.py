@@ -21,6 +21,8 @@ class User(UserBase):
     account_status: str = "active"  # active, suspended, cancelled, trial
     max_devices: int = 3
     notes: Optional[str] = None
+    recording_hours_limit: int = 95  # Default 95 hours CVR storage
+    recording_hours_used: float = 0.0
     created_at: datetime = Field(default_factory=datetime.utcnow)
     last_login: Optional[datetime] = None
 
@@ -34,6 +36,8 @@ class UserUpdate(BaseModel):
     account_status: Optional[str] = None
     max_devices: Optional[int] = None
     notes: Optional[str] = None
+    recording_hours_limit: Optional[int] = None
+    recording_hours_used: Optional[float] = None
 
 class UserLogin(BaseModel):
     username: str
