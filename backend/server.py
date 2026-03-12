@@ -19,6 +19,9 @@ from routes.auth import router as auth_router
 from routes.setup import router as setup_router
 from routes.users import router as users_router
 
+# Import security middleware
+from utils.https_middleware import HTTPSRedirectMiddleware, SecureHeadersMiddleware
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
