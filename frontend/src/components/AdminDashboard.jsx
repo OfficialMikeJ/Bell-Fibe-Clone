@@ -798,6 +798,48 @@ const AdminDashboard = () => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* QR Refresh Dialog */}
+        <Dialog open={isQRDialogOpen} onOpenChange={setIsQRDialogOpen}>
+          <DialogContent className="bg-[#1a1a1a] border-gray-700 max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-2xl text-white">
+                {qrDialogData?.action === 'reset' ? 'QR Code Reset' : 'QR Code Refreshed'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              {qrDialogData?.qr_code_path && (
+                <div className="flex justify-center">
+                  <img
+                    src={`${BACKEND_URL}${qrDialogData.qr_code_path}`}
+                    alt="Device QR Code"
+                    className="w-64 h-64"
+                  />
+                </div>
+              )}
+              <div className="bg-[#2a2a2a] p-4 rounded">
+                <p className="text-xs text-gray-400 mb-1">Activation Code:</p>
+                <code className="text-white text-lg font-mono block text-center">
+                  {qrDialogData?.activation_code}
+                </code>
+              </div>
+              <p className="text-sm text-gray-400 text-center">
+                {qrDialogData?.action === 'reset' 
+                  ? 'New activation code generated. Previous code is now invalid.'
+                  : 'QR code regenerated with the same activation code.'}
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={() => setIsQRDialogOpen(false)}
+                className="bg-[#0056A8] hover:bg-[#0066c8] w-full"
+              >
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </div>
   );
