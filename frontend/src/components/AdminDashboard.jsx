@@ -537,6 +537,12 @@ const AdminDashboard = () => {
             </div>
           </TabsContent>
 
+          {/* Users Tab */}
+          <TabsContent value="users">
+            <UserManagementTab token={token} />
+          </TabsContent>
+
+
           {/* Statistics Tab */}
           <TabsContent value="stats" className="space-y-4">
             <h2 className="text-2xl font-semibold text-white mb-4">System Statistics</h2>
