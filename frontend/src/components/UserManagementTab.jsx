@@ -287,6 +287,24 @@ const UserManagementTab = ({ token }) => {
               />
             </div>
             
+            {isEditMode && (
+              <div className="space-y-2">
+                <Label htmlFor="account_status" className="text-white">Account Status</Label>
+                <select
+                  id="account_status"
+                  value={userForm.account_status}
+                  onChange={(e) => setUserForm({ ...userForm, account_status: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-md text-white"
+                >
+                  <option value="active">Active</option>
+                  <option value="trial">Trial</option>
+                  <option value="suspended">Suspended</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <p className="text-xs text-gray-400">Account status (no payment processing)</p>
+              </div>
+            )}
+            
             <DialogFooter>
               <Button
                 type="button"
