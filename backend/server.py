@@ -123,7 +123,7 @@ def get_file_meta(file_path: str):
         return {"size": stat.st_size, "mtime": stat.st_mtime, "exists": True}
     return {"exists": False}
 
-@app.get("/uploads/media/{filename}")
+@app.get("/api/uploads/media/{filename}")
 async def serve_media(filename: str, request: Request):
     """Stream media with Range support, proper caching headers for smooth playback"""
     file_path = uploads_dir / "media" / filename
@@ -186,6 +186,9 @@ async def serve_media(filename: str, request: Request):
         )
 
 # Serve other uploads with caching
+# Mount under /api/uploads for Kubernetes ingress routing (only /api/* reaches backend)
+app.mount("/api/uploads", StaticFiles(directory=str(uploads_dir)), name="api_uploads")
+# Keep /uploads mount for direct backend access (localhost:8001)
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 # Add security middleware (HTTPS enforcement and security headers)

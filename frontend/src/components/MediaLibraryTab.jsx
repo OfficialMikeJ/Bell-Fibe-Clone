@@ -189,7 +189,7 @@ const MediaLibraryTab = ({ token }) => {
                   {/* Poster */}
                   <div className="w-20 h-28 bg-[#3a3a3a] rounded-md overflow-hidden flex-shrink-0 flex items-center justify-center">
                     {item.poster_path ? (
-                      <img src={`${BACKEND_URL}${item.poster_path}`} alt={item.title} className="w-full h-full object-cover" />
+                      <img src={`${BACKEND_URL}/api${item.poster_path}`} alt={item.title} className="w-full h-full object-cover" />
                     ) : (
                       <Film className="w-8 h-8 text-gray-600" />
                     )}

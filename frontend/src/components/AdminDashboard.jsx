@@ -208,7 +208,7 @@ const AdminDashboard = () => {
       channel_type: channel.channel_type || 'live',
       stream_url: channel.stream_url || ''
     });
-    setLogoPreview(channel.logo_path ? `${BACKEND_URL}${channel.logo_path}` : '');
+    setLogoPreview(channel.logo_path ? `${BACKEND_URL}/api${channel.logo_path}` : '');
     setIsChannelDialogOpen(true);
   };
 
@@ -370,7 +370,7 @@ const AdminDashboard = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <img
-                          src={`${BACKEND_URL}${channel.logo_path}` || 'https://via.placeholder.com/80'}
+                          src={`${BACKEND_URL}/api${channel.logo_path}` || 'https://via.placeholder.com/80'}
                           alt={channel.name}
                           className="w-16 h-16 rounded-md object-cover"
                           onError={(e) => {
@@ -499,7 +499,7 @@ const AdminDashboard = () => {
                       </div>
                       {device.qr_code_path && (
                         <img
-                          src={`${BACKEND_URL}${device.qr_code_path}`}
+                          src={`${BACKEND_URL}/api${device.qr_code_path}`}
                           alt="QR Code"
                           className="w-20 h-20"
                         />
@@ -928,7 +928,7 @@ const AdminDashboard = () => {
               {qrDialogData?.qr_code_path && (
                 <div className="flex justify-center">
                   <img
-                    src={`${BACKEND_URL}${qrDialogData.qr_code_path}`}
+                    src={`${BACKEND_URL}/api${qrDialogData.qr_code_path}`}
                     alt="Device QR Code"
                     className="w-64 h-64"
                   />

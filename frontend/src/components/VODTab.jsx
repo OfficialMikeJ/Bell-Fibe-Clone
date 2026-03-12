@@ -142,7 +142,7 @@ const VODTab = ({ token }) => {
             <Card key={item.id} className="bg-[#2a2a2a] border-gray-700 overflow-hidden" data-testid={`vod-item-${item.id}`}>
               <div className="aspect-[2/3] bg-[#3a3a3a] relative">
                 {item.poster_path ? (
-                  <img src={`${BACKEND_URL}${item.poster_path}`} alt={item.title} className="w-full h-full object-cover" />
+                  <img src={`${BACKEND_URL}/api${item.poster_path}`} alt={item.title} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center"><Film className="w-12 h-12 text-gray-600" /></div>
                 )}

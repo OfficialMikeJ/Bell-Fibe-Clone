@@ -11,11 +11,11 @@ const ChannelFeatured = ({ channel, currentProgram }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const videoSrc = currentProgram?.media_file_path
-    ? `${BACKEND_URL}${currentProgram.media_file_path}`
+    ? `${BACKEND_URL}/api${currentProgram.media_file_path}`
     : channel?.stream_url || null;
 
   const posterSrc = currentProgram?.poster_path
-    ? `${BACKEND_URL}${currentProgram.poster_path}`
+    ? `${BACKEND_URL}/api${currentProgram.poster_path}`
     : null;
 
   useEffect(() => {
@@ -50,7 +50,7 @@ const ChannelFeatured = ({ channel, currentProgram }) => {
   if (!channel) return null;
 
   const logoSrc = channel.logo_path
-    ? (channel.logo_path.startsWith('http') ? channel.logo_path : `${BACKEND_URL}${channel.logo_path}`)
+    ? (channel.logo_path.startsWith('http') ? channel.logo_path : `${BACKEND_URL}/api${channel.logo_path}`)
     : null;
 
   return (

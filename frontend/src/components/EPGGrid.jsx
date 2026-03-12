@@ -62,7 +62,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
   const getLogoSrc = (channel) => {
     if (!channel.logo_path) return null;
     if (channel.logo_path.startsWith('http')) return channel.logo_path;
-    return `${BACKEND_URL}${channel.logo_path}`;
+    return `${BACKEND_URL}/api${channel.logo_path}`;
   };
 
   const getLogoFallback = (channel, e) => {
@@ -156,7 +156,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
                         >
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             {program.poster_path && (
-                              <img src={`${BACKEND_URL}${program.poster_path}`} alt=""
+                              <img src={`${BACKEND_URL}/api${program.poster_path}`} alt=""
                                 className="w-8 h-8 rounded object-cover flex-shrink-0" />
                             )}
                             <span className="text-white text-sm truncate">{program.title}</span>

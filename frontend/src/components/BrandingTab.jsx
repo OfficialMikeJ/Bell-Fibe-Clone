@@ -96,7 +96,7 @@ const BrandingTab = ({ token }) => {
           <div className="flex items-center gap-6">
             <div className="w-32 h-32 bg-[#3a3a3a] rounded-xl flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-600">
               {currentLogo ? (
-                <img src={`${BACKEND_URL}${currentLogo}`} alt="Service Logo" className="w-full h-full object-contain p-2" />
+                <img src={`${BACKEND_URL}/api${currentLogo}`} alt="Service Logo" className="w-full h-full object-contain p-2" />
               ) : (
                 <div className="text-center">
                   <Image className="w-10 h-10 text-gray-600 mx-auto mb-2" />

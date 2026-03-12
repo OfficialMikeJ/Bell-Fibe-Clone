@@ -80,7 +80,7 @@ const RecordingsPage = ({ userId, username, onBack }) => {
         </div>
         <div className="flex-1 flex items-center justify-center bg-black">
           {playingRec.file_path ? (
-            <video controls autoPlay className="max-w-full max-h-full" src={`${BACKEND_URL}${playingRec.file_path}`} />
+            <video controls autoPlay className="max-w-full max-h-full" src={`${BACKEND_URL}/api${playingRec.file_path}`} />
           ) : (
             <div className="text-center text-gray-400">
               <Video className="w-20 h-20 mx-auto mb-4 opacity-30" />

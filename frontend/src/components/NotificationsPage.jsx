@@ -88,7 +88,7 @@ const NotificationsPage = ({ onBack }) => {
                       <p className="text-gray-600 text-xs mt-2">{new Date(notif.created_at).toLocaleString()}</p>
                     </div>
                     {notif.image_path && (
-                      <img src={`${BACKEND_URL}${notif.image_path}`} alt=""
+                      <img src={`${BACKEND_URL}/api${notif.image_path}`} alt=""
                         className="w-20 h-20 object-cover rounded-lg flex-shrink-0" />
                     )}
                   </div>

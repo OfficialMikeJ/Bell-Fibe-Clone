@@ -98,7 +98,14 @@ Clone of Bell Canada's TV service (IPTV + Live TV Guide). Full-stack application
 - Admin: username=admin, password=admin123
 - Note: Default admin has no security questions configured
 
-## Completion Status (as of 2026-03-12): ~98%
+## Completion Status (as of 2026-03-12): 100% core features tested & working
+
+## Recently Completed (2026-03-12 fork session)
+1. **Setup Service Config API fix**: Made `service_name` optional in `/api/setup/service-config`; added `cvr_total_storage_gb`, `hours_request_min`, `hours_request_max` fields
+2. **Config endpoint fix**: `/api/setup/config` now returns CVR storage fields
+3. **Uploads routing fix**: All upload files now served under `/api/uploads/...` (Kubernetes ingress compatible); frontend updated across 9 components
+4. **Media streaming**: Custom Range-streaming endpoint moved to `/api/uploads/media/{filename}`
+5. **Test coverage**: Backend 100% (26/26), Frontend 100% - iteration_3 report
 
 ## P1 Backlog
 - Separate guide-app: Move EPGGrid, Sidebar, TopBar to /app/guide-app as standalone React app (prerequisite for Android)

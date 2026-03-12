@@ -47,7 +47,7 @@ const OnDemandPage = ({ onBack }) => {
               controls
               autoPlay
               className="max-w-full max-h-full"
-              src={`${BACKEND_URL}${playingItem.media_file_path}`}
+              src={`${BACKEND_URL}/api${playingItem.media_file_path}`}
             />
           ) : (
             <div className="text-center text-gray-400">
@@ -125,7 +125,7 @@ const VODCard = ({ item, onPlay }) => (
   <div className="group cursor-pointer" onClick={onPlay} data-testid={`vod-card-${item.id}`}>
     <div className="aspect-[2/3] bg-[#2a2a2a] rounded-lg overflow-hidden relative mb-2">
       {item.poster_path ? (
-        <img src={`${BACKEND_URL}${item.poster_path}`} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <img src={`${BACKEND_URL}/api${item.poster_path}`} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0056A8] to-[#003d7a]">
           <Play className="w-12 h-12 text-white opacity-60" />
