@@ -24,6 +24,14 @@ class ServiceConfig(BaseModel):
     domain_name: Optional[str] = None
     min_channels_configured: bool = False
     admin_configured: bool = False
+
+    # CVR Storage
+    cvr_total_storage_gb: Optional[int] = 500
+    hours_request_min: Optional[int] = 96
+    hours_request_max: Optional[int] = 105
+
+    # External Services
+    uptime_kuma_url: Optional[str] = None
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

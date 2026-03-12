@@ -8,19 +8,22 @@ Clone of Bell Canada's TV service (IPTV + Live TV Guide). Full-stack application
 /app
 ├── backend/           FastAPI (Python) + MongoDB
 │   ├── routes/        auth, channels, programs, devices, users, setup,
-│   │                  media, vod, notifications, recordings
+│   │                  media, vod, notifications, recordings, tickets, faq
 │   ├── models/        admin, channel, device, program, service_config, user,
-│   │                  media, vod, notification, recording
+│   │                  media, vod, notification, recording, ticket, faq
 │   └── utils/         geo_location, https_middleware, qr_generator,
 │                      security, two_factor, media_utils (FFmpeg wrapper)
 ├── frontend/          React + TailwindCSS + Shadcn UI
 │   └── src/
-│       ├── components/ AdminDashboard (11 tabs), LoginPage, SettingsTab,
+│       ├── components/ AdminDashboard (14 tabs), LoginPage, SettingsTab,
 │       │               UserManagementTab, TwoFactorSetup, SetupWizard,
 │       │               EPGGrid, Sidebar, TopBar, ChannelFeatured,
 │       │               MediaLibraryTab, VODTab, NotificationsTab,
-│       │               CVRTab, BrandingTab,
+│       │               CVRTab, BrandingTab, AnalyticsTab,
+│       │               admin/TicketsTab, admin/FAQTab
 │       │               OnDemandPage, RecordingsPage, NotificationsPage
+│       ├── pages/      ActivatePage, PortalLayout, PortalHome,
+│       │               PortalFAQ, PortalSupport, PortalStatus
 │       └── contexts/   AuthContext, ServiceContext
 ├── guide-app/         Placeholder for standalone guide app (future)
 └── android/           Placeholder for Android wrapper (future)
@@ -35,19 +38,44 @@ Clone of Bell Canada's TV service (IPTV + Live TV Guide). Full-stack application
 - Master Admin PIN for sidebar locking
 - All admin API endpoints secured with Bearer token auth
 - Canada-only geo-fencing for device activation
+- Portal login via QR activation code (no username/password)
 
-### Admin Dashboard (11 tabs)
+### Admin Dashboard (14 tabs)
 1. **Channels** - CRUD with logo upload, quality label (720p/720p60/1080p/1080p60/1440p/1440p60/4K/4K60), channel type (live/VOD), stream URL
 2. **EPG Programs** - Create/delete with media file link (auto-fills duration from FFmpeg), poster display
-3. **Media Library** - Upload video files (FFmpeg auto-detects duration/resolution/fps/quality), poster upload, metadata CRUD (title/description/type/genre/year/rating)
-4. **VOD** - VOD catalog management (separate from live channels), link to media library, featured flag, poster
-5. **Devices** - QR code generation, Refresh QR, Reset activation code, geo-location display
+3. **Media Library** - Upload video files (FFmpeg auto-detects duration/resolution/fps/quality), poster upload, metadata CRUD
+4. **VOD** - VOD catalog management, link to media library, featured flag, poster
+5. **Devices** - QR code generation, full UUID display, geo (City, Province, Country), Public IP with Static/Dynamic indicator, User ID, Refresh/Reset QR
 6. **Users** - Full CRUD with status (active/suspended/trial/cancelled), notes, max devices
-7. **Notifications** - Create/toggle/delete notifications (Movie/TV Show/Mini Series/Limited Series/System types)
-8. **CVR** - View all user recordings, update status (scheduled→completed/failed), delete
-9. **Statistics** - Total channels, programs, active devices
-10. **Branding** - Service logo upload (.png/.jpg), service name (saved to DB), Master PIN setup
-11. **Settings** - 2FA setup, domain configuration, account info
+7. **Notifications** - Create/toggle/delete notifications
+8. **CVR** - View all user recordings, status management, storage config, user hour requests
+9. **Support Tickets** - Color-coded priority (Critical/High/Medium/Info/Resolved), status tags (#Open/#In-Progress/#Resolved/#Closed), ticket types, admin reply with Admin ✓ badge, IP cross-reference
+10. **FAQ** - Manage FAQ articles (question/answer/category/order/visibility), shown in portal
+11. **Statistics** - Total channels, programs, active devices
+12. **Analytics** - Charts for content types, genres, channel popularity, storage, recording hours
+13. **Branding** - Service logo upload, service name, Master PIN setup
+14. **Settings** - 2FA setup, domain config, Uptime Kuma status page URL, account info
+
+### Customer Portal (/portal)
+- QR code login (activation code → user_id session)
+- FAQ page with search and category accordion
+- Support ticket submission + My Tickets view (with ticket types)
+- Service Status page (embeds Uptime Kuma status page)
+
+### Self-Serve Activation (/activate)
+- Customer scans QR → opens /activate?code={activation_code}
+- Device lookup, Canada geo-check, confirmation flow
+- Shows User ID after activation
+
+### QR Code System
+- QR codes encode activation URL: {service_domain}/activate?code={activation_code}
+- Self-service: no admin visit required
+- Portal login: enter activation code → get user_id session
+
+### Uploads Routing
+- All uploaded files served under /api/uploads/* (Kubernetes ingress compatible)
+- Media streaming with Range headers at /api/uploads/media/{filename}
+- RAM caching for file metadata
 
 ### TV Guide (Customer-facing Sidebar - 7 items)
 - **Home** - Welcome page

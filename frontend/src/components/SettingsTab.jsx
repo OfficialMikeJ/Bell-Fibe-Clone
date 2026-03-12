@@ -62,7 +62,7 @@ const SettingsTab = ({ token }) => {
           params: {
             service_name: serviceConfig.service_name,
             domain_name: serviceConfig.custom_domain,
-            uptime_kuma_url: serviceConfig.uptime_kuma_url || undefined,
+            uptime_kuma_url: serviceConfig.uptime_kuma_url,
           },
           headers: getHeaders()
         }
