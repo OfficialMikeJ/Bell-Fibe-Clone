@@ -7,9 +7,10 @@
 #### **User Management**
 - Create customer accounts
 - Set device limits per user
-- Manage subscription status
+- Manage account status (active, trial, suspended, cancelled)
 - View user devices
 - Edit user details
+- **Note**: Account status is for management only - no payment processing integrated
 
 #### **Device Management**
 - Generate activation QR codes
