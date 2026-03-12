@@ -1,0 +1,53 @@
+{
+  "summary": "Comprehensive testing of Bell Canada TV Service Clone new customer features: registration flow, customer login, PIN-based device activation with IP lockout, refresh PIN, My Account dashboard, and admin customer management. All 26 backend tests pass (100%). All frontend flows verified and working correctly via Playwright.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/customer/activate-with-pin",
+        "issue": "IP-based lockout state persists across test runs (45-min lockout). Future test runs will fail if IP is still locked from previous run. Not a code bug - a testing infra concern. Mitigation: clear pin_attempt_log collection in MongoDB before running backend tests.",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_customer_features_iter5.py",
+    "/app/test_reports/pytest/pytest_results_iter5.xml"
+  ],
+  "action_items": [
+    "TESTING INFRA NOTE: Before running backend tests for customer PIN activation, ensure pin_attempt_log collection is cleared (IP lockout from previous runs blocks new activation tests). Add MongoDB cleanup step or admin API endpoint to clear lockouts for testing."
+  ],
+  "critical_code_review_comments": [
+    "IP LOCKOUT PERSISTENCE: The pin_attempt_log collection persists IP-based lockout state indefinitely (until 45-min window expires). If the same IP (e.g. test container) runs tests repeatedly, activation tests will fail after 3 bad PINs until lockout expires. Consider adding an admin API endpoint to clear lockout records for a specific IP for testing purposes.",
+    "QR CODE SERVING: QR code served at ${BACKEND_URL}/api/uploads/qr_codes/{file} - this works correctly because server.py likely mounts the /uploads directory under /api. Verified working in screenshots.",
+    "CODE QUALITY: customer.py is 379 lines - within acceptable range. No major DRY violations."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_customer_features_iter5.py"
+  ],
+  "success_rate": {
+    "backend": "100% (26/26 tests pass)",
+    "frontend": "100% - All flows verified: /register landing page, registration form with device brand/type/disclaimer, success page with PIN, /customer-login, /my-account redirect when unauthenticated, /my-account with large PIN display + QR code, /activate mode selection (PIN vs code), /activate?pin=XXXXX pre-fill, E2E PIN activation success"
+  },
+  "test_credentials": {
+    "admin": "admin / admin123",
+    "known_customer": "john.test@example.com / TestPass123",
+    "ui_test_customer": "ui.test.356806@example.com / UITestPass123! (registered during UI testing, PIN used for E2E activation)"
+  },
+  "seed_data_creation": "Two test customers created during testing: (1) test.customer.XXXXXX@example.com via backend pytest (registered + suspended/reactivated + PIN activated via API), (2) ui.test.356806@example.com via frontend UI test (registered and PIN 189120 used for E2E activation). Lockout records cleared twice (pre-existed from previous iteration + re-triggered by lockout test).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration 5 complete. All new customer features verified: registration, login, PIN activation with lockout, refresh PIN, My Account dashboard, Activate page (both mode selection and pre-fill via ?pin=). Backend: 26 tests in test_customer_features_iter5.py all pass. IMPORTANT: Before running tests, clear pin_attempt_log collection (IP lockout from lockout test blocks activation tests on next run). John Smith (john.test@example.com) account: status=active, is_activated=true, PIN=849008. The lockout test runs 3 bad PINs so current test IP IS locked again after test run - clear it before next run. Admin endpoints work: list customers (GET /api/customer/admin/all), update status (PUT /api/customer/admin/{id}/status?status=suspended/active/pending).",
+  "rca_of_issue": {
+    "IP_Lockout_Test_State": {
+      "root_cause": "The test_lockout_after_three_bad_pins test submits 3 wrong PINs which locks the test container's IP in pin_attempt_log for 45 minutes. On the next test run, test_activate_with_valid_pin fails with 429 because the IP is still locked from the previous run.",
+      "reproduction": "1. Run pytest test_customer_features_iter5.py. 2. All tests pass. 3. Run pytest again immediately. 4. TestPinActivation tests fail with 429 Too Many Failed Attempts.",
+      "mitigation": "Add a MongoDB cleanup step before TestPinActivation class (or at module start) that deletes all pin_attempt_log records. This was done manually during testing by running a Python script to clear the collection."
+    }
+  }
+}

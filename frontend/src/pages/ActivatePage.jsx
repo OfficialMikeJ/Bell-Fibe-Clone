@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { CheckCircle, XCircle, Loader, Tv, QrCode, Copy } from 'lucide-react';
+import { CheckCircle, XCircle, Loader, Tv, QrCode, Copy, Lock } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -10,19 +10,27 @@ export default function ActivatePage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const code = searchParams.get('code') || '';
+  const prefilledPin = searchParams.get('pin') || '';
 
-  const [step, setStep] = useState('lookup'); // lookup | confirm | activating | success | error
+  // Mode: 'code' = activation_code (admin-created device), 'pin' = 6-digit customer PIN
+  const [mode, setMode] = useState(prefilledPin ? 'pin' : (code ? 'code' : 'choose'));
+  const [step, setStep] = useState('lookup'); // lookup | confirm | activating | success | error | already-active
   const [deviceInfo, setDeviceInfo] = useState(null);
   const [activationCode, setActivationCode] = useState(code);
+  const [pin, setPin] = useState(prefilledPin);
   const [errorMsg, setErrorMsg] = useState('');
   const [userId, setUserId] = useState('');
   const [copied, setCopied] = useState(false);
+  const [lockoutMinutes, setLockoutMinutes] = useState(0);
 
   useEffect(() => {
-    if (code) {
+    if (prefilledPin) {
+      setMode('pin');
+      setStep('pin-confirm');
+    } else if (code) {
       lookupDevice(code);
     }
-  }, [code]);
+  }, [code, prefilledPin]);
 
   const lookupDevice = async (c) => {
     try {
@@ -36,6 +44,31 @@ export default function ActivatePage() {
     } catch {
       setStep('error');
       setErrorMsg('Invalid or expired activation code. Please check your code and try again.');
+    }
+  };
+
+  const handlePinActivate = async () => {
+    if (!pin || pin.length !== 6) {
+      setErrorMsg('Please enter all 6 digits.');
+      return;
+    }
+    setStep('activating');
+    setErrorMsg('');
+    try {
+      const res = await axios.post(`${API}/customer/activate-with-pin?pin=${pin}`);
+      setUserId(res.data.user_id);
+      setStep('success');
+    } catch (err) {
+      const detail = err.response?.data?.detail || 'Activation failed.';
+      const status = err.response?.status;
+      if (status === 429) {
+        const match = detail.match(/(\d+) minute/);
+        setLockoutMinutes(match ? parseInt(match[1]) : 45);
+        setStep('locked');
+      } else {
+        setStep('error');
+        setErrorMsg(detail);
+      }
     }
   };
 
@@ -82,8 +115,114 @@ export default function ActivatePage() {
           <p className="text-gray-500 mt-1 text-sm">Activate your IPTV box to start watching</p>
         </div>
 
+        {/* Mode: Choose activation method */}
+        {mode === 'choose' && step === 'lookup' && !code && !prefilledPin && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600 text-center mb-2">How would you like to activate?</p>
+            <button
+              onClick={() => setMode('pin')}
+              className="w-full flex items-center gap-3 p-4 border-2 border-[#0056A8] rounded-xl hover:bg-blue-50 transition-colors"
+              data-testid="choose-pin-mode-btn"
+            >
+              <div className="w-10 h-10 bg-[#0056A8] rounded-lg flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-900">6-Digit PIN</p>
+                <p className="text-xs text-gray-500">Enter the PIN from your My Account page</p>
+              </div>
+            </button>
+            <button
+              onClick={() => setMode('code')}
+              className="w-full flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              data-testid="choose-code-mode-btn"
+            >
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
+                <QrCode className="w-5 h-5 text-gray-600" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-900">Activation Code</p>
+                <p className="text-xs text-gray-500">Use an admin-provided activation code</p>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* Mode: PIN entry */}
+        {mode === 'pin' && (step === 'lookup' || step === 'pin-confirm') && (
+          <div className="space-y-5">
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Enter the <strong>6-digit PIN</strong> from your account page at <strong>/my-account</strong></p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-center">Activation PIN</label>
+              <div className="flex justify-center gap-2">
+                {[0,1,2,3,4,5].map(i => (
+                  <input
+                    key={i}
+                    id={`pin-digit-${i}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={pin[i] || ''}
+                    onChange={e => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      const arr = pin.split('');
+                      arr[i] = val;
+                      const newPin = arr.join('').slice(0, 6);
+                      setPin(newPin);
+                      if (val && i < 5) document.getElementById(`pin-digit-${i+1}`)?.focus();
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Backspace' && !pin[i] && i > 0) {
+                        document.getElementById(`pin-digit-${i-1}`)?.focus();
+                      }
+                    }}
+                    className="w-12 h-14 text-center text-xl font-bold border-2 border-gray-300 rounded-xl focus:outline-none focus:border-[#0056A8] text-gray-900"
+                    data-testid={`pin-input-digit-${i}`}
+                  />
+                ))}
+              </div>
+            </div>
+            {errorMsg && (
+              <div className="flex items-start gap-2 text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
+                <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                {errorMsg}
+              </div>
+            )}
+            <button
+              onClick={handlePinActivate}
+              disabled={pin.length !== 6}
+              className="w-full bg-[#0056A8] text-white py-3 rounded-xl font-semibold hover:bg-[#0066c8] transition-colors disabled:opacity-50"
+              data-testid="activate-with-pin-btn"
+            >
+              Activate with PIN
+            </button>
+            <button onClick={() => setMode('choose')} className="w-full text-sm text-gray-400 hover:text-gray-600">
+              ← Other activation methods
+            </button>
+          </div>
+        )}
+
+        {/* Lockout screen */}
+        {step === 'locked' && (
+          <div className="text-center space-y-4">
+            <Lock className="w-16 h-16 text-red-500 mx-auto" />
+            <h2 className="text-xl font-bold text-gray-900">Account Locked</h2>
+            <p className="text-gray-600 text-sm">
+              Too many failed activation attempts. Your account is locked for <strong>{lockoutMinutes} minute(s)</strong>.
+            </p>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700">
+              Please wait {lockoutMinutes} minute(s) before trying again. If you need help, visit the support portal.
+            </div>
+            <button onClick={() => navigate('/portal/support')} className="w-full text-[#0056A8] text-sm underline">
+              Contact Support
+            </button>
+          </div>
+        )}
+
         {/* Step: Enter code manually */}
-        {step === 'lookup' && !code && (
+        {mode === 'code' && step === 'lookup' && !code && (
           <form onSubmit={handleLookup} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -100,7 +239,7 @@ export default function ActivatePage() {
                   data-testid="activation-code-input"
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-1">Find this code on your device screen or QR sticker</p>
+              <p className="text-xs text-gray-400 mt-1">Enter the activation code provided by your service admin</p>
             </div>
             <button
               type="submit"
@@ -108,6 +247,9 @@ export default function ActivatePage() {
               data-testid="lookup-device-btn"
             >
               Look Up Device
+            </button>
+            <button type="button" onClick={() => setMode('choose')} className="w-full text-sm text-gray-400 hover:text-gray-600">
+              ← Other activation methods
             </button>
           </form>
         )}

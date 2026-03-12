@@ -20,6 +20,9 @@ import PortalHome from "./pages/PortalHome";
 import PortalFAQ from "./pages/PortalFAQ";
 import PortalSupport from "./pages/PortalSupport";
 import PortalStatus from "./pages/PortalStatus";
+import RegisterPage from "./pages/RegisterPage";
+import CustomerLoginPage from "./pages/CustomerLoginPage";
+import MyAccountPage from "./pages/MyAccountPage";
 import { Toaster } from "./components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -214,6 +217,9 @@ function AppContent() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/customer-login" element={<CustomerLoginPage />} />
+          <Route path="/my-account" element={<MyAccountPage />} />
           <Route path="/activate" element={<ActivatePage />} />
           <Route path="/portal" element={<PortalLayout />}>
             <Route index element={<PortalHome />} />
