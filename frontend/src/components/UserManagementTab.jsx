@@ -83,7 +83,8 @@ const UserManagementTab = ({ token }) => {
       email: user.email,
       password: '',
       full_name: user.full_name || '',
-      max_devices: user.max_devices || 3
+      max_devices: user.max_devices || 3,
+      account_status: user.account_status || user.subscription_status || 'active'
     });
     setIsUserDialogOpen(true);
   };
