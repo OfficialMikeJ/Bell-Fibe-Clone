@@ -335,7 +335,7 @@ const AdminDashboard = () => {
                           alt={channel.name}
                           className="w-16 h-16 rounded-md object-cover"
                           onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/80/0056A8/ffffff?text=' + channel.number;
+                            e.target.src = `data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%230056A8'/><text x='40' y='45' font-family='Arial' font-size='14' fill='white' text-anchor='middle'>${channel.number}</text></svg>`;
                           }}
                         />
                         <div>

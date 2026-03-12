@@ -1,79 +1,105 @@
-# TV Service System - Product Requirements Document
+# IPTV Service - Product Requirements Document
 
-## Features Overview
+## Original Problem Statement
+Clone of Bell Canada's TV service (IPTV + Live TV Guide). Full-stack application with admin dashboard and customer-facing EPG grid. No copyrighted materials (logos/channel names).
 
-### Core System Features
+## Architecture
+```
+/app
+├── backend/           FastAPI (Python) + MongoDB
+│   ├── routes/        auth, channels, programs, devices, users, setup
+│   ├── models/        admin, channel, device, program, service_config, user
+│   └── utils/         geo_location, https_middleware, qr_generator, security, two_factor
+├── frontend/          React + TailwindCSS + Shadcn UI
+│   └── src/
+│       ├── components/ AdminDashboard, LoginPage, SettingsTab, UserManagementTab,
+│       │               TwoFactorSetup, SetupWizard, EPGGrid, Sidebar, TopBar, ChannelFeatured
+│       └── contexts/   AuthContext, ServiceContext
+├── guide-app/         Placeholder for future standalone guide app
+└── android/           Placeholder for Android wrapper
+```
 
-#### **User Management**
-- Create customer accounts
-- Set device limits per user
-- Manage account status (active, trial, suspended, cancelled)
-- View user devices
-- Edit user details
-- **Note**: Account status is for management only - no payment processing integrated
+## Core Features - Implemented
 
-#### **Device Management**
-- Generate activation QR codes
-- Refresh QR codes (same activation code)
-- Reset activation codes (new code + QR)
+### Authentication & Security
+- JWT-based admin authentication
+- Two-Factor Authentication (Google Authenticator / TOTP)
+- Password reset via security questions
+- Route protection (admin routes require JWT)
+- All admin API endpoints secured with Bearer token auth
+- Canada-only geo-fencing for device activation
+
+### Admin Dashboard (6 tabs)
+- **Channels**: CRUD with logo upload, inline SVG fallback for logos
+- **EPG Programs**: Create/delete programs with date/time/duration/channel
+- **Devices**: QR code generation, Refresh QR, Reset activation code, geo-location display
+- **Users**: Full CRUD with status (active/suspended/trial/cancelled), notes, max devices
+- **Statistics**: Total channels, programs, active devices
+- **Settings**: Service name config (saved to DB + ServiceContext), 2FA enable/disable, domain config
+
+### TV Guide (Customer-facing)
+- EPG grid with 30-minute time slots
+- Sidebar navigation (Guide, Home, Coming Soon items)
+- Dynamic service name from DB via ServiceContext
+- Channel featured display
+
+### Device Management
+- QR code activation system
+- MAC address + UUID tracking
 - Geo-location validation (Canada only)
-- IP tracking and history
-- MAC address binding
+- IP history tracking
 
-#### **Channel & EPG Management**
-- Channel creation with logo upload
-- EPG program scheduling (7-day, 30-min intervals)
-- Bulk channel operations
-- Program guide display
-
-#### **Authentication & Security**
-- Admin authentication with JWT
-- Two-factor authentication (2FA) support
-- Security question-based password reset
-- Session management
-- Role-based access control
-
-#### **Setup & Configuration**
-- Initial setup wizard (5 steps)
-- Service name configuration
-- System requirements validation
-- Bulk channel creation during setup
+### Setup Wizard
+- Multi-step guided setup
+- System requirements check
+- Service naming
 - Admin account creation with security questions
 
-## Technical Requirements
+## Key Technical Decisions
+- Frontend uses ServiceContext to load service name from `/api/setup/config`
+- Setup completion requires: service_configured=True AND admin_exists (no longer requires 25 channels)
+- Channel logo fallback: inline SVG data URI (no external URL dependency)
 
-### Backend API
-- FastAPI framework
-- MongoDB database
-- JWT authentication
-- RESTful API design
-- Comprehensive error handling
+## Database Collections
+- `admins`: username, password_hash, security_questions, two_fa_secret, two_fa_enabled
+- `users`: username, email, full_name, account_status, max_devices, notes, is_active
+- `service_configs`: setup_completed, service_name, domain_name
+- `channels`: name, number, description, logo_path
+- `epg_programs`: channel_id, title, description, start_time, end_time, date, duration_minutes
+- `devices`: device_name, mac_address, device_uuid, activation_code, qr_code_path, status, user_id, ip_history
 
-### Frontend
-- React.js with modern hooks
-- Responsive design
-- Real-time updates
-- Interactive setup wizard
-- Admin dashboard interface
+## API Endpoints
+- POST /api/auth/login (with optional two_fa_code)
+- GET /api/auth/verify
+- POST /api/auth/password-reset
+- GET /api/auth/security-questions/{username}
+- POST /api/auth/2fa/setup, /enable, /disable
+- GET/POST/PUT/DELETE /api/channels (auth required for write)
+- GET/POST/DELETE /api/programs (auth required)
+- GET/POST /api/devices (auth required)
+- POST /api/devices/refresh-qr (auth required)
+- POST /api/devices/activate (public - for IPTV boxes)
+- GET /api/devices/guide/{device_id} (public - geo-validated)
+- GET/POST/PUT/DELETE /api/users (all auth required)
+- GET /api/setup/status
+- GET /api/setup/config
+- POST /api/setup/service-config (auth required)
 
-### Security
-- HTTPS enforcement
-- Input validation
-- SQL injection prevention
-- XSS protection
-- Rate limiting
+## Test Credentials
+- Admin: username=admin, password=admin123
+- Note: Default admin has no security questions (created by auto-setup)
 
-## Deployment Requirements
+## Completion Status (as of 2026-03-12)
+Estimated ~98% complete
 
-### System Requirements
-- Python 3.11+
-- Node.js 18+
-- MongoDB 5.0+
-- Supervisor for process management
+## P0 Remaining
+- None - all core features implemented and tested
 
-### Production Considerations
-- SSL/TLS certificates
-- Reverse proxy configuration
-- Database authentication
-- Backup strategies
-- Monitoring and logging
+## P1 Backlog
+- Separate guide-app: Move EPGGrid, Sidebar, TopBar to /app/guide-app as standalone React app
+- Android app wrapper: Package guide-app using /app/android folder
+
+## Future (P2)
+- CVR (Cloud Video Recorder) feature - documented in /app/FUTURE_DEVELOPMENT.md
+- Public customer registration website
+- Add security questions to default admin account

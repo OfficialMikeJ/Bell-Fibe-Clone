@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Header
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from models.service_config import ServiceConfig, ServiceConfigUpdate
 from models.admin import AdminCreate, Admin
-from utils.security import get_password_hash
+from utils.security import get_password_hash, verify_token
 from utils.system_check import get_setup_status
+from typing import Optional
 import shutil
 from pathlib import Path
 import uuid
@@ -13,6 +14,30 @@ router = APIRouter(prefix="/api/setup", tags=["setup"])
 async def get_db():
     from server import db
     return db
+
+async def get_current_admin_optional(authorization: Optional[str] = Header(None), db: AsyncIOMotorDatabase = Depends(get_db)):
+    """Optional auth - returns admin if authenticated, None otherwise"""
+    if not authorization or not authorization.startswith('Bearer '):
+        return None
+    token = authorization.replace('Bearer ', '')
+    payload = verify_token(token)
+    if not payload:
+        return None
+    admin = await db.admins.find_one({"username": payload.get("sub")})
+    return Admin(**admin) if admin else None
+
+async def get_current_admin(authorization: Optional[str] = Header(None), db: AsyncIOMotorDatabase = Depends(get_db)):
+    """Require admin auth"""
+    if not authorization or not authorization.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.replace('Bearer ', '')
+    payload = verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    admin = await db.admins.find_one({"username": payload.get("sub")})
+    if not admin:
+        raise HTTPException(status_code=401, detail="Admin not found")
+    return Admin(**admin)
 
 @router.get("/status")
 async def check_setup_status(db: AsyncIOMotorDatabase = Depends(get_db)):
@@ -43,7 +68,8 @@ async def check_setup_status(db: AsyncIOMotorDatabase = Depends(get_db)):
 async def configure_service(
     service_name: str,
     domain_name: str = None,
-    db: AsyncIOMotorDatabase = Depends(get_db)
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    admin: Admin = Depends(get_current_admin)
 ):
     """Configure basic service settings"""
     config = await db.service_config.find_one({})

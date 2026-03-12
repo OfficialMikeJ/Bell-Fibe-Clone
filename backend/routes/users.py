@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Header
 from models.user import User, UserCreate, UserUpdate, UserLogin
-from typing import List
+from models.admin import Admin
+from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from utils.security import verify_password, get_password_hash, create_access_token
+from utils.security import verify_password, get_password_hash, create_access_token, verify_token
 from datetime import datetime
 
 router = APIRouter(prefix="/api/users", tags=["users"])
@@ -11,10 +12,23 @@ async def get_db():
     from server import db
     return db
 
+async def get_current_admin(authorization: Optional[str] = Header(None), db: AsyncIOMotorDatabase = Depends(get_db)):
+    if not authorization or not authorization.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.replace('Bearer ', '')
+    payload = verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    admin = await db.admins.find_one({"username": payload.get("sub")})
+    if not admin:
+        raise HTTPException(status_code=401, detail="Admin not found")
+    return Admin(**admin)
+
 @router.post("", response_model=User)
 async def create_user(
     user: UserCreate,
-    db: AsyncIOMotorDatabase = Depends(get_db)
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    admin: Admin = Depends(get_current_admin)
 ):
     """Create a new user account"""
     # Check if username exists
@@ -36,13 +50,13 @@ async def create_user(
     return user_obj
 
 @router.get("", response_model=List[User])
-async def get_users(db: AsyncIOMotorDatabase = Depends(get_db)):
+async def get_users(db: AsyncIOMotorDatabase = Depends(get_db), admin: Admin = Depends(get_current_admin)):
     """Get all users"""
     users = await db.users.find().sort("created_at", -1).to_list(1000)
     return [User(**user) for user in users]
 
 @router.get("/{user_id}", response_model=User)
-async def get_user(user_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def get_user(user_id: str, db: AsyncIOMotorDatabase = Depends(get_db), admin: Admin = Depends(get_current_admin)):
     """Get user by ID"""
     user = await db.users.find_one({"id": user_id})
     if not user:
@@ -53,7 +67,8 @@ async def get_user(user_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
 async def update_user(
     user_id: str,
     user_update: UserUpdate,
-    db: AsyncIOMotorDatabase = Depends(get_db)
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    admin: Admin = Depends(get_current_admin)
 ):
     """Update user information"""
     user = await db.users.find_one({"id": user_id})
@@ -71,7 +86,7 @@ async def update_user(
     return User(**updated_user)
 
 @router.delete("/{user_id}")
-async def delete_user(user_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def delete_user(user_id: str, db: AsyncIOMotorDatabase = Depends(get_db), admin: Admin = Depends(get_current_admin)):
     """Delete a user"""
     result = await db.users.delete_one({"id": user_id})
     if result.deleted_count == 0:
@@ -79,7 +94,7 @@ async def delete_user(user_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
     return {"message": "User deleted successfully"}
 
 @router.get("/{user_id}/devices")
-async def get_user_devices(user_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def get_user_devices(user_id: str, db: AsyncIOMotorDatabase = Depends(get_db), admin: Admin = Depends(get_current_admin)):
     """Get all devices for a user"""
     user = await db.users.find_one({"id": user_id})
     if not user:

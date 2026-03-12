@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, Header
 from models.device import Device, DeviceCreate, DeviceActivate
-from typing import List
+from models.admin import Admin
+from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from utils.qr_generator import generate_qr_code
 from utils.geo_location import get_geo_location, is_canada_ip, get_client_ip
+from utils.security import verify_token
 from datetime import datetime, timedelta
 import uuid
 
@@ -13,8 +15,20 @@ async def get_db():
     from server import db
     return db
 
+async def get_current_admin(authorization: Optional[str] = Header(None), db: AsyncIOMotorDatabase = Depends(get_db)):
+    if not authorization or not authorization.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.replace('Bearer ', '')
+    payload = verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    admin = await db.admins.find_one({"username": payload.get("sub")})
+    if not admin:
+        raise HTTPException(status_code=401, detail="Admin not found")
+    return Admin(**admin)
+
 @router.post("", response_model=Device)
-async def create_device(device: DeviceCreate, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def create_device(device: DeviceCreate, db: AsyncIOMotorDatabase = Depends(get_db), admin: Admin = Depends(get_current_admin)):
     # Check if MAC address already exists
     existing = await db.devices.find_one({"mac_address": device.mac_address})
     if existing:
@@ -36,12 +50,12 @@ async def create_device(device: DeviceCreate, db: AsyncIOMotorDatabase = Depends
     return device_obj
 
 @router.get("", response_model=List[Device])
-async def get_devices(db: AsyncIOMotorDatabase = Depends(get_db)):
+async def get_devices(db: AsyncIOMotorDatabase = Depends(get_db), admin: Admin = Depends(get_current_admin)):
     devices = await db.devices.find().sort("created_at", -1).to_list(1000)
     return [Device(**device) for device in devices]
 
 @router.get("/{device_id}", response_model=Device)
-async def get_device(device_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def get_device(device_id: str, db: AsyncIOMotorDatabase = Depends(get_db), admin: Admin = Depends(get_current_admin)):
     device = await db.devices.find_one({"id": device_id})
     if not device:
         raise HTTPException(status_code=404, detail="Device not found")
@@ -51,7 +65,8 @@ async def get_device(device_id: str, db: AsyncIOMotorDatabase = Depends(get_db))
 async def refresh_device_qr(
     device_id: str,
     reset_code: bool = False,
-    db: AsyncIOMotorDatabase = Depends(get_db)
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    admin: Admin = Depends(get_current_admin)
 ):
     """Refresh or reset QR code for a device"""
     import secrets
