@@ -6,7 +6,7 @@ Android app polls GET /api/apk/latest on startup and compares version_code.
 If server version_code > app's hardcoded version_code → show native update dialog.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Header
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Header, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorClient
 from models.admin import Admin
 from utils.security import verify_token
@@ -50,7 +50,7 @@ async def get_current_admin(authorization: str = Header(None), db: AsyncIOMotorD
 # ─── Public: Android app checks this on startup ──────────────────────────────
 
 @router.get("/latest")
-async def get_latest_apk(db: AsyncIOMotorDatabase = Depends(get_db)):
+async def get_latest_apk(request: Request, db: AsyncIOMotorDatabase = Depends(get_db)):
     """
     Android app calls this on startup.
     Returns latest APK version info; app compares version_code to its own.
@@ -61,11 +61,16 @@ async def get_latest_apk(db: AsyncIOMotorDatabase = Depends(get_db)):
     if not latest:
         return {"has_release": False}
 
+    # Build absolute download URL so Android can download directly
+    base = str(request.base_url).rstrip("/")
+    relative = latest.get("download_url", "")
+    absolute_url = f"{base}{relative}" if relative.startswith("/") else relative
+
     return {
         "has_release": True,
         "version": latest.get("version", "1.0.0"),
         "version_code": latest.get("version_code", 1),
-        "download_url": latest.get("download_url", ""),
+        "download_url": absolute_url,
         "release_notes": latest.get("release_notes", ""),
         "required": latest.get("required", False),
         "uploaded_at": latest.get("uploaded_at", ""),

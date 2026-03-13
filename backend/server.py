@@ -31,6 +31,7 @@ from routes.tickets import router as tickets_router
 from routes.faq import router as faq_router
 from routes.customer import router as customer_router
 from routes.guide_state import router as guide_state_router
+from routes.apk import router as apk_router
 
 # Import security middleware
 from utils.https_middleware import HTTPSRedirectMiddleware, SecureHeadersMiddleware
@@ -109,10 +110,11 @@ app.include_router(tickets_router)
 app.include_router(faq_router)
 app.include_router(customer_router)
 app.include_router(guide_state_router)
+app.include_router(apk_router)
 
 # Mount uploads directory for serving files with proper caching headers
 uploads_dir = Path("/app/backend/uploads")
-for subdir in ["media", "posters", "logos", "qr_codes", "branding", "notifications", "cvr"]:
+for subdir in ["media", "posters", "logos", "qr_codes", "branding", "notifications", "cvr", "apk"]:
     (uploads_dir / subdir).mkdir(parents=True, exist_ok=True)
 
 # Custom media streaming with Range support, caching, and proper headers

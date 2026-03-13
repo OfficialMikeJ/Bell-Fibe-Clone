@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useService } from '../contexts/ServiceContext';
@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Settings as SettingsIcon, Server, Lock, Globe, Save } from 'lucide-react';
+import { Settings as SettingsIcon, Server, Lock, Globe, Save, Smartphone, Upload, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import TwoFactorSetup from './TwoFactorSetup';
 
@@ -26,10 +26,18 @@ const SettingsTab = ({ token }) => {
     uptime_kuma_url: '',
   });
 
+  // APK state
+  const [apkFile, setApkFile] = useState(null);
+  const [apkForm, setApkForm] = useState({ version: '', version_code: '', release_notes: '', required: false });
+  const [apkUploading, setApkUploading] = useState(false);
+  const [apkReleases, setApkReleases] = useState([]);
+  const apkInputRef = useRef(null);
+
   const getHeaders = () => ({ Authorization: `Bearer ${token}` });
 
   useEffect(() => {
     fetchSettings();
+    fetchApkReleases();
   }, []);
 
   const fetchSettings = async () => {
@@ -74,6 +82,53 @@ const SettingsTab = ({ token }) => {
       toast.error('Failed to save configuration');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchApkReleases = async () => {
+    try {
+      const res = await axios.get(`${API}/apk/releases`, { headers: getHeaders() });
+      setApkReleases(res.data || []);
+    } catch {
+      // silently fail — not critical
+    }
+  };
+
+  const handleApkUpload = async () => {
+    if (!apkFile) return toast.error('Please select an APK file');
+    if (!apkForm.version.trim()) return toast.error('Version name is required (e.g. 1.2.0)');
+    if (!apkForm.version_code || isNaN(parseInt(apkForm.version_code))) return toast.error('Version code must be a number');
+
+    const fd = new FormData();
+    fd.append('file', apkFile);
+    fd.append('version', apkForm.version.trim());
+    fd.append('version_code', parseInt(apkForm.version_code));
+    fd.append('release_notes', apkForm.release_notes);
+    fd.append('required', apkForm.required);
+
+    setApkUploading(true);
+    try {
+      const res = await axios.post(`${API}/apk/upload`, fd, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+      toast.success(`APK v${res.data.version} uploaded (${res.data.file_size_mb} MB)`);
+      setApkFile(null);
+      setApkForm({ version: '', version_code: '', release_notes: '', required: false });
+      if (apkInputRef.current) apkInputRef.current.value = '';
+      fetchApkReleases();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Upload failed');
+    } finally {
+      setApkUploading(false);
+    }
+  };
+
+  const handleDeleteRelease = async (version_code) => {
+    if (!window.confirm(`Delete release v${version_code}?`)) return;
+    try {
+      await axios.delete(`${API}/apk/release/${version_code}`, { headers: getHeaders() });
+      toast.success('Release deleted');
+      fetchApkReleases();
+    } catch {
+      toast.error('Failed to delete release');
     }
   };
 
@@ -247,6 +302,136 @@ const SettingsTab = ({ token }) => {
             <span className="text-gray-400">Version:</span>
             <span className="text-white">1.0.0</span>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Android APK Management */}
+      <Card className="bg-[#2a2a2a] border-gray-700">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Smartphone className="w-5 h-5 text-blue-400" />
+            <div>
+              <CardTitle className="text-white">Android APK Management</CardTitle>
+              <CardDescription className="text-gray-400">
+                Upload new app versions — Android devices will be prompted to update automatically
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {/* Upload Form */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-white">APK File</Label>
+              <input
+                ref={apkInputRef}
+                type="file"
+                accept=".apk"
+                data-testid="apk-file-input"
+                onChange={e => setApkFile(e.target.files[0] || null)}
+                className="w-full text-sm text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-[#0056A8] file:text-white file:cursor-pointer bg-[#1a1a1a] border border-gray-600 rounded p-1.5 cursor-pointer"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-white">Version Name <span className="text-gray-500 text-xs">(e.g. 1.2.0)</span></Label>
+              <Input
+                data-testid="apk-version-input"
+                value={apkForm.version}
+                onChange={e => setApkForm({ ...apkForm, version: e.target.value })}
+                placeholder="1.2.0"
+                className="bg-[#1a1a1a] border-gray-600 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-white">Version Code <span className="text-gray-500 text-xs">(integer, must increase each release)</span></Label>
+              <Input
+                data-testid="apk-version-code-input"
+                type="number"
+                value={apkForm.version_code}
+                onChange={e => setApkForm({ ...apkForm, version_code: e.target.value })}
+                placeholder="2"
+                className="bg-[#1a1a1a] border-gray-600 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-white">Release Notes <span className="text-gray-500 text-xs">(optional)</span></Label>
+              <Input
+                data-testid="apk-release-notes-input"
+                value={apkForm.release_notes}
+                onChange={e => setApkForm({ ...apkForm, release_notes: e.target.value })}
+                placeholder="Bug fixes and improvements"
+                className="bg-[#1a1a1a] border-gray-600 text-white"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="apk-required"
+              data-testid="apk-required-checkbox"
+              checked={apkForm.required}
+              onChange={e => setApkForm({ ...apkForm, required: e.target.checked })}
+              className="w-4 h-4 accent-blue-500"
+            />
+            <Label htmlFor="apk-required" className="text-white cursor-pointer">
+              Force update — users must update before they can continue
+            </Label>
+          </div>
+
+          <Button
+            data-testid="apk-upload-btn"
+            onClick={handleApkUpload}
+            disabled={apkUploading || !apkFile}
+            className="bg-[#0056A8] hover:bg-[#0066c8]"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {apkUploading ? 'Uploading…' : 'Upload APK'}
+          </Button>
+
+          {/* Releases Table */}
+          {apkReleases.length > 0 && (
+            <div className="mt-4">
+              <p className="text-gray-400 text-sm mb-2">Uploaded Releases</p>
+              <div className="space-y-2">
+                {apkReleases.map(r => (
+                  <div
+                    key={r.version_code}
+                    data-testid={`apk-release-${r.version_code}`}
+                    className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded border border-gray-700"
+                  >
+                    <div>
+                      <span className="text-white font-medium">v{r.version}</span>
+                      <span className="text-gray-500 text-xs ml-2">(code {r.version_code})</span>
+                      {r.required && <span className="ml-2 text-xs bg-red-900/50 text-red-400 px-1.5 py-0.5 rounded">Force Update</span>}
+                      {r.release_notes && <p className="text-gray-400 text-xs mt-0.5">{r.release_notes}</p>}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <a
+                        href={r.download_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 text-xs hover:underline"
+                      >
+                        Download
+                      </a>
+                      <button
+                        data-testid={`apk-delete-${r.version_code}`}
+                        onClick={() => handleDeleteRelease(r.version_code)}
+                        className="text-red-400 hover:text-red-300 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {apkReleases.length === 0 && (
+            <p className="text-gray-500 text-sm italic" data-testid="apk-no-releases">No APK releases uploaded yet.</p>
+          )}
         </CardContent>
       </Card>
     </div>

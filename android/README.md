@@ -70,46 +70,114 @@ Create basic structure:
 
 **MainActivity.java:**
 ```java
-package com.tvservice.guide;
+package com.streamvault.tv;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
 
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 public class MainActivity extends Activity {
     private WebView webView;
-    private static final String GUIDE_URL = "https://guide.yourdomain.com";
-    
+
+    // ── Replace with your actual server IP / domain ──────────────────────────
+    private static final String BASE_URL   = "http://70.28.9.208:8001";   // or https://api.yourdomain.com
+    private static final String GUIDE_URL  = "http://70.28.9.208:3001";   // or https://guide.yourdomain.com
+
+    // Increment this whenever you build a new APK
+    private static final int APP_VERSION_CODE = 1;
+    // ─────────────────────────────────────────────────────────────────────────
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        
+
         webView = findViewById(R.id.webview);
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
-        
-        // Enable caching
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        webSettings.setAppCacheEnabled(true);
-        
-        // Location for geo-validation
         webSettings.setGeolocationEnabled(true);
-        
+
         webView.setWebViewClient(new WebViewClient());
         webView.loadUrl(GUIDE_URL);
+
+        // Check for update in background
+        new CheckUpdateTask().execute(BASE_URL + "/api/apk/latest");
     }
-    
+
     @Override
     public void onBackPressed() {
         if (webView.canGoBack()) {
             webView.goBack();
         } else {
             super.onBackPressed();
+        }
+    }
+
+    // ── Background task: poll /api/apk/latest and prompt if newer ────────────
+    private class CheckUpdateTask extends AsyncTask<String, Void, JSONObject> {
+        @Override
+        protected JSONObject doInBackground(String... urls) {
+            try {
+                HttpURLConnection conn = (HttpURLConnection) new URL(urls[0]).openConnection();
+                conn.setConnectTimeout(5000);
+                conn.setReadTimeout(5000);
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) sb.append(line);
+                return new JSONObject(sb.toString());
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject result) {
+            if (result == null) return;
+            try {
+                boolean hasRelease = result.optBoolean("has_release", false);
+                if (!hasRelease) return;
+
+                int serverVersionCode = result.optInt("version_code", 0);
+                if (serverVersionCode <= APP_VERSION_CODE) return;   // already up to date
+
+                String serverVersion  = result.optString("version", "");
+                String downloadUrl    = result.optString("download_url", "");
+                String releaseNotes   = result.optString("release_notes", "");
+                boolean required      = result.optBoolean("required", false);
+
+                String message = "Version " + serverVersion + " is available.\n";
+                if (!releaseNotes.isEmpty()) message += "\n" + releaseNotes + "\n";
+                if (required) message += "\nThis update is required to continue.";
+
+                final String finalUrl = downloadUrl;
+                new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Update Available")
+                    .setMessage(message)
+                    .setPositiveButton("Download Now", (d, w) -> {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(finalUrl)));
+                    })
+                    .setNegativeButton(required ? null : "Later", required ? null : (d, w) -> d.dismiss())
+                    .setCancelable(!required)
+                    .show();
+            } catch (Exception e) {
+                // ignore — update check is best-effort
+            }
         }
     }
 }
@@ -119,18 +187,22 @@ public class MainActivity extends Activity {
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tvservice.guide">
+    package="com.streamvault.tv">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    
+
+    <!--
+      Set usesCleartextTraffic="true" when using HTTP (static IP / local testing).
+      Change to "false" once you have HTTPS via Nginx Proxy Manager + Let's Encrypt.
+    -->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:usesCleartextTraffic="false"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         <activity android:name=".MainActivity">
             <intent-filter>
