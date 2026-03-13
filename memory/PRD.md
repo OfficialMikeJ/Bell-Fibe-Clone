@@ -124,11 +124,18 @@ StreamVault — a full-featured IPTV service with Live TV Guide. Full-stack appl
 - Admin: username=admin, password=admin123
 
 ## Completion Status (as of 2026-02-10): All core features implemented and tested
-- Backend: 22/22 TOTP tests pass + all previous tests passing
-- Frontend: All flows verified (register, my-account, portal, admin)
-- Guide-app: Code complete, ready for independent deployment
+- Backend: Roku endpoints (13/13), TOTP (22/22), all previous tests passing
+- Frontend: All flows verified — StreamVault branding live in TopBar
+- Guide-app: Full layout complete (EPGGrid, Sidebar, ChannelFeatured, GuideTopBar, TVGuide shell)
+- Dockerfiles: backend, frontend, guide-app all created with nginx configs
+- .env.example template created
 
 ## P1 Backlog
+- Guide-app: Update REACT_APP_API_URL fallback in config.js from localhost to production URL
+- Guide-app: Add `.env` file for local guide-app development
+- Add `portal` route to the Roku router for portal-style TOTP login page
+
+## P2 Future
 - Migrate EPGGrid, Sidebar, TopBar from main frontend into guide-app for full separation
 - Guide-app needs Dockerfile + supervisor config for deployment
 - Roku link-code backend endpoints (POST /api/roku/request-link, etc.)
