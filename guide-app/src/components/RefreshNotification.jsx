@@ -85,6 +85,30 @@ export default function RefreshNotification({ visible, onDone }) {
           auto-refreshed for your convenience.
         </p>
 
+        {/* Blue close button */}
+        <button
+          onClick={() => { setPhase('exit'); setTimeout(() => { setPhase('hidden'); onDone?.(); }, 450); }}
+          style={{
+            display: 'block',
+            width: '100%',
+            background: 'linear-gradient(135deg, #0056A8, #0080ff)',
+            border: 'none',
+            borderRadius: 10,
+            padding: '10px 0',
+            color: '#fff',
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+            marginBottom: 16,
+            transition: 'opacity 0.15s, transform 0.15s',
+            pointerEvents: 'auto',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = '0.85'; e.currentTarget.style.transform = 'scale(1.01)'; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)'; }}
+        >
+          Close
+        </button>
+
         {/* Progress bar */}
         <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
           <div

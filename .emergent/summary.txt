@@ -1,75 +1,76 @@
 <analysis>**original_problem_statement:**
-The user wants to develop a full-featured clone of Bell Canada's TV service, including an IPTV service and a Live TV Guide. The project has evolved to include a comprehensive admin dashboard, a customer-facing support portal, and a public registration website.
+The user wants to develop a full-featured TV service clone, which has been named StreamVault. The service includes an IPTV service with a Live TV Guide (EPG) and a Video on Demand (VOD) section. The project also encompasses a comprehensive admin dashboard, a customer-facing support portal, and a public registration website. The application is intended to be containerized and eventually run on a user-provided server with a custom domain.
 
 **PRODUCT REQUIREMENTS:**
-- **Core Functionality:** A full-stack application with a live TV guide (EPG) and a Video on Demand (VOD) section.
-- **Admin Dashboard:** A comprehensive backend for managing channels, EPG, media, users, devices, CVR, analytics, a new support ticket system, and an FAQ section.
+- **Core Functionality:** A full-stack application with a live TV guide (EPG) and a VOD section. The branding is StreamVault.
+- **Admin Dashboard:** A comprehensive backend for managing channels, EPG, media, users, devices, CVR, analytics, a support ticket system, and an FAQ section. It should also include a section for uploading new versions of the Android APK.
 - **Customer Portal:** A separate web portal () for customers to log in via QR code to submit support tickets and view FAQs.
-- **Public Website:** A public-facing site for new customer registration. The registration flow involves collecting device information and uses a PIN-based activation method for the app, with an IP-based lockout mechanism for security.
+- **Public Website:** A public-facing site for new customer registration. The activation flow now uses Google Authenticator (TOTP), replacing the previous PIN-based system.
 - **Security & Infrastructure:**
     - Multi-layered admin authentication (JWT, 2FA, Master PIN).
-    - Device authentication via Device UUID, MAC Address, and Geo-location.
-    - Integration with Uptime Kuma for service status monitoring.
-    - The application should be containerized using Docker Compose and support custom domains via a proxy manager like Nginx Proxy Manager.
+    - Device authentication uses a TOTP code from Google Authenticator, with an IP-based lockout mechanism for security.
+    - The application is containerized using Docker and is being configured to work with a user-provided static IP for testing, with plans for a future SSL domain.
 - **Client Applications:**
-    - A dedicated, separated React application () for the customer-facing TV guide.
-    - A placeholder Android project to wrap the .
-    - A  file with specifications for a future Roku application.
+    - A dedicated React application () for the customer-facing TV guide, featuring UI animations.
+    - A placeholder Android project () to wrap the , which needs to include an in-app update check mechanism.
+    - A  file with specifications for a future Roku application (note: no Roku code should be implemented).
 
 **User's preferred language**: English
 
 **what currently exists?**
-A robust, feature-rich full-stack application. The backend is a FastAPI application providing APIs for all required features. The frontend consists of a massive admin dashboard with 14 tabs (including new ones for Tickets and FAQs), a complete customer support portal, and a public registration website. The system has undergone multiple successful end-to-end test cycles, and all known bugs have been fixed. The agent was in the process of scaffolding the next major architectural changes when the session ended.
+A feature-rich full-stack application. The backend is a FastAPI server, and the frontend consists of three parts: a large admin dashboard, a public registration/customer portal, and a separate, dedicated React app () for the main user-facing TV Guide. Major features like the support portal and the new Google Authenticator-based registration are complete and tested. The project has been fully rebranded to StreamVault. The architecture has been set up for containerization with Docker. The agent was in the process of implementing a self-hosted Android app (APK) update system.
 
 **Last working item**:
-- **Last item agent was working**: The agent was executing a multi-part user request which involves major architectural setup for future deployment and development. This includes:
-    1.  Creating a new, separate React application directory () for the customer-facing UI.
-    2.  Creating a placeholder Android project structure ().
-    3.  Creating a  file for containerized deployment.
-    4.  Creating a  file with specifications for a future Roku app.
+- **Last item agent was working**: The agent was implementing a multi-part user request to facilitate self-hosting and updates for the Android application. This involved:
+    1.  Adding a Close button to the guide's auto-refresh notification.
+    2.  Creating backend API endpoints to upload and retrieve the latest Android APK file.
+    3.  Creating an admin UI to upload the APK.
+    4.  Planning the logic for an in-app update check within the Android app.
+    5.  Configuring the application to use the user's provided static IP () for testing.
 - **Status**: IN PROGRESS
 - **Agent Testing Done**: N
-- **Which testing method agent to use?** both. The new  will require frontend testing to ensure it works independently. The  setup will require backend and integration testing to confirm all services start and communicate correctly.
+- **Which testing method agent to use?** both. The new API endpoints () require backend testing via . The new UI elements (notification button, admin upload form) require frontend testing via screenshot or the testing agent.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- There are no known bugs or issues. The application was stable and fully tested before starting the last task.
+- There are no known bugs or blocking issues.
 
 **In progress Task List**:
-- **Task 1: Complete Scaffolding for Guide App, Docker, and Android** (Priority: P0)
-    - **Where to resume**: The agent has initiated the creation of several files (, , , etc.) but has not yet populated them with content. The next step is to write the actual content for these files to create a working baseline for each deliverable.
-    - **What will be achieved with this?**: This will establish the foundational structure for the separated guide application, the future Android app, and the containerized deployment environment, fulfilling the user's latest request.
+- **Task 1: Implement Android APK Hosting and Update Flow** (Priority: P0)
+    - **Where to resume**: The agent has created the file  and the directory . The next step is to implement the logic for the  and  endpoints within that file and register the router in .
+    - **What will be achieved with this?**: This will create a complete system allowing the admin to upload new Android app versions through the dashboard, which the Android app can then check against to prompt users to update.
     - **Status**: IN PROGRESS
     - **Should Test frontend/backend/both after fix?**: both
     - **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **P0: Migrate Customer UI to **: Move all customer-facing components (e.g., , , , ) and their related logic from the main  project into the newly created .
-    - **P1: Implement Android App Wrapper**: Flesh out the  project to build an APK that wraps the web-based .
-    - **P2: Finalize Docker and Nginx Proxy Manager Integration**: Refine the  and provide documentation on how to use it with Nginx Proxy Manager to set a custom domain.
+    - **P0: Complete APK Update Flow & Static IP Integration**:
+        - Add the blue Close button to the  component.
+        - Build the admin UI in  for APK uploading.
+        - Implement the update-check logic in the placeholder .
+        - Configure all relevant  and config files to point to the user's static IP ().
+    - **P1: Flesh out Android App Wrapper**: Implement the WebView in the  project to load the  URL, creating a functional Android application.
+    - **P2: Finalize Docker and Nginx Proxy Manager Integration**: Refine the  and provide documentation on how to use it with Nginx Proxy Manager to set up the user's future custom SSL domain.
 - **Future Tasks**:
-    - **TV Tuner Integration**: Implement the backend logic to interface with a TV tuner card for streaming Free-to-Air channels and build out the corresponding Live TV tab.
-    - **Build Roku App**: Develop the Roku application based on the specifications in .
+    - **TV Tuner Integration**: Implement the backend logic to interface with a TV tuner card for streaming Free-to-Air channels and activate the Live TV Coming Soon channels.
 
 **Completed work in this session**
-- **Critical Bug Fixes**:
-    - Resolved a major routing issue by mounting the  directory at , fixing all broken images, QR codes, and media streaming links across the application.
-    - Fixed bugs in the  and  endpoints related to missing CVR fields and incorrect validation.
-- **New Feature: Customer Support Portal**:
-    - Built a complete, self-contained customer portal at .
-    - Implemented a secure QR code-based login for customers.
-    - Created a full ticket management system (submission, status tracking, admin replies) and an FAQ management system, both with dedicated tabs in the admin dashboard.
-    - Added support for configuring an Uptime Kuma URL in the admin settings.
-- **New Feature: Public Customer Registration**:
-    - Developed a public-facing registration website.
-    - Implemented a new user activation flow using a 6-digit PIN.
-    - Created a robust, IP-based security lockout mechanism to prevent brute-force PIN attacks, including an admin endpoint to clear lockouts.
-- **Testing and Validation**:
-    - Successfully executed multiple comprehensive test runs using the testing agent, achieving 100% pass rates on both frontend and backend tests for the newly added features.
+- **Authentication Overhaul**: Replaced the entire PIN-based activation system with a more secure Google Authenticator (TOTP) flow. This included backend logic for secret generation and verification () and frontend UI for displaying QR codes.
+- **Full Rebranding**: Systematically removed all references to Bell Canada and replaced them with StreamVault across all source code, documentation, UI text, and database default values.
+- **Architectural Separation**: Successfully migrated the customer-facing UI (EPG, VOD, etc.) into a new, separate React project at .
+- **UI/UX Animations**:
+    - Implemented a Netflix-style entrance animation for the  activation screen.
+    - Added subtle, staggered slide-in and fade animations to the main guide interface for a more polished feel.
+- **Guide Auto-Refresh**: Built a polling mechanism where the  checks for content updates every 30 seconds. If new content is detected, the guide automatically refreshes and displays a notification.
+- **EPG Enhancements**:
+    - Added two grayed-out, non-interactive Live TV Coming Soon channels.
+    - Renamed and re-numbered existing channels as per the user's request.
+- **Code Cleanup**: Removed all server-side Roku implementation code that was added in error, reverting to the user's original request of just a  file.
+- **Containerization Setup**: Created  and associated Dockerfiles for the backend and two frontend applications.
 
 **Earlier issues found/mentioned but not fixed**
-- None. The agent was diligent in identifying and resolving all issues as they arose.
+- None. A previous misunderstanding where the agent built Roku backend code instead of just a README was identified by the user and fully corrected by removing all related code. Another issue where Bell Canada TV was still visible due to a database value was also fully resolved.
 
 **Known issue recurrence from previous fork**
 - None.
@@ -78,80 +79,87 @@ A robust, feature-rich full-stack application. The backend is a FastAPI applicat
 
 
 **Key Technical Concepts**
-- **Frontend**: React, React Router, TailwindCSS, Shadcn UI, Axios.
-- **Backend**: FastAPI (Python), Motor (async MongoDB), .
+- **Frontend**: React, React Router, TailwindCSS, Shadcn UI, Axios, CSS Keyframe Animations.
+- **Backend**: FastAPI (Python), Motor (async MongoDB),  for TOTP.
 - **Database**: MongoDB.
-- **Authentication**: JWT, 2FA, Master PIN, Geo-location, and a new IP-based lockout system.
-- **Deployment**: Docker Compose (in progress).
+- **Authentication**: JWT, 2FA, Master PIN, Geo-location, IP-based lockout, and TOTP via Google Authenticator.
+- **Deployment**: Docker Compose.
 
 **key DB schema**
-- **tickets**: , , ,  (, ), , 
-- **faqs**: , 
-- **portal_sessions**: , , 
-- **ip_lockouts**: , , 
+- **users**: Now includes  (string),  (boolean).  is deprecated.
+- **channels**: Includes an optional  (boolean) flag.
+- **guide_refresh_state**: Contains a single  (datetime) field to track content changes.
+- **apk_releases**: A new collection will be needed to store APK metadata (e.g., , , ).
 
 **changes in tech stack**
--  is being introduced for containerized deployment.
--  library was added to the backend for generating QR codes.
+-  library was added to the backend for TOTP implementation.
 
 **All files of reference**
-- : New file for defining the application services for deployment.
-- : New documentation for a future Roku app.
-- : New directory for the separated customer-facing React application.
-- : New directory for the Android project wrapper.
-- : Handles public user registration and PIN activation.
-- : Manages the customer support portal authentication.
-- : CRUD for support tickets.
-- : CRUD for FAQ items.
-- : The new public customer registration UI.
-- : The login page for the customer support portal.
-- : The new admin UI for managing tickets.
-- : Updated to mount  and include all new API routers.
+- : **New file** for the APK upload/download logic.
+- : Heavily modified to replace PIN logic with TOTP.
+- : **New file** for the guide auto-refresh endpoint.
+- : Rewritten to use TOTP and add animations.
+- : Rewritten to incorporate the auto-refresh hook and notification system.
+- : **New file** containing the polling logic.
+- : Modified to include several new CSS keyframe animations.
+- : **New file** defining the three services (backend, frontend, guide-app).
+- : **New file** created for future Roku development specs.
 
 **Areas that need refactoring**:
-- The primary refactoring task is to migrate all customer-facing UI code from  to  to achieve the planned architectural separation.
+- No major refactoring is currently needed. The primary architectural change of separating the  has been completed.
 
 **key api endpoints**
-- : Creates a new customer account.
-- : Activates a device using a PIN, with IP-based lockout.
-- : Authenticates a user into the support portal via QR code scan.
-- : Fetches all support tickets for the admin dashboard.
-- : Manages FAQ items.
+- : **New endpoint** to activate a device using an email and a TOTP code.
+- : **New endpoint** for the guide-app to poll for content changes.
+- : **New endpoint (In Progress)** for admins to upload a new APK file.
+- : **New endpoint (In Progress)** for the Android app to check for updates.
+- : Deprecated and replaced by .
 
 **Critical Info for New Agent**
-- The user continues to provide large, multi-part feature requests with the instruction to proceed or just build.
-- Your immediate task is to finish the scaffolding started by the previous agent: create the content for , the 's basic structure, the Android project files, and the Roku README.
-- Once the scaffolding is complete, the next logical step is the major architectural task of moving the customer-facing UI code into the  directory.
+- **Stick to the User's Request:** The previous agent over-implemented a feature (Roku) and had to remove the work. Be very careful to only build what is explicitly asked for.
+- **Static IP Configuration:** The user has provided a temporary static IP (). Your immediate task includes configuring the  and Android app to point to this IP for API calls and for loading the web content. This is for testing, and the user plans to provide an SSL domain later.
+- **Authentication is TOTP:** The entire user activation flow is now based on Google Authenticator. The old PIN system is gone.
+- **Two Separate Frontends:** Remember that  is for the admin/public site and  is the main customer-facing TV application. They are distinct projects.
 
 **documents and test reports created in this job**
 - 
--  (Updated multiple times)
+-  (updated multiple times)
 - 
-- 
-- 
+-  (TOTP flow tests)
+-  (Branding and final verification tests)
 
 **Last 10 User Messages and any pending HUMAN messages**
-- **User Message (latest):** Requested the creation of the Android-based , a  file for hosting with Nginx Proxy Manager support, and a  file with specs for a future Roku app. (Status: IN PROGRESS)
-- **User Message:** Requested a public customer registration website with a new PIN-based activation flow and IP lockout security. (Status: COMPLETED)
-- **User Message:** Provided details for the support portal, including ticket types, statuses, Uptime Kuma integration, and clarified the portal is a separate website. (Status: COMPLETED)
-- **User Message:** Requested a full customer support portal feature, including QR code login for users, a ticket system, and an FAQ section managed from the admin dashboard. (Status: COMPLETED)
+1.  **User (latest):** Requested the APK self-hosting/update feature, a close button on the refresh notification, and provided a static IP () for testing. (Status: IN PROGRESS)
+2.  **Agent:** Outlined the plan to implement the APK hosting feature and static IP configuration.
+3.  **User:** Agreed with the agent's plan for animations.
+4.  **Agent:** Completed the auto-refresh feature and asked about next steps.
+5.  **User:** Requested two grayed-out Live TV Coming Soon channels. (Status: COMPLETED)
+6.  **Agent:** Implemented the Coming Soon channels.
+7.  **User:** Asked to rename/renumber three specific test channels. (Status: COMPLETED)
+8.  **Agent:** Updated the channels in the database.
+9.  **User:** Agreed to the agent's suggestion to add staggered slide-in animations to the guide. (Status: COMPLETED)
+10. **Agent:** Proposed adding animations to the main guide interface after completing the login animation.
 
 **Project Health Check:**
-- **Broken**: None. The application is in a stable, tested state.
-- **Mocked**: The Live TV (TV Tuner) feature tab in the admin sidebar remains a non-functional placeholder.
+- **Broken**: None. The application is stable.
+- **Mocked**:
+    - The Live TV feature is visually represented by non-functional Coming Soon channels.
+    - The  project is a placeholder and does not yet contain a functional WebView to display the .
 
 **3rd Party Integrations**
 - **ffmpeg**: System-level dependency for media processing.
-- **Uptime Kuma**: Not a direct code integration, but the system supports configuring a URL to an external Uptime Kuma instance.
+- **Uptime Kuma**: URL configuration supported in admin settings.
+- **pyotp**: Python library used for Google Authenticator (TOTP) integration.
 
 **Testing status**
-- **Testing agent used after significant changes**: YES. The agent used the testing subagent three times in the last session, ensuring all new features (support portal, registration page) are stable and bug-free.
+- **Testing agent used after significant changes**: YES. Used successfully after the TOTP implementation and the StreamVault rebranding.
 - **Troubleshoot agent used after agent stuck in loop**: NO.
 - **Test files created**: None.
 - **Known regressions**: None.
 
 **Credentials to test flow:**
-The admin credentials can be found in the  endpoint logic if the app is not yet set up. Otherwise, refer to previous successful test runs or the user's initial requirements for test credentials.
+- Admin credentials can be found in the setup logic () if the app is freshly installed.
+- New user registration is done via the public registration page and requires the use of an authenticator app like Google Authenticator.
 
 **What agent forgot to execute**
-- Nothing. The agent was actively working on the user's latest request to scaffold the , Docker configuration, and Android project when the session ended.</analysis>
+- The agent was actively working on the user's latest request when the session ended. No tasks were forgotten, but the implementation of the APK hosting and update mechanism is incomplete.</analysis>

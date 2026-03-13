@@ -7,7 +7,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://bell-tv-clone-1.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://apk-preview-env.preview.emergentagent.com').rstrip('/')
 
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"

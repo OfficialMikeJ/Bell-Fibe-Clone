@@ -56,7 +56,7 @@
     },
     "Users API no auth": {
       "root_cause": "GET /api/users in routes/users.py has no Depends(get_current_admin) dependency - no auth check at all",
-      "reproduction": "curl https://bell-tv-clone-1.preview.emergentagent.com/api/users returns full user list without any Authorization header",
+      "reproduction": "curl https://apk-preview-env.preview.emergentagent.com/api/users returns full user list without any Authorization header",
       "mitigation": "Add auth dependency: async def get_users(db: AsyncIOMotorDatabase = Depends(get_db), admin: Admin = Depends(get_current_admin))"
     }
   }
