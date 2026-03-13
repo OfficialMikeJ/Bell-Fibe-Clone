@@ -82,7 +82,6 @@ def safe_customer(customer: dict) -> dict:
         "email": customer.get("email"),
         "device_brand": customer.get("device_brand"),
         "device_type": customer.get("device_type"),
-        "activation_pin": customer.get("activation_pin"),
         "qr_code_path": customer.get("qr_code_path"),
         "is_activated": customer.get("is_activated", False),
         "device_id": customer.get("device_id"),
