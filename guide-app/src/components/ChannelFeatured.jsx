@@ -45,7 +45,7 @@ const ChannelFeatured = ({ channel, currentProgram }) => {
     : null;
 
   return (
-    <div className="mb-6">
+    <div className="sv-slide-up sv-d-1 mb-6">
       <div className="flex items-start gap-4">
         {/* Video / Poster */}
         <div className="w-52 h-36 bg-[#0a0a0a] rounded-xl overflow-hidden relative flex-shrink-0 group shadow-2xl border border-gray-700">

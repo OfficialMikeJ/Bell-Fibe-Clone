@@ -152,13 +152,15 @@ function GuideView() {
           <ChannelFeatured channel={selectedChannel} currentProgram={getCurrentProgram()} />
         )}
         {channels.length > 0 ? (
-          <EPGGrid
-            channels={channels}
-            programs={programs}
-            timeSlots={timeSlots.slice(0, 14)}
-            selectedChannelId={selectedChannel?.id}
-            onChannelSelect={setSelectedChannel}
-          />
+          <div className="sv-fade-in" style={{ animationDelay: '200ms' }}>
+            <EPGGrid
+              channels={channels}
+              programs={programs}
+              timeSlots={timeSlots.slice(0, 14)}
+              selectedChannelId={selectedChannel?.id}
+              onChannelSelect={setSelectedChannel}
+            />
+          </div>
         ) : (
           <div className="text-center text-gray-400 mt-20">
             <p className="text-xl">No channels available</p>
@@ -204,7 +206,9 @@ export default function TVGuide({ deviceInfo }) {
     <div className="flex min-h-screen bg-[#1a1a1a]">
       <Sidebar activeView={activeView} onViewChange={handleViewChange} />
       <div className="pl-20 flex-1 flex flex-col">
-        {renderView()}
+        <div key={activeView} className="sv-view-fade flex-1 flex flex-col">
+          {renderView()}
+        </div>
       </div>
     </div>
   );

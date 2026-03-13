@@ -38,13 +38,13 @@ const Sidebar = ({ activeView, onViewChange }) => {
     <>
       <div className="fixed left-0 top-0 h-full w-20 bg-[#1a1a1a] border-r border-gray-800 flex flex-col items-center py-6 z-50">
         {/* Logo */}
-        <div className="w-12 h-12 bg-[#0056A8] rounded-xl flex items-center justify-center mb-8 shadow-lg flex-shrink-0">
+        <div className="sv-slide-down w-12 h-12 bg-[#0056A8] rounded-xl flex items-center justify-center mb-8 shadow-lg flex-shrink-0">
           <Tv className="w-6 h-6 text-white" />
         </div>
 
         {/* Nav items */}
         <nav className="flex-1 flex flex-col gap-1 w-full px-2">
-          {navItems.map((item) => {
+          {navItems.map((item, idx) => {
             const Icon = item.icon;
             const isActive = activeView === item.id && !item.comingSoon;
             return (
@@ -54,13 +54,14 @@ const Sidebar = ({ activeView, onViewChange }) => {
                 data-testid={`guide-sidebar-${item.id}`}
                 disabled={item.comingSoon}
                 title={item.comingSoon ? `${item.label} — Coming Soon` : item.label}
-                className={`w-full flex flex-col items-center gap-1 py-3 px-1 rounded-xl transition-all duration-200 relative ${
+                className={`sv-slide-right w-full flex flex-col items-center gap-1 py-3 px-1 rounded-xl transition-all duration-200 relative ${
                   item.comingSoon
                     ? 'opacity-30 cursor-not-allowed text-gray-600'
                     : isActive
                     ? 'bg-[#0056A8] text-white shadow-lg'
                     : 'text-gray-400 hover:text-white hover:bg-[#2a2a2a]'
                 }`}
+                style={{ animationDelay: `${idx * 60}ms` }}
               >
                 <Icon className="w-5 h-5" />
                 <span className="text-[9px] font-medium leading-tight text-center">{item.label.split(' ')[0]}</span>

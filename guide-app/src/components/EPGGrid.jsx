@@ -63,7 +63,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
   return (
     <div className="overflow-x-auto" ref={containerRef} tabIndex={-1}>
       {/* Time header */}
-      <div className="flex mb-3">
+      <div className="sv-slide-down flex mb-3" style={{ animationDelay: '80ms' }}>
         <div className="w-52 flex-shrink-0 px-3 py-2">
           <span className="text-lg text-gray-400 font-light">Today</span>
         </div>
@@ -88,7 +88,8 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
             <div
               key={channel.id}
               data-testid={`epg-channel-row-${channel.id}`}
-              className={`flex cursor-pointer transition-all duration-200 ${isSelected ? 'scale-[1.01]' : ''}`}
+              className={`sv-slide-from-left flex cursor-pointer transition-all duration-200 ${isSelected ? 'scale-[1.01]' : ''}`}
+              style={{ animationDelay: `${Math.min(idx * 40, 600)}ms` }}
               onClick={() => { onChannelSelect(channel); setFocusedChannelIdx(idx); }}
             >
               {/* Channel info */}

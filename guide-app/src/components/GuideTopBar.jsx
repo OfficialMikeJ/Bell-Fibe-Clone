@@ -14,7 +14,7 @@ const GuideTopBar = ({ onLogout }) => {
     date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
   return (
-    <div className="fixed top-0 left-20 right-0 h-16 bg-[#1a1a1a] border-b border-gray-800 flex items-center justify-between px-6 z-40">
+    <div className="sv-slide-down fixed top-0 left-20 right-0 h-16 bg-[#1a1a1a] border-b border-gray-800 flex items-center justify-between px-6 z-40">
       <div className="flex items-center gap-6">
         <h1 className="text-3xl font-light text-white">Guide</h1>
       </div>
