@@ -6,6 +6,8 @@ import ChannelFeatured from '../components/ChannelFeatured';
 import EPGGrid from '../components/EPGGrid';
 import VODPage from './VODPage';
 import RecordingsPage from './RecordingsPage';
+import useGuideRefresh from '../hooks/useGuideRefresh';
+import RefreshNotification from '../components/RefreshNotification';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -104,32 +106,42 @@ function SavedView({ onViewChange }) {
 }
 
 // ── Main EPG / Guide view ────────────────────────────────────────────────────
-function GuideView() {
+function GuideView({ refreshKey, onContentChanged }) {
   const [channels, setChannels] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showNotification, setShowNotification] = useState(false);
   const timeSlots = generateTimeSlots();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [chRes, pgRes] = await Promise.all([
-          axios.get(`${API_URL}/api/channels`),
-          axios.get(`${API_URL}/api/programs`),
-        ]);
-        const chs = Array.isArray(chRes.data) ? chRes.data : chRes.data.channels || [];
-        setChannels(chs);
-        if (chs.length > 0) setSelectedChannel(chs[0]);
-        setPrograms(Array.isArray(pgRes.data) ? pgRes.data : pgRes.data.programs || []);
-      } catch (e) {
-        console.error('Failed to load guide data', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+  const fetchData = useCallback(async () => {
+    try {
+      const [chRes, pgRes] = await Promise.all([
+        axios.get(`${API_URL}/api/channels`),
+        axios.get(`${API_URL}/api/programs`),
+      ]);
+      const chs = Array.isArray(chRes.data) ? chRes.data : chRes.data.channels || [];
+      setChannels(chs);
+      setSelectedChannel(prev => prev ? (chs.find(c => c.id === prev.id) || chs[0]) : chs[0]);
+      setPrograms(Array.isArray(pgRes.data) ? pgRes.data : pgRes.data.programs || []);
+    } catch (e) {
+      console.error('Failed to load guide data', e);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Initial load
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Re-fetch when refreshKey changes (triggered by polling hook)
+  useEffect(() => {
+    if (refreshKey > 0) {
+      fetchData().then(() => setShowNotification(true));
+    }
+  }, [refreshKey, fetchData]);
 
   const getCurrentProgram = useCallback(() => {
     if (!selectedChannel) return null;
@@ -168,6 +180,10 @@ function GuideView() {
           </div>
         )}
       </div>
+      <RefreshNotification
+        visible={showNotification}
+        onDone={() => setShowNotification(false)}
+      />
     </div>
   );
 }
@@ -175,6 +191,12 @@ function GuideView() {
 // ── Root: TVGuide shell with Sidebar + view switching ────────────────────────
 export default function TVGuide({ deviceInfo }) {
   const [activeView, setActiveView] = useState('guide');
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Polling hook — fires onContentChanged when backend reports new content
+  useGuideRefresh(useCallback(() => {
+    setRefreshKey(k => k + 1);
+  }, []));
 
   const handleLogout = () => {
     localStorage.removeItem('sv_device');
@@ -188,7 +210,7 @@ export default function TVGuide({ deviceInfo }) {
       case 'home':
         return <HomeView onViewChange={handleViewChange} />;
       case 'guide':
-        return <GuideView />;
+        return <GuideView refreshKey={refreshKey} />;
       case 'vod':
         return <VODPage onBack={() => setActiveView('guide')} />;
       case 'recordings':
@@ -198,7 +220,7 @@ export default function TVGuide({ deviceInfo }) {
       case 'saved':
         return <SavedView onViewChange={handleViewChange} />;
       default:
-        return <GuideView />;
+        return <GuideView refreshKey={refreshKey} />;
     }
   };
 

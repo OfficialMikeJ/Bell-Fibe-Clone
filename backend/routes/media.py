@@ -5,6 +5,7 @@ from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from utils.security import verify_token
 from utils.media_utils import analyze_media_file, is_ffmpeg_available
+from utils.guide_state import bump_guide_timestamp
 from datetime import datetime
 from pathlib import Path
 import shutil
@@ -36,6 +37,7 @@ async def get_current_admin(authorization: Optional[str] = Header(None), db: Asy
         raise HTTPException(status_code=401, detail="Admin not found")
     return Admin(**admin)
 
+
 @router.get("", response_model=List[MediaItem])
 async def get_media(
     media_type: Optional[str] = None,
@@ -56,6 +58,7 @@ async def create_media(
 ):
     item = MediaItem(**media.dict())
     await db.media_items.insert_one(item.dict())
+    await bump_guide_timestamp(db)
     return item
 
 @router.post("/upload-file", response_model=MediaItem)
@@ -92,6 +95,7 @@ async def upload_media_file(
         file_size=meta.get('file_size'),
     )
     await db.media_items.insert_one(item.dict())
+    await bump_guide_timestamp(db)
     return item
 
 @router.post("/upload-poster/{media_id}")

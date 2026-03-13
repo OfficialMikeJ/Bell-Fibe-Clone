@@ -24,6 +24,8 @@ async def get_current_admin(authorization: Optional[str] = Header(None), db: Asy
         raise HTTPException(status_code=401, detail="Admin not found")
     return Admin(**admin)
 
+from utils.guide_state import bump_guide_timestamp
+
 @router.post("", response_model=Program)
 async def create_program(
     program: ProgramCreate,
@@ -49,6 +51,7 @@ async def create_program(
 
     program_obj = Program(**program_dict)
     await db.programs.insert_one(program_obj.dict())
+    await bump_guide_timestamp(db)
     return program_obj
 
 @router.get("", response_model=List[Program])
