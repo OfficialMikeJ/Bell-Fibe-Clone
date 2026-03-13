@@ -123,7 +123,7 @@ export default function RegisterPage() {
         <header className="bg-[#0056A8] text-white py-4 px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Tv className="w-6 h-6" />
-            <span className="font-bold text-lg">TV Service</span>
+            <span className="font-bold text-lg">StreamVault</span>
           </div>
           <button onClick={() => setStep('landing')} className="text-white/80 hover:text-white text-sm">
             ← Back
@@ -254,7 +254,7 @@ export default function RegisterPage() {
             <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
               <Tv className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-xl">TV Service</span>
+            <span className="font-bold text-xl">StreamVault</span>
           </div>
           <Link to="/customer-login" className="text-white/80 hover:text-white text-sm font-medium border border-white/30 px-4 py-1.5 rounded-full hover:border-white transition-colors">
             Sign In
@@ -265,7 +265,7 @@ export default function RegisterPage() {
           <div className="space-y-6">
             <div>
               <span className="inline-block bg-white/20 text-white/90 text-sm font-medium px-3 py-1 rounded-full mb-4">
-                Premium IPTV Service
+                StreamVault Premium
               </span>
               <h1 className="text-5xl font-extrabold leading-tight">
                 Entertainment,<br />Unlimited.
@@ -361,7 +361,7 @@ export default function RegisterPage() {
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
           <div className="flex items-center gap-2">
             <Tv className="w-4 h-4 text-[#0056A8]" />
-            <span className="font-medium">TV Service</span>
+            <span className="font-medium">StreamVault</span>
           </div>
           <div className="flex items-center gap-6">
             <Link to="/portal" className="hover:text-[#0056A8]">Support Portal</Link>

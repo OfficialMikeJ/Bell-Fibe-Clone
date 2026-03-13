@@ -1,5 +1,5 @@
 """
-IPTV Bell Canada Clone - Iteration 3 Backend API Tests
+StreamVault TV - IPTV Service - Iteration 3 Backend API Tests
 Tests: Analytics, CVR Storage Config, Hours Requests, Service Config CVR fields,
        Channel Edit (quality_label/channel_type/stream_url), Branding
 """
@@ -128,7 +128,7 @@ class TestServiceConfigSave:
         """POST with only service_name should succeed"""
         response = requests.post(
             f"{BASE_URL}/api/setup/service-config",
-            params={"service_name": "Bell Canada TV"},
+            params={"service_name": "StreamVault TV"},
             headers=auth_headers
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
@@ -137,7 +137,7 @@ class TestServiceConfigSave:
         get_response = requests.get(f"{BASE_URL}/api/setup/config")
         assert get_response.status_code == 200
         data = get_response.json()
-        assert data["service_name"] == "Bell Canada TV", f"Expected 'Bell Canada TV', got {data.get('service_name')}"
+        assert data["service_name"] == "StreamVault TV", f"Expected 'StreamVault TV', got {data.get('service_name')}"
         print(f"Service name saved: {data['service_name']}")
 
 

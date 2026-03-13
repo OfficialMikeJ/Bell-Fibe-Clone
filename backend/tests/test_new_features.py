@@ -1,5 +1,5 @@
 """
-IPTV Bell Canada Clone - New Features Backend API Tests (Iteration 2)
+StreamVault TV - IPTV Service - New Features Backend API Tests (Iteration 2)
 Tests new endpoints: Media Library, VOD, Notifications, CVR/Recordings, Branding/Setup Config
 """
 import pytest

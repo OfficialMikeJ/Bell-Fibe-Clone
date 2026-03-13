@@ -1,4 +1,4 @@
-// Mock data for Bell Canada TV Guide Clone
+// Mock data for StreamVault TV Guide
 
 export const mockChannels = [
   {

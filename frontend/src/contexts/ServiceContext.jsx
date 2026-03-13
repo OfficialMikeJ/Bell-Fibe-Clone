@@ -15,7 +15,7 @@ export const useService = () => {
 };
 
 export const ServiceProvider = ({ children }) => {
-  const [serviceName, setServiceName] = useState('TV Service');
+  const [serviceName, setServiceName] = useState('StreamVault');
   const [serviceConfig, setServiceConfig] = useState(null);
   const [loading, setLoading] = useState(true);
 

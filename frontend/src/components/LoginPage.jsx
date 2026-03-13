@@ -136,7 +136,7 @@ const LoginPage = () => {
           {loginStep === 'credentials' ? (
             <>
               <CardTitle className="text-3xl font-bold text-white text-center" data-testid="login-title">
-                IPTV Admin
+                IPTV Admin · StreamVault
               </CardTitle>
               <CardDescription className="text-gray-400 text-center">
                 Enter your credentials to access the admin dashboard

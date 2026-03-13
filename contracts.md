@@ -1,4 +1,4 @@
-# Bell Canada TV Guide Clone - System Architecture
+# StreamVault TV Guide - System Architecture
 
 ## Tech Stack
 - **Frontend**: React + Vite + TailwindCSS

@@ -1,5 +1,5 @@
 """
-IPTV Bell Canada Clone - Backend API Tests
+StreamVault TV - IPTV Service - Backend API Tests
 Tests all critical API endpoints: auth, setup, channels, programs, devices, users
 """
 import pytest

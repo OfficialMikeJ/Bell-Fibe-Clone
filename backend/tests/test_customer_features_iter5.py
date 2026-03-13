@@ -1,6 +1,6 @@
 """
 Iteration 5: Customer Registration, Login, PIN Activation, Lockout, Admin endpoints
-Tests for Bell Canada TV Service Clone customer flow
+Tests for StreamVault TV Service customer flow
 """
 import pytest
 import requests

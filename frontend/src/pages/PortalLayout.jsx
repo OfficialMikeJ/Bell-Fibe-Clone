@@ -16,7 +16,7 @@ export function usePortal() {
 export default function PortalLayout() {
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
-  const [serviceName, setServiceName] = useState('TV Service');
+  const [serviceName, setServiceName] = useState('StreamVault');
   const [logoPath, setLogoPath] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -28,7 +28,7 @@ export default function PortalLayout() {
     }
     // Fetch service config for branding
     axios.get(`${API}/setup/config`).then(res => {
-      setServiceName(res.data.service_name || 'TV Service');
+      setServiceName(res.data.service_name || 'StreamVault');
       setLogoPath(res.data.logo_path || '');
     }).catch(() => {});
   }, []);

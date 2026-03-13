@@ -157,7 +157,7 @@ export default function MyAccountPage() {
 
             <div className="flex items-center gap-2 text-sm text-gray-500 bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4">
               <Smartphone className="w-4 h-4 text-[#0056A8] shrink-0" />
-              <p>Open the TV Service app, go to <strong>Activate Account</strong>, enter your email and the 6-digit code from Google Authenticator.</p>
+              <p>Open the <strong>StreamVault</strong> app, go to <strong>Activate Account</strong>, enter your email and the 6-digit code from Google Authenticator.</p>
             </div>
 
             <div className="flex gap-2">

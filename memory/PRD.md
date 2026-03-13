@@ -1,7 +1,7 @@
 # IPTV Service - Product Requirements Document
 
 ## Original Problem Statement
-Clone of Bell Canada's TV service (IPTV + Live TV Guide). Full-stack application with admin dashboard and customer-facing EPG grid. No copyrighted materials.
+StreamVault — a full-featured IPTV service with Live TV Guide. Full-stack application with admin dashboard and customer-facing EPG grid.
 
 ## Architecture
 ```

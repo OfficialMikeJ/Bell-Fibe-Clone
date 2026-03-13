@@ -80,7 +80,7 @@
 - ✅ Channel selection
 - ✅ Program viewing
 - ✅ Responsive design
-- ✅ Compact UI (Bell Canada style)
+- ✅ Compact UI (StreamVault style)
 - ✅ Sidebar navigation
 - ✅ Real-time clock
 
