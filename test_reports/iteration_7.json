@@ -1,0 +1,85 @@
+{
+  "summary": "Iteration 7 testing: Roku endpoints (13 backend tests all PASS), guide-app component migration (all files exist/verified by code inspection), Dockerfiles + nginx.conf + .env.example existence (all PASS), service branding (StreamVault TV in TopBar and MongoDB, StreamVault Admin in frontend/index.html), sidebar navigation (all 7 items visible and clickable). All tests pass at 100%.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Browser tab title check",
+        "issues": [
+          "Playwright reports browser title as 'Emergent | Fullstack App' — this is the Emergent preview environment iframe wrapper overriding the tab title. The actual <title> tag in /app/frontend/public/index.html is correctly set to 'StreamVault Admin'. Not a real app bug."
+        ]
+      }
+    ]
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_roku_endpoints_iter7.py",
+    "/app/test_reports/pytest/pytest_results_iter7.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "roku.py confirm-link: customer['id'] field is used in link update (user_id) but the customer document uses MongoDB _id internally. The code works because customers were created with an explicit 'id' field, but if any customer was created without an 'id' field, customer.get('id') would be None silently. Safe as-is given current customer creation flow.",
+    "roku.py get_db(): Creates its own MongoClient instance (_client) separate from server.py's global client. This works but means two connection pools exist. Minor resource inefficiency — not a bug.",
+    "guide-app/src/config.js uses 'http://localhost:8001' as fallback for REACT_APP_API_URL. Must be overridden at build time for production Docker deployment.",
+    "TVGuide.jsx Sidebar nav items: 'Settings' is not in Sidebar.jsx for guide-app (only 7 items: Home, Guide, On Demand, Recordings, What's New, Saved, Live TV). The main frontend Sidebar.jsx has Settings. This is correct per the guide-app design (no admin access from TV guide), but the main frontend test request mentions 'Settings' should be visible — it is, in the main frontend's Sidebar."
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_roku_endpoints_iter7.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (13/13 Roku endpoint tests pass)",
+    "frontend": "100% — TopBar shows 'StreamVault TV', sidebar 7 items (Home, Guide, On Demand, Recordings, What's New, Saved, Settings) all visible and clickable, guide-app component/file existence all verified"
+  },
+
+  "test_credentials": {
+    "admin": "admin / admin123",
+    "test_roku_customer": "test_roku@streamvault.test, totp_secret=3PUD3CMU6JFTXU2NS7LLHCTJ7QYCGHSF (created in DB for Roku tests)"
+  },
+
+  "seed_data_creation": "Created test customer 'test_roku@streamvault.test' in customer_accounts collection with TOTP secret for Roku backend tests. Also creates roku_links documents during tests (cleaned by expiry logic in request-link endpoint).",
+
+  "file_existence_checks": {
+    "backend_dockerfile": "PASS — /app/backend/Dockerfile",
+    "frontend_dockerfile": "PASS — /app/frontend/Dockerfile",
+    "guide_app_dockerfile": "PASS — /app/guide-app/Dockerfile",
+    "frontend_nginx_conf": "PASS — /app/frontend/nginx.conf",
+    "guide_app_nginx_conf": "PASS — /app/guide-app/nginx.conf",
+    "env_example": "PASS — /app/.env.example",
+    "frontend_favicon_svg": "PASS — /app/frontend/public/favicon.svg",
+    "guide_app_favicon_svg": "PASS — /app/guide-app/public/favicon.svg",
+    "epg_grid": "PASS — /app/guide-app/src/components/EPGGrid.jsx",
+    "sidebar": "PASS — /app/guide-app/src/components/Sidebar.jsx",
+    "channel_featured": "PASS — /app/guide-app/src/components/ChannelFeatured.jsx",
+    "guide_top_bar": "PASS — /app/guide-app/src/components/GuideTopBar.jsx",
+    "tailwind_config": "PASS — /app/guide-app/tailwind.config.js",
+    "postcss_config": "PASS — /app/guide-app/postcss.config.js",
+    "tv_guide": "PASS — /app/guide-app/src/pages/TVGuide.jsx"
+  },
+
+  "roku_endpoint_results": {
+    "POST /api/roku/request-link": "PASS — returns link_code (6 chars) + expires_in (600s)",
+    "GET /api/roku/check-link (fresh code)": "PASS — returns {linked: false}",
+    "GET /api/roku/check-link (invalid code)": "PASS — returns 404",
+    "POST /api/roku/confirm-link (valid email+TOTP)": "PASS — returns 200 + success message",
+    "GET /api/roku/check-link (after confirm)": "PASS — returns {linked: true, session_token}",
+    "POST /api/roku/confirm-link (wrong TOTP)": "PASS — returns 401",
+    "POST /api/roku/confirm-link (invalid code)": "PASS — returns 404",
+    "POST /api/roku/confirm-link (unknown email)": "PASS — returns 401"
+  },
+
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+
+  "context_for_next_testing_agent": "Iteration 7 complete. All new features tested and passing: Roku link-code endpoints (13 tests), guide-app component migration (file inspection), Dockerfiles/nginx.conf/.env.example existence, branding (StreamVault TV in DB+TopBar, StreamVault Admin in HTML title). Test customer 'test_roku@streamvault.test' left in DB for future Roku tests. guide-app is NOT a running service — only the main frontend at port 3000 is running. Guide-app was tested via file/code inspection only."
+}

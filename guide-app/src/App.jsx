@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import ActivationGate from './pages/ActivationGate';
 import TVGuide from './pages/TVGuide';
-import VODPage from './pages/VODPage';
-import RecordingsPage from './pages/RecordingsPage';
 import axios from 'axios';
 import { API_URL } from './config';
 
@@ -12,7 +10,7 @@ const DEVICE_KEY = 'sv_device';
 
 function isDeviceExpired(device) {
   const lastActive = device.last_active ? new Date(device.last_active) : null;
-  if (!lastActive) return true; // no record → treat as expired
+  if (!lastActive) return true;
   const daysSince = (Date.now() - lastActive.getTime()) / (1000 * 60 * 60 * 24);
   return daysSince > INACTIVITY_DAYS;
 }
@@ -46,10 +44,9 @@ function AppShell() {
       return;
     }
 
-    // Verify with server that device is still active
+    // Verify device is still active on server
     verifyDevice(device.device_id).then(ok => {
       if (ok) {
-        // Refresh last_active timestamp
         device.last_active = new Date().toISOString();
         localStorage.setItem(DEVICE_KEY, JSON.stringify(device));
         setDeviceInfo(device);
@@ -93,14 +90,7 @@ function AppShell() {
     );
   }
 
-  return (
-    <Routes>
-      <Route path="/" element={<TVGuide deviceInfo={deviceInfo} />} />
-      <Route path="/vod" element={<VODPage />} />
-      <Route path="/recordings" element={<RecordingsPage deviceInfo={deviceInfo} />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
+  return <TVGuide deviceInfo={deviceInfo} />;
 }
 
 export default function App() {

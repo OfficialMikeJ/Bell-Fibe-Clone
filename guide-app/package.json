@@ -15,10 +15,19 @@
     "preview": "serve -s build"
   },
   "browserslist": {
-    "production": [">0.2%", "not dead"],
-    "development": ["last 1 chrome version"]
+    "production": [
+      ">0.2%",
+      "not dead"
+    ],
+    "development": [
+      "last 1 chrome version"
+    ]
   },
   "devDependencies": {
-    "serve": "^14.2.0"
+    "autoprefixer": "^10.4.27",
+    "lucide-react": "^0.577.0",
+    "postcss": "^8.5.8",
+    "serve": "^14.2.0",
+    "tailwindcss": "^3"
   }
 }

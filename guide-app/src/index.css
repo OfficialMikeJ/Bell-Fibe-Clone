@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* StreamVault TV Guide — TV-optimized CSS */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
