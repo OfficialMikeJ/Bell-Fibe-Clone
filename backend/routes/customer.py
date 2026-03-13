@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Request, Header
-from models.customer import CustomerAccount, CustomerCreate, CustomerLogin
+from models.customer import CustomerAccount, CustomerCreate, CustomerLogin, TOTPActivateRequest
 from models.admin import Admin
 from typing import Optional, List
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -10,6 +10,7 @@ from utils.geo_location import get_client_ip
 from utils.qr_generator import generate_qr_code
 from datetime import datetime, timedelta
 import os
+import pyotp
 
 router = APIRouter(prefix="/api/customer", tags=["customer"])
 
@@ -87,6 +88,8 @@ def safe_customer(customer: dict) -> dict:
         "device_id": customer.get("device_id"),
         "status": customer.get("status"),
         "created_at": customer.get("created_at"),
+        "totp_enabled": bool(customer.get("totp_secret")),
+        "last_active_at": customer.get("last_active_at"),
     }
 
 
@@ -118,9 +121,14 @@ async def register_customer(
         device_type=data.device_type,
     )
 
-    # Generate QR code pointing to activation page with PIN pre-filled
-    activation_domain = os.environ.get("ACTIVATION_DOMAIN", "http://localhost:3000")
-    qr_data = f"{activation_domain}/activate?pin={customer.activation_pin}"
+    # Generate Google Authenticator QR code
+    # The QR data is an otpauth:// URI that Google Authenticator reads
+    service_name = os.environ.get("SERVICE_NAME", "TV Service")
+    totp_uri = pyotp.totp.TOTP(customer.totp_secret).provisioning_uri(
+        name=email,
+        issuer_name=service_name,
+    )
+    qr_data = totp_uri  # QR encodes the GA setup URI
 
     try:
         from pathlib import Path
@@ -294,13 +302,12 @@ async def refresh_pin(
     customer: CustomerAccount = Depends(get_current_customer),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    """Generate a new 6-digit PIN for the customer"""
-    from models.customer import generate_pin
-    new_pin = generate_pin()
-
-    # Regenerate QR code with new PIN
-    activation_domain = os.environ.get("ACTIVATION_DOMAIN", "http://localhost:3000")
-    qr_data = f"{activation_domain}/activate?pin={new_pin}"
+    """Regenerate TOTP QR code for the customer (re-scan with Google Authenticator)"""
+    service_name = os.environ.get("SERVICE_NAME", "TV Service")
+    totp_uri = pyotp.totp.TOTP(customer.totp_secret).provisioning_uri(
+        name=customer.email,
+        issuer_name=service_name,
+    )
 
     qr_code_path = customer.qr_code_path
     try:
@@ -312,7 +319,7 @@ async def refresh_pin(
         filepath = qr_dir / filename
 
         qr = qrcode_lib.QRCode(version=1, error_correction=qrcode_lib.constants.ERROR_CORRECT_L, box_size=10, border=4)
-        qr.add_data(qr_data)
+        qr.add_data(totp_uri)
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
         img.save(filepath)
@@ -322,17 +329,144 @@ async def refresh_pin(
 
     await db.customer_accounts.update_one(
         {"email": customer.email},
+        {"$set": {"qr_code_path": qr_code_path}},
+    )
+
+    return {"qr_code_path": qr_code_path, "message": "Google Authenticator QR refreshed"}
+
+
+@router.post("/activate-with-totp")
+async def activate_with_totp(
+    data: TOTPActivateRequest,
+    request: Request,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Device activation / re-authentication using Google Authenticator TOTP code.
+    Rate-limited by IP: 3 failed attempts → 45-minute lockout.
+    Handles both first-time activation and 45-day re-auth.
+    """
+    client_ip = get_client_ip(request) if request else "unknown"
+    now = datetime.utcnow()
+    window_start = now - timedelta(minutes=PIN_LOCKOUT_MINUTES)
+    email = data.email.lower().strip()
+
+    # Check IP-based lockout (reuse same pin_attempt_log collection)
+    ip_record = await db.pin_attempt_log.find_one({"ip": client_ip})
+    if ip_record:
+        recent_failures = [
+            ts for ts in ip_record.get("failures", [])
+            if datetime.fromisoformat(ts) > window_start
+        ]
+        if len(recent_failures) >= PIN_MAX_ATTEMPTS:
+            oldest = min(datetime.fromisoformat(ts) for ts in recent_failures)
+            unlock_at = oldest + timedelta(minutes=PIN_LOCKOUT_MINUTES)
+            minutes_remaining = max(1, int((unlock_at - now).total_seconds() / 60) + 1)
+            raise HTTPException(
+                status_code=429,
+                detail=f"Too many failed attempts. Please wait {minutes_remaining} minute(s) before trying again."
+            )
+
+    # Find customer by email
+    customer = await db.customer_accounts.find_one({"email": email})
+    if not customer:
+        # Record failed attempt (don't reveal that the email doesn't exist)
+        await db.pin_attempt_log.update_one(
+            {"ip": client_ip},
+            {"$push": {"failures": now.isoformat()}, "$set": {"last_attempt": now.isoformat()}},
+            upsert=True,
+        )
+        raise HTTPException(status_code=401, detail="Invalid email or code.")
+
+    if customer.get("status") == "suspended":
+        raise HTTPException(status_code=403, detail="Your account has been suspended. Please contact support.")
+
+    # Verify TOTP code
+    totp_secret = customer.get("totp_secret")
+    if not totp_secret:
+        raise HTTPException(status_code=400, detail="Google Authenticator is not set up for this account.")
+
+    totp = pyotp.TOTP(totp_secret)
+    # valid_window=1 allows ±30 seconds clock drift
+    if not totp.verify(data.totp_code, valid_window=1):
+        await db.pin_attempt_log.update_one(
+            {"ip": client_ip},
+            {"$push": {"failures": now.isoformat()}, "$set": {"last_attempt": now.isoformat()}},
+            upsert=True,
+        )
+        updated = await db.pin_attempt_log.find_one({"ip": client_ip})
+        recent = [ts for ts in updated.get("failures", []) if datetime.fromisoformat(ts) > window_start]
+        remaining = PIN_MAX_ATTEMPTS - len(recent)
+        if remaining <= 0:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Too many failed attempts. Your account is locked for {PIN_LOCKOUT_MINUTES} minutes."
+            )
+        raise HTTPException(
+            status_code=401,
+            detail=f"Invalid code. {remaining} attempt(s) remaining before lockout."
+        )
+
+    # Success — clear IP lockout
+    await db.pin_attempt_log.delete_one({"ip": client_ip})
+
+    import secrets as secrets_mod
+    import uuid as uuid_mod
+    from models.device import Device
+
+    # Re-authentication: customer already has a device
+    if customer.get("is_activated") and customer.get("device_id"):
+        device_id = customer["device_id"]
+        await db.devices.update_one(
+            {"id": device_id},
+            {"$set": {"status": "active", "current_ip": client_ip}}
+        )
+        await db.customer_accounts.update_one(
+            {"id": customer["id"]},
+            {"$set": {"last_active_at": now, "status": "active"}}
+        )
+        return {
+            "message": "Re-authentication successful!",
+            "user_id": customer["id"],
+            "device_id": device_id,
+            "customer_name": f"{customer['first_name']} {customer['last_name']}",
+        }
+
+    # First activation: create new device
+    device_id = str(uuid_mod.uuid4())
+    activation_code = secrets_mod.token_urlsafe(16)
+
+    new_device = Device(
+        id=device_id,
+        device_name=data.device_name or f"{customer['first_name']}'s Device",
+        mac_address=data.device_uuid or f"AUTO-{device_id[:12].upper()}",
+        device_uuid=data.device_uuid or device_id,
+        user_id=customer["id"],
+        activation_code=activation_code,
+        status="active",
+        activated_at=now,
+        current_ip=client_ip,
+    )
+
+    await db.devices.insert_one(new_device.dict())
+    await db.customer_accounts.update_one(
+        {"id": customer["id"]},
         {
             "$set": {
-                "activation_pin": new_pin,
-                "pin_failed_attempts": [],
-                "is_activated": False,
-                "qr_code_path": qr_code_path,
+                "is_activated": True,
+                "device_id": device_id,
+                "status": "active",
+                "last_active_at": now,
             }
         }
     )
 
-    return {"activation_pin": new_pin, "qr_code_path": qr_code_path, "message": "New PIN generated"}
+    return {
+        "message": "Device activated successfully!",
+        "user_id": customer["id"],
+        "device_id": device_id,
+        "customer_name": f"{customer['first_name']} {customer['last_name']}",
+    }
 
 
 # ─── Admin endpoints ───────────────────────────────────────────────────────────

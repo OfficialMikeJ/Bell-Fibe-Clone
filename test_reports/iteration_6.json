@@ -1,0 +1,71 @@
+{
+  "summary": "Comprehensive testing of TOTP (Google Authenticator) feature replacing old PIN-based activation. Covered: backend API (register, activate-with-totp, re-auth, refresh-pin, IP lockout), frontend (register landing/form/success pages, My Account page). All 22 backend tests pass (100%). All frontend flows verified via Playwright and screenshots.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/customer/register, POST /api/customer/login, GET /api/customer/me",
+        "issue": "safe_customer() still returns 'activation_pin' (e.g. '653128') in customer response object even in the new TOTP flow. The old PIN is exposed in register/login/me responses. While the /api/customer/activate-with-pin backward-compat endpoint still exists, the PIN being returned is a security concern since TOTP is now the intended mechanism.",
+        "priority": "LOW"
+      },
+      {
+        "endpoint": "POST /api/customer/refresh-pin",
+        "issue": "Endpoint regenerates QR image at same filename (customer_qr_{id}.png). The TOTP secret itself is NEVER regenerated — only the QR image is re-saved. This means the secret is persistent and re-scanning always produces the same TOTP codes. This is intended/safe behavior for re-linking Google Authenticator, but worth noting. No new secret is issued on QR refresh.",
+        "priority": "INFO"
+      }
+    ]
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_totp_features_iter6.py",
+    "/app/test_reports/pytest/pytest_results_iter6.xml"
+  ],
+
+  "action_items": [
+    "OPTIONAL: Remove 'activation_pin' from safe_customer() response since TOTP is now the primary flow. Keeping it enables old PIN activation backward compat but leaks the PIN to any API consumer.",
+    "GUIDE-APP NOTE: The guide-app (/app/guide-app/) is NOT running as a service and has no build. It is a standalone React app. Code review confirms ActivationGate.jsx correctly calls activate-with-totp with email + 6 TOTP digits, and App.jsx implements 45-day inactivity check using localStorage. If guide-app needs to be deployed/tested, it must be started separately (yarn start or built and served)."
+  ],
+
+  "critical_code_review_comments": [
+    "safe_customer() in customer.py (line 85) still includes 'activation_pin' field. Since TOTP replaces PIN activation, this old PIN should be removed from API responses to reduce attack surface — the old activate-with-pin endpoint still works with this PIN.",
+    "guide-app/src/config.js uses 'http://localhost:8001' as fallback for REACT_APP_API_URL. In production deployment, REACT_APP_API_URL must be set as env var at build time.",
+    "No TOTP secret rotation on refresh-pin: the same secret is used forever. Consider adding a 'regenerate secret' option separate from 'refresh QR image' for cases where an authenticator device is lost.",
+    "IP lockout shares pin_attempt_log collection between activate-with-pin and activate-with-totp. Running both endpoints tests simultaneously from the same IP can trigger lockout cross-endpoint. This is acceptable but worth documenting."
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_totp_features_iter6.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (22/22 tests pass) — TestRegister(6), TestActivateWithTOTP(7), TestReAuthentication(2), TestRefreshPin(5), TestIPLockout(2)",
+    "frontend": "100% — /register landing (GA copy, 6-digit TOTP preview, Get Started btn), /register form (GA subtitle, 'Create Account & Set Up Authenticator' button), /register success (QR image, 4-step GA instructions, Continue to My Account), /my-account (Google Authenticator section, QR Code in right column, Refresh QR button, no PIN digits). Refresh QR Code button functional."
+  },
+
+  "test_credentials": {
+    "admin": "admin / admin123",
+    "ui_test_customer_during_testing": "ui.totp.361178@example.com / TOTPPass123! (deleted after testing)"
+  },
+
+  "seed_data_creation": "Two temporary test customers created and deleted: ui.totp.361178@example.com (UI testing), TEST_qr_check_final@example.com (API review). All cleaned up. Backend tests create/delete TEST_totp_iter6_* customers automatically.",
+
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+
+  "context_for_next_testing_agent": "Iteration 6 complete. TOTP feature fully tested and working. Backend: 22 tests pass (test_totp_features_iter6.py). Frontend: all flows verified — register landing/form/success with QR code, my-account with GA section and QR in right column. Guide-app code reviewed (ActivationGate.jsx calls activate-with-totp correctly, App.jsx has 45-day check) but NOT running as service (no supervisor config, no build). Minor: activation_pin still returned in register/login/me responses (old PIN, backward compat for activate-with-pin endpoint). IP lockout correctly triggers 429 after 3 bad TOTP codes.",
+
+  "rca_of_issues": {
+    "activation_pin_in_response": {
+      "root_cause": "safe_customer() in customer.py includes 'activation_pin' in the returned dict. This was kept for backward compatibility with the old /activate-with-pin endpoint.",
+      "impact": "Low risk — PIN is 6-digit numeric, UI doesn't display it. But it is returned in JSON to any API consumer.",
+      "mitigation": "Remove 'activation_pin' from safe_customer() or make its inclusion conditional on whether TOTP is disabled."
+    }
+  }
+}

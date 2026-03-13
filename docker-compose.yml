@@ -1,0 +1,89 @@
+version: '3.8'
+
+# ─── StreamVault TV — Docker Compose ─────────────────────────────────────────
+# Usage:
+#   1. Copy .env.example to .env and fill in values
+#   2. docker compose up -d
+#   3. Point Nginx Proxy Manager to:
+#        admin/api  → http://backend:8001
+#        guide app  → http://guide-app:3001
+#        admin UI   → http://frontend:3000
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── MongoDB ────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - internal
+
+  # ── FastAPI Backend ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASS}@mongo:27017/${DB_NAME}?authSource=admin
+      DB_NAME: ${DB_NAME}
+      SERVICE_NAME: ${SERVICE_NAME:-TV Service}
+      ACTIVATION_DOMAIN: ${ACTIVATION_DOMAIN:-http://localhost:3000}
+      JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - uploads:/app/backend/uploads
+    ports:
+      - "8001:8001"
+    depends_on:
+      - mongo
+    networks:
+      - internal
+      - proxy
+
+  # ── Admin Dashboard (React) ────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_BACKEND_URL: ${REACT_APP_BACKEND_URL}
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - proxy
+
+  # ── Customer Guide App (React) ─────────────────────────────────────────────
+  guide-app:
+    build:
+      context: ./guide-app
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_BACKEND_URL}
+        REACT_APP_GUIDE_TITLE: ${SERVICE_NAME:-StreamVault TV}
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    depends_on:
+      - backend
+    networks:
+      - proxy
+
+volumes:
+  mongo_data:
+  uploads:
+
+networks:
+  internal:
+    internal: true
+  proxy:
+    external: true   # created by Nginx Proxy Manager; run: docker network create proxy

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Tv, User, Shield, RefreshCw, LogOut, QrCode, Copy, CheckCircle,
+  Tv, User, Shield, RefreshCw, LogOut, QrCode, CheckCircle,
   Smartphone, AlertCircle, Loader, ExternalLink,
 } from 'lucide-react';
 
@@ -14,7 +14,6 @@ export default function MyAccountPage() {
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
 
   const token = localStorage.getItem('customer_token');
@@ -42,29 +41,20 @@ export default function MyAccountPage() {
     }
   };
 
-  const handleRefreshPIN = async () => {
-    if (!window.confirm('This will generate a new 6-digit PIN. Your old PIN will no longer work. Continue?')) return;
+  const handleRefreshQR = async () => {
+    if (!window.confirm('This will regenerate your Google Authenticator QR code. You will need to re-scan it with your app. Continue?')) return;
     setRefreshing(true);
     try {
       const res = await axios.post(`${API}/customer/refresh-pin`, {}, { headers });
       setCustomer(prev => ({
         ...prev,
-        activation_pin: res.data.activation_pin,
         qr_code_path: res.data.qr_code_path,
-        is_activated: false,
       }));
     } catch {
-      setError('Failed to refresh PIN. Please try again.');
+      setError('Failed to refresh QR code. Please try again.');
     } finally {
       setRefreshing(false);
     }
-  };
-
-  const copyPIN = () => {
-    if (!customer?.activation_pin) return;
-    navigator.clipboard.writeText(customer.activation_pin);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleLogout = () => {
@@ -82,8 +72,6 @@ export default function MyAccountPage() {
   }
 
   if (!customer) return null;
-
-  const pin = customer.activation_pin || '------';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -145,57 +133,42 @@ export default function MyAccountPage() {
             </div>
           </div>
 
-          {/* 6-digit PIN — the star of the show */}
+          {/* Google Authenticator card */}
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-[#0056A8]" />
-                <h2 className="text-lg font-bold text-gray-900">Your Activation PIN</h2>
+                <h2 className="text-lg font-bold text-gray-900">Google Authenticator</h2>
               </div>
               {customer.is_activated && (
                 <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 border border-green-200 px-2 py-1 rounded-full">
-                  <CheckCircle className="w-3.5 h-3.5" /> Activated
+                  <CheckCircle className="w-3.5 h-3.5" /> Device Activated
                 </span>
               )}
             </div>
 
-            {/* Big PIN display */}
-            <div className="bg-gradient-to-r from-[#0056A8] to-[#0070d8] rounded-xl p-6 mb-4">
-              <p className="text-white/70 text-sm text-center mb-3">Enter this PIN in your device app</p>
-              <div className="flex items-center justify-center gap-3 mb-3">
-                {pin.split('').map((d, i) => (
-                  <div key={i}
-                    className="w-12 h-14 bg-white rounded-xl flex items-center justify-center text-[#0056A8] text-2xl font-bold shadow-lg select-all"
-                    data-testid={`pin-digit-${i}`}
-                  >
-                    {d}
-                  </div>
-                ))}
+            <div className="bg-gradient-to-r from-[#0056A8] to-[#0070d8] rounded-xl p-5 mb-4 text-white text-center">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Shield className="w-6 h-6 text-white" />
               </div>
-              <div className="flex items-center justify-center gap-2">
-                <button onClick={copyPIN}
-                  className="flex items-center gap-1.5 text-white/80 hover:text-white text-xs transition-colors"
-                  data-testid="copy-pin-btn">
-                  {copied ? <CheckCircle className="w-3.5 h-3.5 text-green-300" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied ? 'Copied!' : 'Copy PIN'}
-                </button>
-              </div>
+              <p className="font-semibold text-base mb-1">Authenticator is Set Up</p>
+              <p className="text-white/70 text-sm">Use the 6-digit code from Google Authenticator to activate your TV device</p>
             </div>
 
             <div className="flex items-center gap-2 text-sm text-gray-500 bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4">
               <Smartphone className="w-4 h-4 text-[#0056A8] shrink-0" />
-              <p>Open the TV Service app on your device, then go to <strong>Activate Account</strong> and enter the 6 digits above.</p>
+              <p>Open the TV Service app, go to <strong>Activate Account</strong>, enter your email and the 6-digit code from Google Authenticator.</p>
             </div>
 
             <div className="flex gap-2">
               <button
-                onClick={handleRefreshPIN}
+                onClick={handleRefreshQR}
                 disabled={refreshing}
                 className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-60"
-                data-testid="refresh-pin-btn"
+                data-testid="refresh-qr-btn"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                {refreshing ? 'Generating...' : 'Generate New PIN'}
+                {refreshing ? 'Refreshing...' : 'Refresh QR Code'}
               </button>
               <Link to="/activate"
                 className="flex items-center gap-2 px-4 py-2 bg-[#0056A8] text-white rounded-xl text-sm hover:bg-[#0066c8] transition-colors">
@@ -219,18 +192,18 @@ export default function MyAccountPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
             <div className="flex items-center gap-2 mb-4">
               <QrCode className="w-5 h-5 text-[#0056A8]" />
-              <h2 className="text-base font-bold text-gray-900">Quick Activate via QR</h2>
+              <h2 className="text-base font-bold text-gray-900">Authenticator QR Code</h2>
             </div>
             {customer.qr_code_path ? (
               <div className="text-center">
                 <img
                   src={`${BACKEND_URL}/api${customer.qr_code_path}`}
-                  alt="Activation QR Code"
+                  alt="Google Authenticator QR Code"
                   className="w-40 h-40 mx-auto rounded-xl border border-gray-200"
                   data-testid="customer-qr-code"
                 />
                 <p className="text-xs text-gray-400 mt-3">
-                  Scan with your Android device camera to auto-fill the activation PIN
+                  Scan with Google Authenticator to re-link your account
                 </p>
               </div>
             ) : (
