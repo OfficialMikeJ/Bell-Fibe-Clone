@@ -4,6 +4,130 @@
 
 /* StreamVault TV Guide — TV-optimized CSS */
 
+/* ── Netflix-style entrance animations ───────────────────────────────────── */
+@keyframes sv-bg-breathe {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 0.9; transform: scale(1.04); }
+}
+
+@keyframes sv-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes sv-slide-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sv-scale-bounce {
+  0%   { opacity: 0; transform: scale(0.4); }
+  65%  { transform: scale(1.12); }
+  80%  { transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes sv-slide-right {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sv-glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 86, 168, 0.3); }
+  50%       { box-shadow: 0 0 40px rgba(0, 86, 168, 0.7), 0 0 80px rgba(0, 86, 168, 0.2); }
+}
+
+@keyframes sv-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+/* ── Animation utility classes ───────────────────────────────────────────── */
+.sv-bg-breathe  { animation: sv-bg-breathe 8s ease-in-out infinite; }
+.sv-fade-in     { animation: sv-fade-in 0.8s ease-out both; }
+.sv-slide-up    { animation: sv-slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.sv-scale-bounce{ animation: sv-scale-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.sv-slide-right { animation: sv-slide-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.sv-glow-pulse  { animation: sv-glow-pulse 3s ease-in-out infinite; }
+
+.sv-d-0  { animation-delay: 0ms; }
+.sv-d-1  { animation-delay: 100ms; }
+.sv-d-2  { animation-delay: 200ms; }
+.sv-d-3  { animation-delay: 320ms; }
+.sv-d-4  { animation-delay: 440ms; }
+.sv-d-5  { animation-delay: 560ms; }
+.sv-d-6  { animation-delay: 680ms; }
+.sv-d-7  { animation-delay: 800ms; }
+
+/* ── Pin digit boxes ─────────────────────────────────────────────────────── */
+.sv-pin-box {
+  width: 52px; height: 64px;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  font-size: 28px; font-weight: 700; color: #fff;
+  text-align: center; outline: none;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  caret-color: #0056A8;
+}
+.sv-pin-box:focus {
+  border-color: #0056A8;
+  background: rgba(0, 86, 168, 0.15);
+  transform: scale(1.08);
+  box-shadow: 0 0 0 3px rgba(0, 86, 168, 0.25);
+}
+.sv-pin-box.filled {
+  border-color: rgba(0, 86, 168, 0.6);
+  background: rgba(0, 86, 168, 0.1);
+}
+
+/* ── Email input ─────────────────────────────────────────────────────────── */
+.sv-email-input {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  font-size: 15px; color: #fff; padding: 14px 18px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.sv-email-input:focus {
+  border-color: #0056A8;
+  background: rgba(0, 86, 168, 0.1);
+  box-shadow: 0 0 0 3px rgba(0, 86, 168, 0.2);
+}
+.sv-email-input::placeholder { color: rgba(255,255,255,0.25); }
+
+/* ── Activate button ─────────────────────────────────────────────────────── */
+.sv-activate-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #0056A8 0%, #0070d8 100%);
+  color: #fff;
+  border: none; border-radius: 12px;
+  padding: 16px 24px;
+  font-size: 17px; font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
+  position: relative; overflow: hidden;
+}
+.sv-activate-btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+  background-size: 400px 100%;
+  animation: sv-shimmer 2.5s ease-in-out infinite;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.sv-activate-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 8px 32px rgba(0, 86, 168, 0.5);
+}
+.sv-activate-btn:hover:not(:disabled)::after { opacity: 1; }
+.sv-activate-btn:active:not(:disabled) { transform: translateY(0) scale(0.99); }
+.sv-activate-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {

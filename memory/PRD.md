@@ -33,7 +33,6 @@ StreamVault — a full-featured IPTV service with Live TV Guide. Full-stack appl
 │       └── pages/      ActivationGate.jsx (TOTP), TVGuide.jsx, VODPage.jsx, RecordingsPage.jsx
 ├── android/           Android WebView wrapper (README + build specs)
 ├── docker-compose.yml Production deployment config
-└── ROKU_APP_README.md Roku app specification
 ```
 
 ## Core Features - Implemented
@@ -93,7 +92,6 @@ StreamVault — a full-featured IPTV service with Live TV Guide. Full-stack appl
 
 ### Deployment Infrastructure
 - docker-compose.yml: backend, frontend, guide-app, MongoDB, network for Nginx Proxy Manager
-- ROKU_APP_README.md: full Roku app specification (BrightScript/SceneGraph)
 - Android WebView wrapper: full README with MainActivity.java, manifest, build.gradle
 
 ## Key Technical Decisions
@@ -124,25 +122,21 @@ StreamVault — a full-featured IPTV service with Live TV Guide. Full-stack appl
 - Admin: username=admin, password=admin123
 
 ## Completion Status (as of 2026-02-10): All core features implemented and tested
-- Backend: Roku endpoints (13/13), TOTP (22/22), all previous tests passing
-- Frontend: All flows verified — StreamVault branding live in TopBar
-- Guide-app: Full layout complete (EPGGrid, Sidebar, ChannelFeatured, GuideTopBar, TVGuide shell)
+- Backend: TOTP (22/22), all previous tests passing; Roku code fully removed
+- Frontend: StreamVault branding live; all flows verified
+- Guide-app: Full layout + Netflix-style entrance animations on ActivationGate
 - Dockerfiles: backend, frontend, guide-app all created with nginx configs
-- .env.example template created
 
 ## P1 Backlog
 - Guide-app: Update REACT_APP_API_URL fallback in config.js from localhost to production URL
 - Guide-app: Add `.env` file for local guide-app development
-- Add `portal` route to the Roku router for portal-style TOTP login page
 
 ## P2 Future
 - Migrate EPGGrid, Sidebar, TopBar from main frontend into guide-app for full separation
 - Guide-app needs Dockerfile + supervisor config for deployment
-- Roku link-code backend endpoints (POST /api/roku/request-link, etc.)
 
 ## P2 Future
 - Android APK build (WebView wrapping guide-app)
 - Actual HLS/RTSP stream playback integration
 - CVR automated recording (background job)
 - TOTP secret rotation option (for lost authenticator device)
-- Roku native app development per ROKU_APP_README.md spec
