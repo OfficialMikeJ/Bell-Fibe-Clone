@@ -108,7 +108,7 @@ const SettingsTab = ({ token }) => {
 
     setApkUploading(true);
     try {
-      const res = await axios.post(`${API}/apk/upload`, fd, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+      const res = await axios.post(`${API}/apk/upload`, fd, { headers: getHeaders() });
       toast.success(`APK v${res.data.version} uploaded (${res.data.file_size_mb} MB)`);
       setApkFile(null);
       setApkForm({ version: '', version_code: '', release_notes: '', required: false });

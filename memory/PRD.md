@@ -8,14 +8,15 @@ StreamVault — a full-featured IPTV service with Live TV Guide. Full-stack appl
 /app
 ├── backend/           FastAPI (Python) + MongoDB
 │   ├── routes/        auth, channels, programs, devices, users, setup,
-│   │                  media, vod, notifications, recordings, tickets, faq, customer, portal
+│   │                  media, vod, notifications, recordings, tickets, faq, customer, portal,
+│   │                  guide_state, apk (new)
 │   ├── models/        admin, channel, device, program, service_config, user,
 │   │                  media, vod, notification, recording, ticket, faq, customer
 │   └── utils/         geo_location, https_middleware, qr_generator,
 │                      security, two_factor, media_utils (FFmpeg wrapper)
 ├── frontend/          React + TailwindCSS + Shadcn UI
 │   └── src/
-│       ├── components/ AdminDashboard (14 tabs), LoginPage, SettingsTab,
+│       ├── components/ AdminDashboard (14 tabs), LoginPage, SettingsTab (APK section added),
 │       │               UserManagementTab, TwoFactorSetup, SetupWizard,
 │       │               EPGGrid, Sidebar, TopBar, ChannelFeatured,
 │       │               MediaLibraryTab, VODTab, NotificationsTab,
@@ -31,8 +32,9 @@ StreamVault — a full-featured IPTV service with Live TV Guide. Full-stack appl
 │       ├── App.jsx     Auth shell with 45-day inactivity check
 │       ├── config.js
 │       └── pages/      ActivationGate.jsx (TOTP), TVGuide.jsx, VODPage.jsx, RecordingsPage.jsx
-├── android/           Android WebView wrapper (README + build specs)
+├── android/           Android WebView wrapper (README with full update-check Java code)
 ├── docker-compose.yml Production deployment config
+├── .env.example       Full template including PUBLIC_BASE_URL
 ```
 
 ## Core Features - Implemented

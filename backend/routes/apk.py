@@ -61,8 +61,9 @@ async def get_latest_apk(request: Request, db: AsyncIOMotorDatabase = Depends(ge
     if not latest:
         return {"has_release": False}
 
-    # Build absolute download URL so Android can download directly
-    base = str(request.base_url).rstrip("/")
+    # Build absolute download URL — prefer PUBLIC_BASE_URL env var (set in .env)
+    # to avoid returning the internal Kubernetes cluster hostname
+    base = os.environ.get("PUBLIC_BASE_URL", str(request.base_url)).rstrip("/")
     relative = latest.get("download_url", "")
     absolute_url = f"{base}{relative}" if relative.startswith("/") else relative
 
@@ -110,7 +111,8 @@ async def upload_apk(
     with dest.open("wb") as out:
         shutil.copyfileobj(file.file, out)
 
-    download_url = f"/uploads/apk/{filename}"
+    # Use /api/uploads/apk/ — the only path routed through the Kubernetes/Nginx ingress
+    download_url = f"/api/uploads/apk/{filename}"
 
     record = {
         "version": version,
@@ -150,8 +152,15 @@ async def delete_release(
     admin: Admin = Depends(get_current_admin),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    """Admin: delete an APK release record (does not delete the file)."""
-    result = await db.apk_releases.delete_one({"version_code": version_code})
-    if result.deleted_count == 0:
+    """Admin: delete an APK release record and the corresponding file."""
+    record = await db.apk_releases.find_one({"version_code": version_code}, {"_id": 0})
+    if not record:
         raise HTTPException(status_code=404, detail="Release not found")
+
+    # Remove the file from disk
+    file_path = APK_DIR / record.get("filename", "")
+    if file_path.exists():
+        file_path.unlink()
+
+    await db.apk_releases.delete_one({"version_code": version_code})
     return {"message": f"Release v{version_code} deleted"}
