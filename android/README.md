@@ -76,8 +76,9 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
@@ -87,15 +88,19 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
     private WebView webView;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler  = new Handler(Looper.getMainLooper());
 
     // ── Replace with your actual server IP / domain ──────────────────────────
     private static final String BASE_URL   = "http://70.28.9.208:8001";   // or https://api.yourdomain.com
     private static final String GUIDE_URL  = "http://70.28.9.208:3001";   // or https://guide.yourdomain.com
 
-    // Increment this whenever you build a new APK
+    // Increment this every time you build and upload a new APK
     private static final int APP_VERSION_CODE = 1;
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -115,8 +120,14 @@ public class MainActivity extends Activity {
         webView.setWebViewClient(new WebViewClient());
         webView.loadUrl(GUIDE_URL);
 
-        // Check for update in background
-        new CheckUpdateTask().execute(BASE_URL + "/api/apk/latest");
+        // Check for update in background (no deprecated AsyncTask)
+        checkForUpdate();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        executor.shutdownNow();   // clean up thread pool — prevents memory leaks
     }
 
     @Override
@@ -128,56 +139,58 @@ public class MainActivity extends Activity {
         }
     }
 
-    // ── Background task: poll /api/apk/latest and prompt if newer ────────────
-    private class CheckUpdateTask extends AsyncTask<String, Void, JSONObject> {
-        @Override
-        protected JSONObject doInBackground(String... urls) {
-            try {
-                HttpURLConnection conn = (HttpURLConnection) new URL(urls[0]).openConnection();
-                conn.setConnectTimeout(5000);
-                conn.setReadTimeout(5000);
-                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = br.readLine()) != null) sb.append(line);
-                return new JSONObject(sb.toString());
-            } catch (Exception e) {
-                return null;
-            }
+    // ── Background update check using Executors (replaces deprecated AsyncTask) ──
+    private void checkForUpdate() {
+        executor.execute(() -> {
+            JSONObject result = fetchLatestRelease();
+            mainHandler.post(() -> handleUpdateResult(result));
+        });
+    }
+
+    private JSONObject fetchLatestRelease() {
+        try {
+            HttpURLConnection conn = (HttpURLConnection) new URL(BASE_URL + "/api/apk/latest").openConnection();
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) sb.append(line);
+            br.close();
+            return new JSONObject(sb.toString());
+        } catch (Exception e) {
+            return null;   // network unavailable — skip silently
         }
+    }
 
-        @Override
-        protected void onPostExecute(JSONObject result) {
-            if (result == null) return;
-            try {
-                boolean hasRelease = result.optBoolean("has_release", false);
-                if (!hasRelease) return;
+    private void handleUpdateResult(JSONObject result) {
+        if (result == null || isFinishing()) return;
+        try {
+            if (!result.optBoolean("has_release", false)) return;
 
-                int serverVersionCode = result.optInt("version_code", 0);
-                if (serverVersionCode <= APP_VERSION_CODE) return;   // already up to date
+            int serverVersionCode = result.optInt("version_code", 0);
+            if (serverVersionCode <= APP_VERSION_CODE) return;   // already up to date
 
-                String serverVersion  = result.optString("version", "");
-                String downloadUrl    = result.optString("download_url", "");
-                String releaseNotes   = result.optString("release_notes", "");
-                boolean required      = result.optBoolean("required", false);
+            String serverVersion = result.optString("version", "");
+            String downloadUrl   = result.optString("download_url", "");
+            String releaseNotes  = result.optString("release_notes", "");
+            boolean required     = result.optBoolean("required", false);
 
-                String message = "Version " + serverVersion + " is available.\n";
-                if (!releaseNotes.isEmpty()) message += "\n" + releaseNotes + "\n";
-                if (required) message += "\nThis update is required to continue.";
+            String message = "Version " + serverVersion + " is available.";
+            if (!releaseNotes.isEmpty()) message += "\n\n" + releaseNotes;
+            if (required) message += "\n\nThis update is required to continue.";
 
-                final String finalUrl = downloadUrl;
-                new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Update Available")
-                    .setMessage(message)
-                    .setPositiveButton("Download Now", (d, w) -> {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(finalUrl)));
-                    })
-                    .setNegativeButton(required ? null : "Later", required ? null : (d, w) -> d.dismiss())
-                    .setCancelable(!required)
-                    .show();
-            } catch (Exception e) {
-                // ignore — update check is best-effort
-            }
+            new AlertDialog.Builder(this)
+                .setTitle("Update Available")
+                .setMessage(message)
+                .setPositiveButton("Download Now", (d, w) ->
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl))))
+                .setNegativeButton(required ? null : "Later",
+                    required ? null : (d, w) -> d.dismiss())
+                .setCancelable(!required)
+                .show();
+        } catch (Exception e) {
+            // ignore — update check is best-effort
         }
     }
 }
@@ -226,7 +239,7 @@ android {
     compileSdk 33
     
     defaultConfig {
-        applicationId "com.tvservice.guide"
+        applicationId "com.streamvault.tv"
         minSdk 24
         targetSdk 33
         versionCode 1
