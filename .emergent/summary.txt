@@ -1,0 +1,157 @@
+<analysis>**original_problem_statement:**
+The user wants to develop a full-featured clone of Bell Canada's TV service, including an IPTV service and a Live TV Guide. The project has evolved to include a comprehensive admin dashboard, a customer-facing support portal, and a public registration website.
+
+**PRODUCT REQUIREMENTS:**
+- **Core Functionality:** A full-stack application with a live TV guide (EPG) and a Video on Demand (VOD) section.
+- **Admin Dashboard:** A comprehensive backend for managing channels, EPG, media, users, devices, CVR, analytics, a new support ticket system, and an FAQ section.
+- **Customer Portal:** A separate web portal () for customers to log in via QR code to submit support tickets and view FAQs.
+- **Public Website:** A public-facing site for new customer registration. The registration flow involves collecting device information and uses a PIN-based activation method for the app, with an IP-based lockout mechanism for security.
+- **Security & Infrastructure:**
+    - Multi-layered admin authentication (JWT, 2FA, Master PIN).
+    - Device authentication via Device UUID, MAC Address, and Geo-location.
+    - Integration with Uptime Kuma for service status monitoring.
+    - The application should be containerized using Docker Compose and support custom domains via a proxy manager like Nginx Proxy Manager.
+- **Client Applications:**
+    - A dedicated, separated React application () for the customer-facing TV guide.
+    - A placeholder Android project to wrap the .
+    - A  file with specifications for a future Roku application.
+
+**User's preferred language**: English
+
+**what currently exists?**
+A robust, feature-rich full-stack application. The backend is a FastAPI application providing APIs for all required features. The frontend consists of a massive admin dashboard with 14 tabs (including new ones for Tickets and FAQs), a complete customer support portal, and a public registration website. The system has undergone multiple successful end-to-end test cycles, and all known bugs have been fixed. The agent was in the process of scaffolding the next major architectural changes when the session ended.
+
+**Last working item**:
+- **Last item agent was working**: The agent was executing a multi-part user request which involves major architectural setup for future deployment and development. This includes:
+    1.  Creating a new, separate React application directory () for the customer-facing UI.
+    2.  Creating a placeholder Android project structure ().
+    3.  Creating a  file for containerized deployment.
+    4.  Creating a  file with specifications for a future Roku app.
+- **Status**: IN PROGRESS
+- **Agent Testing Done**: N
+- **Which testing method agent to use?** both. The new  will require frontend testing to ensure it works independently. The  setup will require backend and integration testing to confirm all services start and communicate correctly.
+- **User Testing Done**: N
+
+**All Pending/In progress Issue list**:
+- There are no known bugs or issues. The application was stable and fully tested before starting the last task.
+
+**In progress Task List**:
+- **Task 1: Complete Scaffolding for Guide App, Docker, and Android** (Priority: P0)
+    - **Where to resume**: The agent has initiated the creation of several files (, , , etc.) but has not yet populated them with content. The next step is to write the actual content for these files to create a working baseline for each deliverable.
+    - **What will be achieved with this?**: This will establish the foundational structure for the separated guide application, the future Android app, and the containerized deployment environment, fulfilling the user's latest request.
+    - **Status**: IN PROGRESS
+    - **Should Test frontend/backend/both after fix?**: both
+    - **Blocked on something**: No.
+
+**Upcoming and Future Tasks**
+- **Upcoming Tasks**:
+    - **P0: Migrate Customer UI to **: Move all customer-facing components (e.g., , , , ) and their related logic from the main  project into the newly created .
+    - **P1: Implement Android App Wrapper**: Flesh out the  project to build an APK that wraps the web-based .
+    - **P2: Finalize Docker and Nginx Proxy Manager Integration**: Refine the  and provide documentation on how to use it with Nginx Proxy Manager to set a custom domain.
+- **Future Tasks**:
+    - **TV Tuner Integration**: Implement the backend logic to interface with a TV tuner card for streaming Free-to-Air channels and build out the corresponding Live TV tab.
+    - **Build Roku App**: Develop the Roku application based on the specifications in .
+
+**Completed work in this session**
+- **Critical Bug Fixes**:
+    - Resolved a major routing issue by mounting the  directory at , fixing all broken images, QR codes, and media streaming links across the application.
+    - Fixed bugs in the  and  endpoints related to missing CVR fields and incorrect validation.
+- **New Feature: Customer Support Portal**:
+    - Built a complete, self-contained customer portal at .
+    - Implemented a secure QR code-based login for customers.
+    - Created a full ticket management system (submission, status tracking, admin replies) and an FAQ management system, both with dedicated tabs in the admin dashboard.
+    - Added support for configuring an Uptime Kuma URL in the admin settings.
+- **New Feature: Public Customer Registration**:
+    - Developed a public-facing registration website.
+    - Implemented a new user activation flow using a 6-digit PIN.
+    - Created a robust, IP-based security lockout mechanism to prevent brute-force PIN attacks, including an admin endpoint to clear lockouts.
+- **Testing and Validation**:
+    - Successfully executed multiple comprehensive test runs using the testing agent, achieving 100% pass rates on both frontend and backend tests for the newly added features.
+
+**Earlier issues found/mentioned but not fixed**
+- None. The agent was diligent in identifying and resolving all issues as they arose.
+
+**Known issue recurrence from previous fork**
+- None.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+- **Frontend**: React, React Router, TailwindCSS, Shadcn UI, Axios.
+- **Backend**: FastAPI (Python), Motor (async MongoDB), .
+- **Database**: MongoDB.
+- **Authentication**: JWT, 2FA, Master PIN, Geo-location, and a new IP-based lockout system.
+- **Deployment**: Docker Compose (in progress).
+
+**key DB schema**
+- **tickets**: , , ,  (, ), , 
+- **faqs**: , 
+- **portal_sessions**: , , 
+- **ip_lockouts**: , , 
+
+**changes in tech stack**
+-  is being introduced for containerized deployment.
+-  library was added to the backend for generating QR codes.
+
+**All files of reference**
+- : New file for defining the application services for deployment.
+- : New documentation for a future Roku app.
+- : New directory for the separated customer-facing React application.
+- : New directory for the Android project wrapper.
+- : Handles public user registration and PIN activation.
+- : Manages the customer support portal authentication.
+- : CRUD for support tickets.
+- : CRUD for FAQ items.
+- : The new public customer registration UI.
+- : The login page for the customer support portal.
+- : The new admin UI for managing tickets.
+- : Updated to mount  and include all new API routers.
+
+**Areas that need refactoring**:
+- The primary refactoring task is to migrate all customer-facing UI code from  to  to achieve the planned architectural separation.
+
+**key api endpoints**
+- : Creates a new customer account.
+- : Activates a device using a PIN, with IP-based lockout.
+- : Authenticates a user into the support portal via QR code scan.
+- : Fetches all support tickets for the admin dashboard.
+- : Manages FAQ items.
+
+**Critical Info for New Agent**
+- The user continues to provide large, multi-part feature requests with the instruction to proceed or just build.
+- Your immediate task is to finish the scaffolding started by the previous agent: create the content for , the 's basic structure, the Android project files, and the Roku README.
+- Once the scaffolding is complete, the next logical step is the major architectural task of moving the customer-facing UI code into the  directory.
+
+**documents and test reports created in this job**
+- 
+-  (Updated multiple times)
+- 
+- 
+- 
+
+**Last 10 User Messages and any pending HUMAN messages**
+- **User Message (latest):** Requested the creation of the Android-based , a  file for hosting with Nginx Proxy Manager support, and a  file with specs for a future Roku app. (Status: IN PROGRESS)
+- **User Message:** Requested a public customer registration website with a new PIN-based activation flow and IP lockout security. (Status: COMPLETED)
+- **User Message:** Provided details for the support portal, including ticket types, statuses, Uptime Kuma integration, and clarified the portal is a separate website. (Status: COMPLETED)
+- **User Message:** Requested a full customer support portal feature, including QR code login for users, a ticket system, and an FAQ section managed from the admin dashboard. (Status: COMPLETED)
+
+**Project Health Check:**
+- **Broken**: None. The application is in a stable, tested state.
+- **Mocked**: The Live TV (TV Tuner) feature tab in the admin sidebar remains a non-functional placeholder.
+
+**3rd Party Integrations**
+- **ffmpeg**: System-level dependency for media processing.
+- **Uptime Kuma**: Not a direct code integration, but the system supports configuring a URL to an external Uptime Kuma instance.
+
+**Testing status**
+- **Testing agent used after significant changes**: YES. The agent used the testing subagent three times in the last session, ensuring all new features (support portal, registration page) are stable and bug-free.
+- **Troubleshoot agent used after agent stuck in loop**: NO.
+- **Test files created**: None.
+- **Known regressions**: None.
+
+**Credentials to test flow:**
+The admin credentials can be found in the  endpoint logic if the app is not yet set up. Otherwise, refer to previous successful test runs or the user's initial requirements for test credentials.
+
+**What agent forgot to execute**
+- Nothing. The agent was actively working on the user's latest request to scaffold the , Docker configuration, and Android project when the session ended.</analysis>
