@@ -15,15 +15,16 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
       a.start_time.localeCompare(b.start_time)
     );
 
-  // Keyboard / Android remote D-pad navigation
+  // Keyboard / Android remote D-pad navigation (skip coming-soon channels)
   useEffect(() => {
+    const activeChannels = channels.filter(c => !c.coming_soon && c.status !== 'coming_soon');
     const handleKeyDown = (e) => {
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
           setFocusedChannelIdx(prev => {
-            const next = Math.min(prev + 1, channels.length - 1);
-            onChannelSelect(channels[next]);
+            const next = Math.min(prev + 1, activeChannels.length - 1);
+            onChannelSelect(activeChannels[next]);
             return next;
           });
           break;
@@ -31,14 +32,14 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
           e.preventDefault();
           setFocusedChannelIdx(prev => {
             const next = Math.max(prev - 1, 0);
-            onChannelSelect(channels[next]);
+            onChannelSelect(activeChannels[next]);
             return next;
           });
           break;
         case 'Enter':
         case ' ':
           e.preventDefault();
-          if (channels[focusedChannelIdx]) onChannelSelect(channels[focusedChannelIdx]);
+          if (activeChannels[focusedChannelIdx]) onChannelSelect(activeChannels[focusedChannelIdx]);
           break;
         default:
           break;
@@ -48,7 +49,6 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [channels, focusedChannelIdx, onChannelSelect]);
 
-  // Sync focus idx with selected channel
   useEffect(() => {
     const idx = channels.findIndex(c => c.id === selectedChannelId);
     if (idx >= 0) setFocusedChannelIdx(idx);
@@ -79,6 +79,37 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
       {/* Channel rows */}
       <div className="space-y-1.5">
         {channels.map((channel, idx) => {
+          const isComingSoon = channel.coming_soon || channel.status === 'coming_soon';
+
+          // ── Coming Soon row ─────────────────────────────────────────────
+          if (isComingSoon) {
+            return (
+              <div
+                key={channel.id}
+                data-testid={`epg-channel-row-${channel.id}`}
+                className="sv-slide-from-left flex opacity-35 cursor-not-allowed select-none"
+                style={{ animationDelay: `${Math.min(idx * 40, 600)}ms` }}
+              >
+                {/* Channel info — grayed out */}
+                <div className="w-52 flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-[#1c1c1c] rounded-l-lg border-2 border-dashed border-gray-800">
+                  <div className="w-12 h-12 rounded-md flex-shrink-0 flex items-center justify-center border border-dashed border-gray-700 bg-[#222]">
+                    <span className="text-gray-600 text-xl">📡</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-500 font-medium text-sm truncate">{channel.name}</p>
+                    <p className="text-gray-700 text-xs">{channel.number}</p>
+                  </div>
+                </div>
+
+                {/* Program area — coming soon placeholder */}
+                <div className="flex-1 flex items-center bg-[#1c1c1c] rounded-r-lg border-2 border-dashed border-gray-800 px-5">
+                  <span className="text-gray-600 text-sm italic tracking-widest">— Live TV Coming Soon —</span>
+                </div>
+              </div>
+            );
+          }
+
+          // ── Normal channel row ───────────────────────────────────────────
           const isSelected = channel.id === selectedChannelId;
           const isFocused = idx === focusedChannelIdx;
           const channelPrograms = getProgramsForChannel(channel.id);
