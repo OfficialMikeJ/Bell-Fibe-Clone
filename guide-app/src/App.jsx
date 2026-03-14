@@ -18,7 +18,8 @@ function isDeviceExpired(device) {
 async function verifyDevice(deviceId) {
   try {
     const res = await axios.get(`${API_URL}/api/devices/guide/${deviceId}`);
-    return res.data.authorized;
+    // Success (200) means the device is valid and authorized
+    return res.status === 200;
   } catch {
     return false;
   }

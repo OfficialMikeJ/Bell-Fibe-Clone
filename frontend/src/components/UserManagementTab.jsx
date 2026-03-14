@@ -455,25 +455,37 @@ const UserManagementTab = ({ token }) => {
                         </td>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
-                            <code className="text-blue-300 text-sm bg-blue-900/20 px-2 py-0.5 rounded" data-testid={`cred-username-${c.id}`}>
-                              {c.app_username}
-                            </code>
-                            <button onClick={() => copyToClipboard(c.app_username, 'Username')} className="text-gray-500 hover:text-gray-300" title="Copy username">
-                              <Copy className="w-3.5 h-3.5" />
-                            </button>
+                            {c.app_username ? (
+                              <>
+                                <code className="text-blue-300 text-sm bg-blue-900/20 px-2 py-0.5 rounded" data-testid={`cred-username-${c.id}`}>
+                                  {c.app_username}
+                                </code>
+                                <button onClick={() => copyToClipboard(c.app_username, 'Username')} className="text-gray-500 hover:text-gray-300" title="Copy username">
+                                  <Copy className="w-3.5 h-3.5" />
+                                </button>
+                              </>
+                            ) : (
+                              <span className="text-gray-600 text-xs italic">Not set — click reset</span>
+                            )}
                           </div>
                         </td>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
-                            <code className="text-green-300 text-sm bg-green-900/20 px-2 py-0.5 rounded" data-testid={`cred-password-${c.id}`}>
-                              {visiblePasswords[c.id] ? c.app_password : '••••••'}
-                            </code>
-                            <button onClick={() => togglePasswordVisibility(c.id)} className="text-gray-500 hover:text-gray-300" title="Show/hide password">
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
-                            <button onClick={() => copyToClipboard(c.app_password, 'Password')} className="text-gray-500 hover:text-gray-300" title="Copy password">
-                              <Copy className="w-3.5 h-3.5" />
-                            </button>
+                            {c.app_password ? (
+                              <>
+                                <code className="text-green-300 text-sm bg-green-900/20 px-2 py-0.5 rounded" data-testid={`cred-password-${c.id}`}>
+                                  {visiblePasswords[c.id] ? c.app_password : '••••••'}
+                                </code>
+                                <button onClick={() => togglePasswordVisibility(c.id)} className="text-gray-500 hover:text-gray-300" title="Show/hide password">
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => copyToClipboard(c.app_password, 'Password')} className="text-gray-500 hover:text-gray-300" title="Copy password">
+                                  <Copy className="w-3.5 h-3.5" />
+                                </button>
+                              </>
+                            ) : (
+                              <span className="text-gray-600 text-xs italic">Not set — click reset</span>
+                            )}
                           </div>
                         </td>
                         <td className="p-3">

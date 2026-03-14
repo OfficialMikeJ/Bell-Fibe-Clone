@@ -141,4 +141,4 @@ StreamVault — a full-featured IPTV service with Live TV Guide. Full-stack appl
 - Android APK build (WebView wrapping guide-app)
 - Actual HLS/RTSP stream playback integration
 - CVR automated recording (background job)
-- TOTP secret rotation option (for lost authenticator device)
+- Credential rotation option (admin-triggered)
