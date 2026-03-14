@@ -85,7 +85,7 @@ function AppShell() {
     return (
       <ActivationGate
         onActivated={handleActivated}
-        expiredMessage="Your session has expired after 45 days of inactivity. Please re-authenticate with Google Authenticator."
+        expiredMessage="Your session has expired after 45 days of inactivity. Please re-enter your username and password to continue."
       />
     );
   }

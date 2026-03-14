@@ -7,7 +7,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Badge } from './ui/badge';
-import { Trash2, Edit, Eye, Plus } from 'lucide-react';
+import { Trash2, Edit, Eye, Plus, Copy, RefreshCw, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -21,6 +21,12 @@ const UserManagementTab = ({ token }) => {
   const [editingUserId, setEditingUserId] = useState(null);
   const [isDevicesDialogOpen, setIsDevicesDialogOpen] = useState(false);
   const [selectedUserDevices, setSelectedUserDevices] = useState(null);
+
+  // Customer accounts (TV app credentials)
+  const [customers, setCustomers] = useState([]);
+  const [customersLoading, setCustomersLoading] = useState(true);
+  const [visiblePasswords, setVisiblePasswords] = useState({});
+  const [resettingId, setResettingId] = useState(null);
   
   const [userForm, setUserForm] = useState({
     username: '',
@@ -36,7 +42,39 @@ const UserManagementTab = ({ token }) => {
 
   useEffect(() => {
     fetchUsers();
+    fetchCustomers();
   }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      const res = await axios.get(`${API}/customer/admin/all`, { headers: getHeaders() });
+      setCustomers(res.data || []);
+    } catch { /* silently fail */ } finally {
+      setCustomersLoading(false);
+    }
+  };
+
+  const handleResetCredentials = async (customerId) => {
+    if (!window.confirm('Generate new username and password for this customer? The old credentials will stop working immediately.')) return;
+    setResettingId(customerId);
+    try {
+      const res = await axios.post(`${API}/customer/admin/${customerId}/reset-credentials`, {}, { headers: getHeaders() });
+      toast.success(`New credentials: ${res.data.app_username} / ${res.data.app_password}`);
+      fetchCustomers();
+    } catch {
+      toast.error('Failed to reset credentials');
+    } finally {
+      setResettingId(null);
+    }
+  };
+
+  const copyToClipboard = (text, label) => {
+    navigator.clipboard.writeText(text).then(() => toast.success(`${label} copied`));
+  };
+
+  const togglePasswordVisibility = (id) => {
+    setVisiblePasswords(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const fetchUsers = async () => {
     try {
@@ -376,6 +414,99 @@ const UserManagementTab = ({ token }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── Customer App Credentials ─────────────────────────────────────────── */}
+      <div className="mt-8">
+        <div className="flex items-center gap-3 mb-4">
+          <KeyRound className="w-5 h-5 text-blue-400" />
+          <h2 className="text-xl font-semibold text-white">Customer App Credentials</h2>
+          <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded">Admin only — not visible to customers</span>
+        </div>
+
+        <Card className="bg-[#2a2a2a] border-gray-700">
+          <CardContent className="p-0">
+            {customersLoading ? (
+              <p className="text-gray-400 text-center py-8">Loading...</p>
+            ) : customers.length === 0 ? (
+              <p className="text-gray-500 text-center py-8 italic">No registered customers yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-[#1a1a1a]">
+                    <tr>
+                      <th className="text-left p-3 text-gray-300 text-sm">Customer</th>
+                      <th className="text-left p-3 text-gray-300 text-sm">Device</th>
+                      <th className="text-left p-3 text-gray-300 text-sm">Username</th>
+                      <th className="text-left p-3 text-gray-300 text-sm">Password</th>
+                      <th className="text-left p-3 text-gray-300 text-sm">Status</th>
+                      <th className="text-right p-3 text-gray-300 text-sm">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customers.map((c) => (
+                      <tr key={c.id} className="border-t border-gray-700 hover:bg-[#1e1e1e]">
+                        <td className="p-3">
+                          <p className="text-white font-medium text-sm">{c.first_name} {c.last_name}</p>
+                          <p className="text-gray-500 text-xs">{c.email}</p>
+                        </td>
+                        <td className="p-3">
+                          <p className="text-gray-300 text-xs">{c.device_brand}</p>
+                          <p className="text-gray-500 text-xs">{c.device_type}</p>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <code className="text-blue-300 text-sm bg-blue-900/20 px-2 py-0.5 rounded" data-testid={`cred-username-${c.id}`}>
+                              {c.app_username}
+                            </code>
+                            <button onClick={() => copyToClipboard(c.app_username, 'Username')} className="text-gray-500 hover:text-gray-300" title="Copy username">
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <code className="text-green-300 text-sm bg-green-900/20 px-2 py-0.5 rounded" data-testid={`cred-password-${c.id}`}>
+                              {visiblePasswords[c.id] ? c.app_password : '••••••'}
+                            </code>
+                            <button onClick={() => togglePasswordVisibility(c.id)} className="text-gray-500 hover:text-gray-300" title="Show/hide password">
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => copyToClipboard(c.app_password, 'Password')} className="text-gray-500 hover:text-gray-300" title="Copy password">
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <Badge className={
+                            c.status === 'active' ? 'bg-green-500/20 text-green-400 border-green-500' :
+                            c.status === 'suspended' ? 'bg-red-500/20 text-red-400 border-red-500' :
+                            'bg-yellow-500/20 text-yellow-400 border-yellow-500'
+                          }>
+                            {c.is_activated ? 'Activated' : c.status}
+                          </Badge>
+                        </td>
+                        <td className="p-3 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleResetCredentials(c.id)}
+                            disabled={resettingId === c.id}
+                            className="text-orange-400 hover:text-orange-300 hover:bg-orange-900/20"
+                            title="Generate new credentials"
+                            data-testid={`reset-creds-${c.id}`}
+                          >
+                            <RefreshCw className={`w-4 h-4 ${resettingId === c.id ? 'animate-spin' : ''}`} />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -3,7 +3,9 @@ from typing import Optional, List
 from datetime import datetime
 import uuid
 import secrets
-import pyotp
+import random
+import string
+
 
 DEVICE_BRANDS = [
     "Samsung", "LG", "TCL", "Sony", "Hisense",
@@ -18,10 +20,36 @@ DEVICE_TYPES = [
     "Other/Not Listed",
 ]
 
+_SPECIAL = "@#$!%*?"
+_VOWELS = "aeiou"
+_CONSONANTS = "bcdfghjklmnpqrstvwxyz"
 
-def generate_pin() -> str:
-    """Generate a cryptographically secure 6-digit numeric PIN"""
-    return str(secrets.randbelow(1000000)).zfill(6)
+
+def generate_app_username() -> str:
+    """8-letter pronounceable lowercase username — no numbers or special chars."""
+    # Alternate consonant-vowel for readability: e.g. "marovebi"
+    pattern = [_CONSONANTS, _VOWELS, _CONSONANTS, _VOWELS,
+               _CONSONANTS, _VOWELS, _CONSONANTS, _VOWELS]
+    return "".join(random.choice(pool) for pool in pattern)
+
+
+def generate_app_password() -> str:
+    """
+    Exactly 6 characters guaranteed to contain:
+    one uppercase letter, one lowercase letter, one digit, one special char,
+    plus two more random chars from the full set.
+    """
+    pool = string.ascii_letters + string.digits + _SPECIAL
+    required = [
+        random.choice(string.ascii_uppercase),
+        random.choice(string.ascii_lowercase),
+        random.choice(string.digits),
+        random.choice(_SPECIAL),
+    ]
+    extra = [secrets.choice(pool) for _ in range(2)]
+    combined = required + extra
+    random.shuffle(combined)
+    return "".join(combined)
 
 
 class CustomerCreate(BaseModel):
@@ -38,9 +66,9 @@ class CustomerLogin(BaseModel):
     password: str
 
 
-class TOTPActivateRequest(BaseModel):
-    email: str
-    totp_code: str
+class CredentialsActivateRequest(BaseModel):
+    app_username: str
+    app_password: str
     device_uuid: Optional[str] = None
     device_name: Optional[str] = None
 
@@ -53,9 +81,10 @@ class CustomerAccount(BaseModel):
     password_hash: str
     device_brand: str
     device_type: str
-    activation_pin: str = Field(default_factory=generate_pin)
-    totp_secret: str = Field(default_factory=pyotp.random_base32)
-    pin_failed_attempts: List[str] = []  # ISO timestamp strings
+    # TV guide app credentials — generated automatically, visible to admin only
+    app_username: str = Field(default_factory=generate_app_username)
+    app_password: str = Field(default_factory=generate_app_password)
+    pin_failed_attempts: List[str] = []
     is_activated: bool = False
     device_id: Optional[str] = None
     qr_code_path: Optional[str] = None

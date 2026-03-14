@@ -1,5 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, Request, Header
-from models.customer import CustomerAccount, CustomerCreate, CustomerLogin, TOTPActivateRequest
+from models.customer import (
+    CustomerAccount, CustomerCreate, CustomerLogin,
+    CredentialsActivateRequest, generate_app_username, generate_app_password,
+)
 from models.admin import Admin
 from typing import Optional, List
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -7,15 +10,13 @@ from utils.security import (
     verify_password, get_password_hash, create_access_token, verify_token
 )
 from utils.geo_location import get_client_ip
-from utils.qr_generator import generate_qr_code
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
-import pyotp
 
 router = APIRouter(prefix="/api/customer", tags=["customer"])
 
-PIN_MAX_ATTEMPTS = 3
-PIN_LOCKOUT_MINUTES = 45
+LOGIN_MAX_ATTEMPTS = 3
+LOGIN_LOCKOUT_MINUTES = 45
 
 
 async def get_db():
@@ -57,22 +58,6 @@ async def get_current_customer(
     return CustomerAccount(**customer)
 
 
-def check_pin_lockout(pin_failed_attempts: List[str]):
-    """Return (is_locked, minutes_remaining, recent_count)"""
-    now = datetime.utcnow()
-    window_start = now - timedelta(minutes=PIN_LOCKOUT_MINUTES)
-    recent = [
-        ts for ts in pin_failed_attempts
-        if datetime.fromisoformat(ts) > window_start
-    ]
-    if len(recent) >= PIN_MAX_ATTEMPTS:
-        oldest_in_window = min(datetime.fromisoformat(ts) for ts in recent)
-        unlock_at = oldest_in_window + timedelta(minutes=PIN_LOCKOUT_MINUTES)
-        minutes_remaining = int((unlock_at - now).total_seconds() / 60) + 1
-        return True, minutes_remaining, len(recent)
-    return False, 0, len(recent)
-
-
 def safe_customer(customer: dict) -> dict:
     """Strip sensitive fields before returning to client"""
     return {
@@ -82,81 +67,56 @@ def safe_customer(customer: dict) -> dict:
         "email": customer.get("email"),
         "device_brand": customer.get("device_brand"),
         "device_type": customer.get("device_type"),
-        "qr_code_path": customer.get("qr_code_path"),
         "is_activated": customer.get("is_activated", False),
         "device_id": customer.get("device_id"),
         "status": customer.get("status"),
         "created_at": customer.get("created_at"),
-        "totp_enabled": bool(customer.get("totp_secret")),
         "last_active_at": customer.get("last_active_at"),
     }
 
 
+# ─── Public: Customer Registration ────────────────────────────────────────────
+
 @router.post("/register")
 async def register_customer(
     data: CustomerCreate,
-    request: Request,
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    """Public: register a new customer account"""
-    # Normalize email
+    """Public: register a new customer account. Credentials are generated automatically."""
     email = data.email.lower().strip()
 
-    # Check if email already registered
     existing = await db.customer_accounts.find_one({"email": email})
     if existing:
         raise HTTPException(status_code=400, detail="An account with this email already exists")
 
-    # Hash password
-    password_hash = get_password_hash(data.password)
+    # Ensure username is unique
+    username = generate_app_username()
+    while await db.customer_accounts.find_one({"app_username": username}):
+        username = generate_app_username()
 
-    # Create account
+    password = generate_app_password()
+
     customer = CustomerAccount(
         first_name=data.first_name.strip(),
         last_name=data.last_name.strip(),
         email=email,
-        password_hash=password_hash,
+        password_hash=get_password_hash(data.password),
         device_brand=data.device_brand,
         device_type=data.device_type,
+        app_username=username,
+        app_password=password,
     )
 
-    # Generate Google Authenticator QR code
-    # The QR data is an otpauth:// URI that Google Authenticator reads
-    service_name = os.environ.get("SERVICE_NAME", "TV Service")
-    totp_uri = pyotp.totp.TOTP(customer.totp_secret).provisioning_uri(
-        name=email,
-        issuer_name=service_name,
-    )
-    qr_data = totp_uri  # QR encodes the GA setup URI
+    doc = customer.dict()
+    await db.customer_accounts.insert_one(doc)
 
-    try:
-        from pathlib import Path
-        import qrcode as qrcode_lib
-
-        qr_dir = Path("/app/backend/uploads/qr_codes")
-        qr_dir.mkdir(parents=True, exist_ok=True)
-        filename = f"customer_qr_{customer.id}.png"
-        filepath = qr_dir / filename
-
-        qr = qrcode_lib.QRCode(version=1, error_correction=qrcode_lib.constants.ERROR_CORRECT_L, box_size=10, border=4)
-        qr.add_data(qr_data)
-        qr.make(fit=True)
-        img = qr.make_image(fill_color="black", back_color="white")
-        img.save(filepath)
-        customer.qr_code_path = f"/uploads/qr_codes/{filename}"
-    except Exception:
-        pass  # QR generation is non-blocking
-
-    await db.customer_accounts.insert_one(customer.dict())
-
-    # Issue JWT for auto-login
     token = create_access_token(data={"sub": email, "type": "customer"})
 
     return {
         "access_token": token,
         "token_type": "bearer",
-        "customer": safe_customer(customer.dict()),
-        "message": "Account created successfully",
+        "customer": safe_customer(doc),
+        "message": "Account created successfully. Your service provider will activate your device.",
     }
 
 
@@ -165,7 +125,7 @@ async def login_customer(
     data: CustomerLogin,
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    """Customer login with email/password"""
+    """Customer portal login with email/password"""
     email = data.email.lower().strip()
     customer = await db.customer_accounts.find_one({"email": email})
 
@@ -188,232 +148,83 @@ async def get_me(
     customer: CustomerAccount = Depends(get_current_customer),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    """Get current customer profile"""
     raw = await db.customer_accounts.find_one({"email": customer.email}, {"_id": 0})
     return safe_customer(raw)
 
 
-@router.post("/activate-with-pin")
-async def activate_with_pin(
-    pin: str,
-    device_uuid: Optional[str] = None,
-    device_name: Optional[str] = None,
-    request: Request = None,
-    db: AsyncIOMotorDatabase = Depends(get_db),
-):
-    """
-    Device activation using 6-digit PIN.
-    Rate-limited by IP: 3 failed attempts → 45-minute lockout.
-    """
-    client_ip = get_client_ip(request) if request else "unknown"
-    now = datetime.utcnow()
-    window_start = now - timedelta(minutes=PIN_LOCKOUT_MINUTES)
+# ─── TV Guide App: Device Activation ──────────────────────────────────────────
 
-    # Check IP-based lockout
-    ip_record = await db.pin_attempt_log.find_one({"ip": client_ip})
-    if ip_record:
-        recent_failures = [
-            ts for ts in ip_record.get("failures", [])
-            if datetime.fromisoformat(ts) > window_start
-        ]
-        if len(recent_failures) >= PIN_MAX_ATTEMPTS:
-            oldest = min(datetime.fromisoformat(ts) for ts in recent_failures)
-            unlock_at = oldest + timedelta(minutes=PIN_LOCKOUT_MINUTES)
-            minutes_remaining = max(1, int((unlock_at - now).total_seconds() / 60) + 1)
-            raise HTTPException(
-                status_code=429,
-                detail=f"Too many failed attempts. Please wait {minutes_remaining} minute(s) before trying again."
-            )
-
-    # Find customer with this PIN
-    customer = await db.customer_accounts.find_one({"activation_pin": pin})
-    if not customer:
-        # Record failed attempt for this IP
-        await db.pin_attempt_log.update_one(
-            {"ip": client_ip},
-            {"$push": {"failures": now.isoformat()}, "$set": {"last_attempt": now.isoformat()}},
-            upsert=True,
-        )
-        # Determine how many recent attempts remain
-        updated = await db.pin_attempt_log.find_one({"ip": client_ip})
-        recent = [ts for ts in updated.get("failures", []) if datetime.fromisoformat(ts) > window_start]
-        remaining = PIN_MAX_ATTEMPTS - len(recent)
-        if remaining <= 0:
-            raise HTTPException(
-                status_code=429,
-                detail=f"Too many failed attempts. Your account is locked for {PIN_LOCKOUT_MINUTES} minutes."
-            )
-        raise HTTPException(
-            status_code=404,
-            detail=f"Invalid PIN. {remaining} attempt(s) remaining before lockout."
-        )
-
-    if customer.get("is_activated"):
-        raise HTTPException(status_code=400, detail="This PIN has already been used to activate a device.")
-
-    # Success: clear IP failures
-    await db.pin_attempt_log.delete_one({"ip": client_ip})
-
-    # Create a device entry linked to this customer
-    import secrets as secrets_mod
-    import uuid as uuid_mod
-    from models.device import Device
-
-    device_id = str(uuid_mod.uuid4())
-    activation_code = secrets_mod.token_urlsafe(16)
-
-    new_device = Device(
-        id=device_id,
-        device_name=device_name or f"{customer['first_name']}'s Device",
-        mac_address=device_uuid or f"AUTO-{device_id[:12].upper()}",
-        device_uuid=device_uuid or device_id,
-        user_id=customer["id"],
-        activation_code=activation_code,
-        status="active",
-        activated_at=datetime.utcnow(),
-        current_ip=client_ip,
-    )
-
-    await db.devices.insert_one(new_device.dict())
-
-    # Mark customer as activated
-    await db.customer_accounts.update_one(
-        {"id": customer["id"]},
-        {
-            "$set": {
-                "is_activated": True,
-                "device_id": device_id,
-                "status": "active",
-            }
-        }
-    )
-
-    return {
-        "message": "Device activated successfully!",
-        "user_id": customer["id"],
-        "device_id": device_id,
-        "customer_name": f"{customer['first_name']} {customer['last_name']}",
-    }
-
-
-@router.post("/refresh-pin")
-async def refresh_pin(
-    customer: CustomerAccount = Depends(get_current_customer),
-    db: AsyncIOMotorDatabase = Depends(get_db),
-):
-    """Regenerate TOTP QR code for the customer (re-scan with Google Authenticator)"""
-    service_name = os.environ.get("SERVICE_NAME", "TV Service")
-    totp_uri = pyotp.totp.TOTP(customer.totp_secret).provisioning_uri(
-        name=customer.email,
-        issuer_name=service_name,
-    )
-
-    qr_code_path = customer.qr_code_path
-    try:
-        from pathlib import Path
-        import qrcode as qrcode_lib
-
-        qr_dir = Path("/app/backend/uploads/qr_codes")
-        filename = f"customer_qr_{customer.id}.png"
-        filepath = qr_dir / filename
-
-        qr = qrcode_lib.QRCode(version=1, error_correction=qrcode_lib.constants.ERROR_CORRECT_L, box_size=10, border=4)
-        qr.add_data(totp_uri)
-        qr.make(fit=True)
-        img = qr.make_image(fill_color="black", back_color="white")
-        img.save(filepath)
-        qr_code_path = f"/uploads/qr_codes/{filename}"
-    except Exception:
-        pass
-
-    await db.customer_accounts.update_one(
-        {"email": customer.email},
-        {"$set": {"qr_code_path": qr_code_path}},
-    )
-
-    return {"qr_code_path": qr_code_path, "message": "Google Authenticator QR refreshed"}
-
-
-@router.post("/activate-with-totp")
-async def activate_with_totp(
-    data: TOTPActivateRequest,
+@router.post("/activate-with-credentials")
+async def activate_with_credentials(
+    data: CredentialsActivateRequest,
     request: Request,
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """
-    Device activation / re-authentication using Google Authenticator TOTP code.
+    Activate a TV device using the admin-generated app_username + app_password.
     Rate-limited by IP: 3 failed attempts → 45-minute lockout.
-    Handles both first-time activation and 45-day re-auth.
+    Also handles 45-day re-authentication.
     """
     client_ip = get_client_ip(request) if request else "unknown"
-    now = datetime.utcnow()
-    window_start = now - timedelta(minutes=PIN_LOCKOUT_MINUTES)
-    email = data.email.lower().strip()
+    now = datetime.now(timezone.utc)
+    window_start = now - timedelta(minutes=LOGIN_LOCKOUT_MINUTES)
 
-    # Check IP-based lockout (reuse same pin_attempt_log collection)
+    # IP-based lockout check
     ip_record = await db.pin_attempt_log.find_one({"ip": client_ip})
     if ip_record:
         recent_failures = [
             ts for ts in ip_record.get("failures", [])
-            if datetime.fromisoformat(ts) > window_start
+            if datetime.fromisoformat(ts).replace(tzinfo=timezone.utc) > window_start
         ]
-        if len(recent_failures) >= PIN_MAX_ATTEMPTS:
-            oldest = min(datetime.fromisoformat(ts) for ts in recent_failures)
-            unlock_at = oldest + timedelta(minutes=PIN_LOCKOUT_MINUTES)
+        if len(recent_failures) >= LOGIN_MAX_ATTEMPTS:
+            oldest = min(datetime.fromisoformat(ts).replace(tzinfo=timezone.utc) for ts in recent_failures)
+            unlock_at = oldest + timedelta(minutes=LOGIN_LOCKOUT_MINUTES)
             minutes_remaining = max(1, int((unlock_at - now).total_seconds() / 60) + 1)
             raise HTTPException(
                 status_code=429,
                 detail=f"Too many failed attempts. Please wait {minutes_remaining} minute(s) before trying again."
             )
 
-    # Find customer by email
-    customer = await db.customer_accounts.find_one({"email": email})
-    if not customer:
-        # Record failed attempt (don't reveal that the email doesn't exist)
-        await db.pin_attempt_log.update_one(
+    # Find customer by app_username (case-insensitive)
+    username = data.app_username.lower().strip()
+    customer = await db.customer_accounts.find_one({"app_username": username})
+
+    def record_failure():
+        return db.pin_attempt_log.update_one(
             {"ip": client_ip},
             {"$push": {"failures": now.isoformat()}, "$set": {"last_attempt": now.isoformat()}},
             upsert=True,
         )
-        raise HTTPException(status_code=401, detail="Invalid email or code.")
 
-    if customer.get("status") == "suspended":
-        raise HTTPException(status_code=403, detail="Your account has been suspended. Please contact support.")
-
-    # Verify TOTP code
-    totp_secret = customer.get("totp_secret")
-    if not totp_secret:
-        raise HTTPException(status_code=400, detail="Google Authenticator is not set up for this account.")
-
-    totp = pyotp.TOTP(totp_secret)
-    # valid_window=1 allows ±30 seconds clock drift
-    if not totp.verify(data.totp_code, valid_window=1):
-        await db.pin_attempt_log.update_one(
-            {"ip": client_ip},
-            {"$push": {"failures": now.isoformat()}, "$set": {"last_attempt": now.isoformat()}},
-            upsert=True,
-        )
+    if not customer or customer.get("app_password") != data.app_password:
+        await record_failure()
         updated = await db.pin_attempt_log.find_one({"ip": client_ip})
-        recent = [ts for ts in updated.get("failures", []) if datetime.fromisoformat(ts) > window_start]
-        remaining = PIN_MAX_ATTEMPTS - len(recent)
+        recent = [
+            ts for ts in updated.get("failures", [])
+            if datetime.fromisoformat(ts).replace(tzinfo=timezone.utc) > window_start
+        ]
+        remaining = LOGIN_MAX_ATTEMPTS - len(recent)
         if remaining <= 0:
             raise HTTPException(
                 status_code=429,
-                detail=f"Too many failed attempts. Your account is locked for {PIN_LOCKOUT_MINUTES} minutes."
+                detail=f"Too many failed attempts. Locked for {LOGIN_LOCKOUT_MINUTES} minutes."
             )
         raise HTTPException(
             status_code=401,
-            detail=f"Invalid code. {remaining} attempt(s) remaining before lockout."
+            detail=f"Invalid username or password. {remaining} attempt(s) remaining."
         )
 
-    # Success — clear IP lockout
+    if customer.get("status") == "suspended":
+        raise HTTPException(status_code=403, detail="This account has been suspended. Please contact support.")
+
+    # Clear lockout on success
     await db.pin_attempt_log.delete_one({"ip": client_ip})
 
     import secrets as secrets_mod
     import uuid as uuid_mod
     from models.device import Device
 
-    # Re-authentication: customer already has a device
+    # Re-authentication (device already activated)
     if customer.get("is_activated") and customer.get("device_id"):
         device_id = customer["device_id"]
         await db.devices.update_one(
@@ -431,17 +242,15 @@ async def activate_with_totp(
             "customer_name": f"{customer['first_name']} {customer['last_name']}",
         }
 
-    # First activation: create new device
+    # First-time activation
     device_id = str(uuid_mod.uuid4())
-    activation_code = secrets_mod.token_urlsafe(16)
-
     new_device = Device(
         id=device_id,
         device_name=data.device_name or f"{customer['first_name']}'s Device",
         mac_address=data.device_uuid or f"AUTO-{device_id[:12].upper()}",
         device_uuid=data.device_uuid or device_id,
         user_id=customer["id"],
-        activation_code=activation_code,
+        activation_code=secrets_mod.token_urlsafe(16),
         status="active",
         activated_at=now,
         current_ip=client_ip,
@@ -450,14 +259,12 @@ async def activate_with_totp(
     await db.devices.insert_one(new_device.dict())
     await db.customer_accounts.update_one(
         {"id": customer["id"]},
-        {
-            "$set": {
-                "is_activated": True,
-                "device_id": device_id,
-                "status": "active",
-                "last_active_at": now,
-            }
-        }
+        {"$set": {
+            "is_activated": True,
+            "device_id": device_id,
+            "status": "active",
+            "last_active_at": now,
+        }}
     )
 
     return {
@@ -475,9 +282,40 @@ async def admin_get_all_customers(
     db: AsyncIOMotorDatabase = Depends(get_db),
     admin: Admin = Depends(get_current_admin),
 ):
-    """Admin: list all customer accounts"""
-    customers = await db.customer_accounts.find({}, {"_id": 0, "password_hash": 0}).sort("created_at", -1).to_list(1000)
+    """Admin: list all customer accounts with their app credentials"""
+    customers = await db.customer_accounts.find(
+        {}, {"_id": 0, "password_hash": 0}
+    ).sort("created_at", -1).to_list(1000)
     return customers
+
+
+@router.post("/admin/{customer_id}/reset-credentials")
+async def admin_reset_credentials(
+    customer_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    admin: Admin = Depends(get_current_admin),
+):
+    """Admin: generate a fresh username + password for a customer"""
+    customer = await db.customer_accounts.find_one({"id": customer_id})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    # Ensure new username is unique
+    new_username = generate_app_username()
+    while await db.customer_accounts.find_one({"app_username": new_username, "id": {"$ne": customer_id}}):
+        new_username = generate_app_username()
+
+    new_password = generate_app_password()
+
+    await db.customer_accounts.update_one(
+        {"id": customer_id},
+        {"$set": {"app_username": new_username, "app_password": new_password}}
+    )
+    return {
+        "message": "Credentials reset successfully",
+        "app_username": new_username,
+        "app_password": new_password,
+    }
 
 
 @router.put("/admin/{customer_id}/status")
@@ -487,7 +325,6 @@ async def admin_update_customer_status(
     db: AsyncIOMotorDatabase = Depends(get_db),
     admin: Admin = Depends(get_current_admin),
 ):
-    """Admin: suspend or reactivate a customer"""
     if status not in ("active", "suspended", "pending"):
         raise HTTPException(status_code=400, detail="Invalid status")
     result = await db.customer_accounts.update_one(
@@ -504,7 +341,6 @@ async def admin_delete_customer(
     db: AsyncIOMotorDatabase = Depends(get_db),
     admin: Admin = Depends(get_current_admin),
 ):
-    """Admin: delete a customer account"""
     result = await db.customer_accounts.delete_one({"id": customer_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -517,10 +353,10 @@ async def admin_clear_ip_lockout(
     db: AsyncIOMotorDatabase = Depends(get_db),
     admin: Admin = Depends(get_current_admin),
 ):
-    """Admin: clear PIN attempt lockout for a specific IP (or all IPs if none specified)"""
+    """Admin: clear login lockout for a specific IP or all IPs"""
     if ip:
         await db.pin_attempt_log.delete_one({"ip": ip})
         return {"message": f"Lockout cleared for IP: {ip}"}
     else:
         result = await db.pin_attempt_log.delete_many({})
-        return {"message": f"All IP lockouts cleared ({result.deleted_count} records)"}
+        return {"message": f"All lockouts cleared ({result.deleted_count} records)"}

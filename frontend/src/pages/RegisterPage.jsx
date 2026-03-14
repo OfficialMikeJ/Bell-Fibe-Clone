@@ -71,45 +71,28 @@ export default function RegisterPage() {
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 space-y-6">
           <div className="text-center">
             <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-3" />
-            <h1 className="text-2xl font-bold text-gray-900">Welcome, {customerData.first_name}!</h1>
-            <p className="text-gray-500 mt-1 text-sm">Your account is ready. Set up Google Authenticator to activate your TV.</p>
+            <h1 className="text-2xl font-bold text-gray-900">You're Registered, {customerData.first_name}!</h1>
+            <p className="text-gray-500 mt-1 text-sm">Your account has been created successfully.</p>
           </div>
 
-          {/* Google Authenticator setup */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 text-center">
-            <div className="flex items-center gap-2 justify-center mb-3">
-              <Shield className="w-5 h-5 text-[#0056A8]" />
-              <h2 className="text-base font-bold text-gray-800">Scan with Google Authenticator</h2>
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 text-center space-y-2">
+            <div className="flex items-center gap-2 justify-center mb-1">
+              <Tv className="w-5 h-5 text-[#0056A8]" />
+              <h2 className="text-base font-bold text-gray-800">What Happens Next</h2>
             </div>
-            {customerData.qr_code_path ? (
-              <img
-                src={`${BACKEND_URL}/api${customerData.qr_code_path}`}
-                alt="Google Authenticator QR Code"
-                className="w-44 h-44 mx-auto rounded-xl border border-gray-200 mb-3 bg-white"
-                data-testid="totp-qr-code"
-              />
-            ) : (
-              <div className="w-44 h-44 mx-auto rounded-xl border border-gray-200 mb-3 bg-gray-100 flex items-center justify-center text-gray-400">
-                <Loader className="w-8 h-8 animate-spin" />
-              </div>
-            )}
-            <ol className="text-left text-sm text-gray-600 space-y-1.5 mt-2">
-              <li className="flex items-start gap-2"><span className="bg-[#0056A8] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</span>Open <strong>Google Authenticator</strong> on your phone</li>
-              <li className="flex items-start gap-2"><span className="bg-[#0056A8] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>Tap <strong>"+"</strong> → <strong>"Scan a QR code"</strong></li>
-              <li className="flex items-start gap-2"><span className="bg-[#0056A8] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</span>Point your camera at the QR code above</li>
-              <li className="flex items-start gap-2"><span className="bg-[#0056A8] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">4</span>Use the <strong>6-digit code</strong> in the TV app to activate</li>
-            </ol>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Your service provider will contact you to schedule device setup. They will enter your credentials directly on your TV device — you don't need to do anything.
+            </p>
           </div>
 
           <div className="space-y-3">
             <button
-              onClick={() => navigate('/my-account')}
+              onClick={() => navigate('/customer-login')}
               className="w-full bg-[#0056A8] text-white py-3 rounded-xl font-semibold hover:bg-[#0066c8] transition-colors"
               data-testid="go-to-account-btn"
             >
-              Continue to My Account
+              Go to My Account
             </button>
-            <p className="text-xs text-gray-400 text-center">You can re-scan this QR code any time from My Account</p>
           </div>
         </div>
       </div>
@@ -132,7 +115,7 @@ export default function RegisterPage() {
 
         <div className="max-w-xl mx-auto py-10 px-4">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Your Account</h1>
-          <p className="text-gray-500 mb-8">Fill in your details to get set up with Google Authenticator</p>
+          <p className="text-gray-500 mb-8">Fill in your details to get set up with StreamVault</p>
 
           <form onSubmit={handleRegister} className="space-y-5">
             {/* Name */}
@@ -231,7 +214,7 @@ export default function RegisterPage() {
               className="w-full bg-[#0056A8] text-white py-3.5 rounded-xl font-semibold text-base hover:bg-[#0066c8] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
               data-testid="register-submit-btn">
               {submitting ? <Loader className="w-5 h-5 animate-spin" /> : null}
-              {submitting ? 'Creating Your Account...' : 'Create Account & Set Up Authenticator'}
+              {submitting ? 'Creating Your Account...' : 'Create Account'}
             </button>
 
             <p className="text-center text-sm text-gray-500">
@@ -285,7 +268,7 @@ export default function RegisterPage() {
                 Support Portal
               </Link>
             </div>
-            <p className="text-white/60 text-sm">Secure activation via Google Authenticator. No stickers needed.</p>
+            <p className="text-white/60 text-sm">Simple setup — your service provider activates your device for you.</p>
           </div>
 
           {/* Feature preview card */}
@@ -301,7 +284,7 @@ export default function RegisterPage() {
                 </div>
               </div>
               <div className="bg-white/10 rounded-xl p-4 text-center">
-                <p className="text-white/70 text-xs mb-2">Secured with Google Authenticator</p>
+                <p className="text-white/70 text-xs mb-2">Managed by your service provider</p>
                 <div className="flex justify-center gap-1 mb-2">
                   {['*','*','*','*','*','*'].map((d, i) => (
                     <div key={i} className="w-9 h-10 bg-white rounded-lg flex items-center justify-center text-[#0056A8] text-xl font-bold">
@@ -309,7 +292,7 @@ export default function RegisterPage() {
                     </div>
                   ))}
                 </div>
-                <p className="text-white/60 text-xs mt-2">6-digit TOTP from your phone</p>
+                <p className="text-white/60 text-xs mt-2">Credentials set up on your device for you</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {['Live TV', 'VOD', 'Recordings', '4K Ready'].map(f => (
@@ -347,7 +330,7 @@ export default function RegisterPage() {
       <div className="bg-[#0056A8] text-white">
         <div className="max-w-3xl mx-auto px-6 py-16 text-center space-y-6">
           <h2 className="text-3xl font-bold">Ready to get started?</h2>
-          <p className="text-white/80">Create your account in minutes and activate your device securely with Google Authenticator.</p>
+          <p className="text-white/80">Create your account in minutes. Your service provider will set up your device for you.</p>
           <button onClick={() => setStep('form')}
             className="bg-white text-[#0056A8] px-10 py-4 rounded-xl font-bold text-base hover:bg-gray-100 transition-colors shadow-lg"
             data-testid="cta-get-started-btn">

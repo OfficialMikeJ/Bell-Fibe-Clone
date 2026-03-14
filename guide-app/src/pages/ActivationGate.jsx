@@ -3,46 +3,24 @@ import axios from 'axios';
 import { API_URL, GUIDE_TITLE } from '../config';
 
 export default function ActivationGate({ onActivated, expiredMessage }) {
-  const [email, setEmail] = useState('');
-  const [pin, setPin] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [lockoutMins, setLockoutMins] = useState(0);
-  const [focusedIdx, setFocusedIdx] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [showPass, setShowPass] = useState(false);
 
-  const pinDigits = (pin + '      ').slice(0, 6).split('');
-
-  const handleDigitChange = (i, val) => {
-    const clean = val.replace(/\D/g, '');
-    const arr = (pin + '      ').slice(0, 6).split('');
-    arr[i] = clean.slice(-1) || ' ';
-    const newPin = arr.join('').trimEnd().slice(0, 6);
-    setPin(newPin);
-    if (clean && i < 5) document.getElementById(`sv-pin-${i + 1}`)?.focus();
-  };
-
-  const handleKeyDown = (i, e) => {
-    if (e.key === 'Backspace') {
-      const arr = (pin + '      ').slice(0, 6).split('');
-      arr[i] = ' ';
-      setPin(arr.join('').trimEnd().slice(0, 6));
-      if (i > 0) document.getElementById(`sv-pin-${i - 1}`)?.focus();
-    } else if (e.key === 'Enter' && canActivate) {
-      handleActivate();
-    }
-  };
-
-  const canActivate = email.includes('@') && pin.trim().length === 6 && !loading && !lockoutMins;
+  const canActivate = username.trim().length >= 4 && password.length >= 1 && !loading && !lockoutMins;
 
   const handleActivate = async () => {
     if (!canActivate) return;
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post(`${API_URL}/api/customer/activate-with-totp`, {
-        email: email.trim().toLowerCase(),
-        totp_code: pin.trim(),
+      const res = await axios.post(`${API_URL}/api/customer/activate-with-credentials`, {
+        app_username: username.trim().toLowerCase(),
+        app_password: password,
       });
       setSuccess(true);
       setTimeout(() => {
@@ -57,7 +35,7 @@ export default function ActivationGate({ onActivated, expiredMessage }) {
       const detail = err.response?.data?.detail || 'Activation failed. Please try again.';
       if (status === 429) {
         const match = detail.match(/(\d+) minute/);
-        setLockoutMins(match ? parseInt(match[1]) : 45);
+        setLockoutMins(match ? parseInt(match[1]) : LOGIN_LOCKOUT_MINUTES);
       } else {
         setError(detail);
       }
@@ -65,6 +43,12 @@ export default function ActivationGate({ onActivated, expiredMessage }) {
       setLoading(false);
     }
   };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && canActivate) handleActivate();
+  };
+
+  const LOGIN_LOCKOUT_MINUTES = 45;
 
   return (
     <div
@@ -86,7 +70,6 @@ export default function ActivationGate({ onActivated, expiredMessage }) {
           pointerEvents: 'none',
         }}
       />
-      {/* Subtle grid texture */}
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
@@ -109,7 +92,7 @@ export default function ActivationGate({ onActivated, expiredMessage }) {
           transition: 'opacity 0.7s ease, transform 0.7s ease',
         }}
       >
-        {/* ── Logo ─────────────────────────────────────────────────── */}
+        {/* Logo */}
         <div className="text-center mb-8">
           <div
             className="sv-scale-bounce sv-d-1 sv-glow-pulse inline-flex items-center justify-center mb-5"
@@ -123,7 +106,6 @@ export default function ActivationGate({ onActivated, expiredMessage }) {
           >
             📺
           </div>
-
           <h1
             className="sv-slide-up sv-d-2 text-white font-bold tracking-tight"
             style={{ fontSize: 28, marginBottom: 6 }}
@@ -131,13 +113,11 @@ export default function ActivationGate({ onActivated, expiredMessage }) {
             {GUIDE_TITLE}
           </h1>
           <p className="sv-slide-up sv-d-3" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, lineHeight: 1.6 }}>
-            Sign in with your email and{' '}
-            <span style={{ color: '#60a5fa', fontWeight: 500 }}>Google Authenticator</span>
-            <br />to activate this device
+            Enter your account credentials<br />to activate this device
           </p>
         </div>
 
-        {/* ── Expired / lockout banners ─────────────────────────────── */}
+        {/* Expired / lockout banners */}
         {expiredMessage && !lockoutMins && (
           <div
             className="sv-slide-up sv-d-3 mb-5 flex items-start gap-3"
@@ -148,7 +128,7 @@ export default function ActivationGate({ onActivated, expiredMessage }) {
               color: '#fde68a', fontSize: 13, lineHeight: 1.5,
             }}
           >
-            <span style={{ fontSize: 16, marginTop: 1 }}>⏱</span>
+            <span style={{ fontSize: 16, marginTop: 1 }}>&#9203;</span>
             {expiredMessage}
           </div>
         )}
@@ -163,7 +143,7 @@ export default function ActivationGate({ onActivated, expiredMessage }) {
               color: '#fca5a5', fontSize: 13, lineHeight: 1.5,
             }}
           >
-            <span style={{ fontSize: 16, marginTop: 1 }}>🔒</span>
+            <span style={{ fontSize: 16, marginTop: 1 }}>&#128274;</span>
             <div>
               <strong>Too many attempts</strong>
               <br />Please wait <strong>{lockoutMins} minute(s)</strong> before trying again.
@@ -181,67 +161,78 @@ export default function ActivationGate({ onActivated, expiredMessage }) {
               color: '#fca5a5', fontSize: 13,
             }}
           >
-            <span>⚠</span> {error}
+            <span>&#9888;</span> {error}
           </div>
         )}
 
-        {/* ── Email field ───────────────────────────────────────────── */}
+        {/* Username field */}
         <div className="sv-slide-up sv-d-4 mb-5">
           <label
-            htmlFor="sv-email"
+            htmlFor="sv-username"
             style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}
           >
-            Account Email
+            Username
           </label>
           <input
-            id="sv-email"
-            type="email"
+            id="sv-username"
+            type="text"
             className="sv-email-input"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="your@email.com"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="your username"
             disabled={lockoutMins > 0}
-            autoComplete="email"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            data-testid="sv-username-input"
           />
         </div>
 
-        {/* ── TOTP code ─────────────────────────────────────────────── */}
-        <div className="sv-slide-up sv-d-5 mb-7">
+        {/* Password field */}
+        <div className="sv-slide-up sv-d-5 mb-7" style={{ position: 'relative' }}>
           <label
+            htmlFor="sv-password"
             style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}
           >
-            Authenticator Code
+            Password
           </label>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-            {[0, 1, 2, 3, 4, 5].map(i => (
-              <input
-                key={i}
-                id={`sv-pin-${i}`}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={pinDigits[i].trim()}
-                onChange={e => handleDigitChange(i, e.target.value)}
-                onKeyDown={e => handleKeyDown(i, e)}
-                onFocus={() => setFocusedIdx(i)}
-                onBlur={() => setFocusedIdx(null)}
-                disabled={lockoutMins > 0}
-                className={`sv-pin-box${pinDigits[i].trim() ? ' filled' : ''}`}
-                style={{ ...(focusedIdx === i ? { borderColor: '#0056A8', background: 'rgba(0,86,168,0.15)', transform: 'scale(1.08)', boxShadow: '0 0 0 3px rgba(0,86,168,0.25)' } : {}) }}
-              />
-            ))}
+          <div style={{ position: 'relative' }}>
+            <input
+              id="sv-password"
+              type={showPass ? 'text' : 'password'}
+              className="sv-email-input"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="your password"
+              disabled={lockoutMins > 0}
+              autoComplete="current-password"
+              data-testid="sv-password-input"
+              style={{ paddingRight: 44 }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass(v => !v)}
+              style={{
+                position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'rgba(255,255,255,0.35)', fontSize: 13, padding: 0,
+              }}
+              tabIndex={-1}
+            >
+              {showPass ? 'Hide' : 'Show'}
+            </button>
           </div>
-          <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: 11, marginTop: 8 }}>
-            6-digit code from Google Authenticator
-          </p>
         </div>
 
-        {/* ── Activate button ───────────────────────────────────────── */}
+        {/* Activate button */}
         <div className="sv-slide-up sv-d-6">
           <button
             onClick={handleActivate}
             disabled={!canActivate}
             className="sv-activate-btn"
+            data-testid="sv-activate-btn"
           >
             {loading ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
@@ -252,9 +243,8 @@ export default function ActivationGate({ onActivated, expiredMessage }) {
           </button>
         </div>
 
-        {/* ── Hint ──────────────────────────────────────────────────── */}
         <p className="sv-fade-in sv-d-7" style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 12, marginTop: 20, lineHeight: 1.7 }}>
-          New to StreamVault? Visit your account page and<br />scan the QR code with Google Authenticator first.
+          Credentials are provided by your service provider.
         </p>
       </div>
 
