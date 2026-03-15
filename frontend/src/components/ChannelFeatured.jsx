@@ -57,7 +57,7 @@ const ChannelFeatured = ({ channel, currentProgram }) => {
     <div className="mb-6">
       <div className="flex items-start gap-4">
         {/* Video Preview / Poster Card */}
-        <div className="w-52 h-36 bg-[#0a0a0a] rounded-xl overflow-hidden relative flex-shrink-0 group shadow-2xl border border-gray-700">
+        <div className="w-96 h-64 bg-[#0a0a0a] rounded-2xl overflow-hidden relative flex-shrink-0 group shadow-2xl border border-gray-700">
           {videoSrc && !hasError ? (
             <>
               <video
@@ -112,8 +112,8 @@ const ChannelFeatured = ({ channel, currentProgram }) => {
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-[#0056A8] to-[#003d7a] flex items-center justify-center">
               <div className="text-center">
-                <div className="text-white text-3xl font-bold">{channel.number}</div>
-                <div className="text-blue-200 text-xs mt-1">{channel.name}</div>
+                <div className="text-white text-7xl font-bold">{channel.number}</div>
+                <div className="text-blue-200 text-base mt-2">{channel.name}</div>
               </div>
             </div>
           )}
