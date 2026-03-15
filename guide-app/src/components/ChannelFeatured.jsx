@@ -48,7 +48,7 @@ const ChannelFeatured = ({ channel, currentProgram }) => {
     <div className="sv-slide-up sv-d-1 mb-6">
       <div className="flex items-start gap-4">
         {/* Video / Poster */}
-        <div className="w-72 h-48 bg-[#0a0a0a] rounded-2xl overflow-hidden relative flex-shrink-0 group shadow-2xl border border-gray-700">
+        <div className="w-96 h-64 bg-[#0a0a0a] rounded-2xl overflow-hidden relative flex-shrink-0 group shadow-2xl border border-gray-700">
           {videoSrc && !hasError ? (
             <>
               <video ref={videoRef} className="w-full h-full object-cover"
@@ -95,8 +95,8 @@ const ChannelFeatured = ({ channel, currentProgram }) => {
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-[#0056A8] to-[#003d7a] flex items-center justify-center">
               <div className="text-center">
-                <div className="text-white text-5xl font-bold">{channel.number}</div>
-                <div className="text-blue-200 text-sm mt-2">{channel.name}</div>
+                <div className="text-white text-7xl font-bold">{channel.number}</div>
+                <div className="text-blue-200 text-base mt-2">{channel.name}</div>
               </div>
             </div>
           )}
