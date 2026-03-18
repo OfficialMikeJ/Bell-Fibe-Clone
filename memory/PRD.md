@@ -1,144 +1,127 @@
-# IPTV Service - Product Requirements Document
+# StreamVault IPTV — Product Requirements Document
 
 ## Original Problem Statement
-StreamVault — a full-featured IPTV service with Live TV Guide. Full-stack application with admin dashboard and customer-facing EPG grid.
+StreamVault — a full-featured IPTV service with Live TV Guide (EPG), VOD section, admin dashboard, customer support portal, and public registration website. Containerized for deployment on a user-provided server with a custom domain and an external Nginx Proxy Manager.
 
 ## Architecture
 ```
 /app
-├── backend/           FastAPI (Python) + MongoDB
+├── backend/           FastAPI (Python) + MongoDB (Motor async)
 │   ├── routes/        auth, channels, programs, devices, users, setup,
-│   │                  media, vod, notifications, recordings, tickets, faq, customer, portal,
-│   │                  guide_state, apk (new)
-│   ├── models/        admin, channel, device, program, service_config, user,
-│   │                  media, vod, notification, recording, ticket, faq, customer
+│   │                  media, vod, notifications, recordings, tickets, faq,
+│   │                  customer, guide_state, apk, home_posts
+│   ├── models/        admin, channel (coming_soon, channel_type), device,
+│   │                  program, service_config, user, media, vod,
+│   │                  notification, recording, ticket, faq, customer
 │   └── utils/         geo_location, https_middleware, qr_generator,
 │                      security, two_factor, media_utils (FFmpeg wrapper)
-├── frontend/          React + TailwindCSS + Shadcn UI
+├── frontend/          React + TailwindCSS + Shadcn UI + hls.js
 │   └── src/
-│       ├── components/ AdminDashboard (14 tabs), LoginPage, SettingsTab (APK section added),
-│       │               UserManagementTab, TwoFactorSetup, SetupWizard,
-│       │               EPGGrid, Sidebar, TopBar, ChannelFeatured,
-│       │               MediaLibraryTab, VODTab, NotificationsTab,
-│       │               CVRTab, BrandingTab, AnalyticsTab,
-│       │               admin/TicketsTab, admin/FAQTab
-│       │               OnDemandPage, RecordingsPage, NotificationsPage
-│       ├── pages/      ActivatePage, PortalLayout, PortalHome,
-│       │               PortalFAQ, PortalSupport, PortalStatus,
-│       │               RegisterPage, MyAccountPage, CustomerLoginPage
-│       └── contexts/   AuthContext, ServiceContext
-├── guide-app/         Standalone customer-facing TV guide app (React)
-│   └── src/
-│       ├── App.jsx     Auth shell with 45-day inactivity check
-│       ├── config.js
-│       └── pages/      ActivationGate.jsx (TOTP), TVGuide.jsx, VODPage.jsx, RecordingsPage.jsx
-├── android/           Android WebView wrapper (README with full update-check Java code)
-├── docker-compose.yml Production deployment config
-├── .env.example       Full template including PUBLIC_BASE_URL
+│       ├── App.js     Main router — guide/ondemand/home/recordings/notifications views
+│       ├── components/
+│       │   ├── AdminDashboard.jsx   (15 tabs including Home Feed)
+│       │   ├── EPGGrid.jsx          (coming_soon popup, VOD channel link)
+│       │   ├── ChannelFeatured.jsx  (hls.js player, VOD card)
+│       │   ├── HomePage.jsx         (dynamic home: VOD + posts)
+│       │   ├── HomeFeedTab.jsx      (admin: create/edit/delete home posts)
+│       │   ├── OnDemandPage.jsx     (VOD browser with category filter)
+│       │   ├── UserManagementTab.jsx (shows app_username / app_password)
+│       │   └── SettingsTab.jsx      (APK upload section)
+│       └── pages/
+│           ├── ActivationGate.jsx   (username+password device login)
+│           └── RegisterPage.jsx     (no TOTP)
+├── android/           README.md with full Android WebView wrapper code
+├── docker-compose.yml Production deployment (external NPM)
+└── guide-app/         DEAD CODE — to be deleted
 ```
 
-## Core Features - Implemented
+## Core Features — Implemented & Tested
 
 ### Authentication & Security
-- JWT-based admin authentication
-- 2FA (Google Authenticator / TOTP) for admin
+- JWT admin authentication
 - Password reset via security questions
 - Master Admin PIN for sidebar locking
-- All admin API endpoints secured with Bearer token auth
-- Canada-only geo-fencing for device activation
-- Portal login via QR activation code (no username/password)
+- Canada-only geo-fencing for device activation (configurable)
 
-### Customer Authentication (Updated: Google Authenticator TOTP)
-- Registration generates a TOTP secret automatically
-- QR code on /register success page encodes `otpauth://` URI for Google Authenticator
-- Device activation (guide-app): email + 6-digit TOTP code from Google Authenticator
-- 45-day inactivity → guide-app forces re-authentication via TOTP
-- IP-based lockout: 3 failed TOTP attempts → 45-minute block
-- Re-authentication: same TOTP endpoint handles both first activation and re-auth
-- TOTP secret stored in customer record; QR accessible in /my-account
+### Customer Device Authentication (Username/Password)
+- Admin creates customer accounts; system generates unique `app_username` + `app_password`
+- Visible to admin in Users tab for manual device setup
+- Device activation via `POST /api/customer/activate-with-credentials`
+- 45-day inactivity check; IP-based lockout on failed attempts
 
-### Admin Dashboard (14 tabs)
-1. **Channels** - CRUD with logo upload, quality label, channel type, stream URL
-2. **EPG Programs** - Create/delete with media file link, auto-fill duration from FFmpeg
-3. **Media Library** - Upload video files, FFmpeg auto-detects metadata
-4. **VOD** - VOD catalog management
-5. **Devices** - QR code generation, UUID display, geo, IP tracking
-6. **Users** - Full CRUD with status (active/suspended/trial/cancelled), notes
-7. **Notifications** - Create/toggle/delete notifications
-8. **CVR** - Cloud Video Recording management
-9. **Support Tickets** - Color-coded priority, status tags, admin reply
-10. **FAQ** - Manage FAQ articles
-11. **Statistics** - Channel/program/device counts
-12. **Analytics** - Charts for content, storage, recordings
-13. **Branding** - Logo, service name, Master PIN setup
-14. **Settings** - 2FA setup, domain config, Uptime Kuma URL
+### Admin Dashboard (15 tabs)
+1. Channels — CRUD, logo upload, quality label, channel_type, stream URL, coming_soon flag
+2. EPG Programs — Create/delete, media file link, FFmpeg duration auto-fill
+3. Media Library — Upload video files, FFmpeg metadata
+4. VOD — VOD catalog management
+5. Devices — UUID display, geo, IP tracking
+6. Users — Full CRUD, auto-generated credentials, status, notes
+7. Notifications — Create/toggle/delete
+8. CVR — Cloud Video Recording management
+9. Support Tickets — Color-coded, admin reply
+10. FAQ — Manage FAQ articles
+11. Statistics — Channel/program/device counts
+12. Analytics — Charts
+13. Branding — Logo, service name, Master PIN
+14. Settings — APK upload, domain config, Uptime Kuma
+15. **Home Feed** — Create/edit/delete/publish announcement posts (app_update, upcoming_feature)
 
-### Customer Portal (/portal)
-- QR code login (activation code → user_id session)
-- FAQ page with search and category accordion
-- Support ticket submission + My Tickets view
-- Service Status page (embeds Uptime Kuma)
-
-### Customer Registration (/register, /customer-login, /my-account)
-- Public landing page with Google Authenticator preview
-- Registration form: name, email, password, device brand/type, disclaimer
-- Post-registration: Google Authenticator QR code setup screen (4-step instructions)
-- /my-account: Google Authenticator status, QR code for re-scanning, device info
-
-### Guide App (standalone /app/guide-app)
-- ActivationGate: email + 6-digit TOTP entry (Google Authenticator)
-- 45-day inactivity check (client-side via localStorage)
-- TVGuide: live channel list + current programs
-- VODPage: on-demand content grid
-- RecordingsPage: user's CVR recordings
+### Customer-Facing Guide App (at /)
+- Sidebar navigation: Home | Guide | On Demand | Recordings | Notifications
+- **Home page**: Dynamic sections — Upcoming Movies, New on TV, App Updates, Upcoming Features
+- EPG grid with HLS video previews for channels with stream URLs
+- "Coming Soon" channels show popup modal on click
+- "On Demand" channel in EPG links to VOD browser (filtered to Movies)
+- VOD browser (OnDemandPage) with category filter
+- Android WebView wrapper documented in /app/android/README.md
 
 ### Deployment Infrastructure
-- docker-compose.yml: backend, frontend, guide-app, MongoDB, network for Nginx Proxy Manager
-- Android WebView wrapper: full README with MainActivity.java, manifest, build.gradle
+- docker-compose.yml: backend + frontend + MongoDB, designed for external Nginx Proxy Manager
+- Android WebView wrapper: full README with modern ExecutorService-based update check
 
 ## Key Technical Decisions
-- pyotp library used for TOTP generation and verification (valid_window=1 for ±30s clock drift)
-- Google Authenticator QR = otpauth:// URI → same PNG infrastructure as before
-- FFmpeg installed system-wide; ffprobe used for media analysis
-- Frontend uses ServiceContext to load service name from /api/setup/config
-- IP lockout shared collection (pin_attempt_log) for both PIN and TOTP endpoints
+- hls.js for HLS stream playback in the guide
+- pyotp REMOVED — replaced by simple username/password credentials
+- FFmpeg system-wide for media analysis
+- home_posts collection: `{id, title, body, category, is_published, version_tag, created_at}`
 
 ## Database Collections
 - `admins`, `users`, `service_configs`, `channels`, `epg_programs`
 - `devices`, `media_items`, `vod_items`, `notifications`, `recordings`
-- `customer_accounts`: includes `totp_secret`, `last_active_at`, `is_activated`, `device_id`
+- `customer_accounts`: `app_username`, `app_password_hash`, `is_activated`, `device_id`, `last_active_at`
 - `tickets`, `faqs`, `portal_sessions`
-- `pin_attempt_log`: IP-based lockout for TOTP/PIN attempts
+- `pin_attempt_log`: IP-based lockout
+- `home_posts`: `{id, title, body, category, is_published, version_tag, created_at}`
+- `apk_versions`: APK update management
 
 ## Key API Endpoints
-- `POST /api/customer/register` — creates account, generates TOTP secret + GA QR
-- `POST /api/customer/activate-with-totp` — email + TOTP code, handles first activation + re-auth
-- `POST /api/customer/activate-with-pin` — legacy PIN endpoint (kept for backward compat)
-- `POST /api/customer/login` — email + password (web portal login)
-- `POST /api/customer/refresh-pin` — regenerates GA QR (secret unchanged)
-- `GET /api/customer/me` — returns customer profile (no PIN, no secret)
-- `POST /api/devices/portal-login` — portal QR login
-- `GET/POST /api/tickets/`, `GET/POST /api/faqs/`
+- `POST /api/customer/activate-with-credentials` — device login (username+password)
+- `GET /api/home-posts` — public, returns published posts sorted newest first
+- `GET /api/home-posts/admin/all` — admin, returns all posts (auth required)
+- `POST /api/home-posts` — admin create post
+- `PUT /api/home-posts/{id}` — admin update post
+- `DELETE /api/home-posts/{id}` — admin delete post
+- `GET /api/apk/latest` — Android app update check
+- `POST /api/apk/upload` — admin APK upload
 
 ## Test Credentials
 - Admin: username=admin, password=admin123
+- Customer accounts: generated via /register, credentials in Admin → Users tab
 
-## Completion Status (as of 2026-02-10): All core features implemented and tested
-- Backend: TOTP (22/22), all previous tests passing; Roku code fully removed
-- Frontend: StreamVault branding live; all flows verified
-- Guide-app: Full layout + Netflix-style entrance animations on ActivationGate
-- Dockerfiles: backend, frontend, guide-app all created with nginx configs
+## P1 Upcoming (User Tasks)
+- Android App build: Take code from /app/android/README.md, create Android Studio project, compile APK
+- Nginx Proxy Manager config: proxy hosts for backend (:8001) and frontend (:3000)
 
-## P1 Backlog
-- Guide-app: Update REACT_APP_API_URL fallback in config.js from localhost to production URL
-- Guide-app: Add `.env` file for local guide-app development
-
-## P2 Future
-- Migrate EPGGrid, Sidebar, TopBar from main frontend into guide-app for full separation
-- Guide-app needs Dockerfile + supervisor config for deployment
-
-## P2 Future
-- Android APK build (WebView wrapping guide-app)
-- Actual HLS/RTSP stream playback integration
+## P2 Backlog
+- **Delete /app/guide-app** — confirmed dead code, causes confusion
+- TV Tuner Integration: backend logic for Free-to-Air channels
+- VOD Content Ingestion: file upload system for movie/show files
+- Add Volume Slider to HLS preview player in the guide
+- Live TV channels: connect actual HLS/RTSP stream URLs
 - CVR automated recording (background job)
 - Credential rotation option (admin-triggered)
+
+## Completion Status (as of 2026-02)
+- Home Feed feature: COMPLETE & TESTED (iteration_12: 100% pass, 27/27 flows)
+- Docker infrastructure: VALIDATED (iteration_11: 100% pass)
+- All core features: implemented and tested across iterations 1-12
