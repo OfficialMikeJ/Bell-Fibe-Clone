@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Hls from 'hls.js';
-import { Volume2, VolumeX, Maximize2, Radio, Wifi, WifiOff } from 'lucide-react';
+import { Volume2, VolumeX, Maximize2, Radio, Wifi, WifiOff, Play, ChevronRight } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Detect if a URL is an HLS stream
 const isHLS = (url) => url && (url.includes('.m3u8') || url.includes('/hls/') || url.includes('playlist'));
 
-const ChannelFeatured = ({ channel, currentProgram }) => {
+const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
   const videoRef    = useRef(null);
   const hlsRef      = useRef(null);
   const retryRef    = useRef(null);
@@ -142,6 +142,47 @@ const ChannelFeatured = ({ channel, currentProgram }) => {
   };
 
   if (!channel) return null;
+
+  // ── VOD Channel — show browse card instead of video player ────────────────
+  if (channel.channel_type === 'vod') {
+    return (
+      <div className="mb-6">
+        <div className="flex items-start gap-5">
+          <div
+            className="w-96 h-64 rounded-2xl overflow-hidden relative flex-shrink-0 shadow-2xl border border-purple-700/50 cursor-pointer group"
+            style={{ background: 'linear-gradient(135deg, #2d1b69 0%, #1a0a3d 100%)' }}
+            onClick={() => onViewChange?.('ondemand')}
+            data-testid="vod-preview-card"
+          >
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6">
+              <div className="w-16 h-16 bg-purple-600/40 rounded-2xl flex items-center justify-center group-hover:bg-purple-600/60 transition-colors">
+                <Play className="w-8 h-8 text-purple-200" />
+              </div>
+              <div className="text-center">
+                <p className="text-white text-xl font-bold">On Demand</p>
+                <p className="text-purple-300 text-sm mt-1">Movies · TV Shows · Mini Series</p>
+              </div>
+              <div className="mt-2 flex items-center gap-2 bg-purple-700 group-hover:bg-purple-600 transition-colors text-white text-sm font-semibold px-5 py-2 rounded-xl">
+                Browse Library <ChevronRight className="w-4 h-4" />
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 pt-1 min-w-0">
+            <h2 className="text-4xl font-light text-white mb-2">{channel.name}</h2>
+            <p className="text-base text-gray-400 mb-4">{channel.number} • On Demand</p>
+            <p className="text-base text-gray-300 leading-relaxed">{channel.description}</p>
+            <button
+              onClick={() => onViewChange?.('ondemand')}
+              className="mt-5 flex items-center gap-2 bg-purple-700 hover:bg-purple-600 transition-colors text-white font-semibold px-6 py-3 rounded-xl"
+              data-testid="vod-open-btn"
+            >
+              <Play className="w-4 h-4" /> Open On Demand
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const showVideo   = videoSrc && !hasError;
   const showPoster  = !showVideo && posterSrc;

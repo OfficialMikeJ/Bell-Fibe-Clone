@@ -42,8 +42,7 @@ const generateTimeSlots = () => {
 
 const timeSlots = generateTimeSlots();
 
-const GuideView = ({ onViewChange }) => {
-  const [channels, setChannels] = useState([]);
+const GuideView = ({ onViewChange }) => {  const [channels, setChannels] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -93,6 +92,7 @@ const GuideView = ({ onViewChange }) => {
           <ChannelFeatured
             channel={selectedChannel}
             currentProgram={getCurrentProgram()}
+            onViewChange={onViewChange}
           />
         )}
         {channels.length > 0 ? (
@@ -102,6 +102,7 @@ const GuideView = ({ onViewChange }) => {
             timeSlots={timeSlots.slice(0, 14)}
             selectedChannelId={selectedChannel?.id}
             onChannelSelect={setSelectedChannel}
+            onViewChange={onViewChange}
           />
         ) : (
           <div className="text-center text-gray-400 mt-20">

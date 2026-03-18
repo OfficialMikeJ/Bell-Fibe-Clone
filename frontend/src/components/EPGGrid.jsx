@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Info, Clock, Tv } from 'lucide-react';
+import { Info, Clock, Tv, Play, ChevronRight } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -32,7 +32,7 @@ const ComingSoonModal = ({ onClose }) => (
   </div>
 );
 
-const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSelect }) => {
+const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSelect, onViewChange }) => {
   const [focusedChannelIdx, setFocusedChannelIdx] = useState(0);
   const [selectedProgramId, setSelectedProgramId] = useState(null);
   const [showComingSoon, setShowComingSoon] = useState(false);
@@ -56,7 +56,10 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
           e.preventDefault();
           setFocusedChannelIdx(prev => {
             const next = Math.min(prev + 1, channels.length - 1);
-            if (!channels[next]?.coming_soon) onChannelSelect(channels[next]);
+            const ch = channels[next];
+            if (ch?.coming_soon) return next;
+            if (ch?.channel_type === 'vod') { onViewChange?.('ondemand'); return next; }
+            onChannelSelect(ch);
             return next;
           });
           break;
@@ -64,7 +67,10 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
           e.preventDefault();
           setFocusedChannelIdx(prev => {
             const next = Math.max(prev - 1, 0);
-            if (!channels[next]?.coming_soon) onChannelSelect(channels[next]);
+            const ch = channels[next];
+            if (ch?.coming_soon) return next;
+            if (ch?.channel_type === 'vod') { onViewChange?.('ondemand'); return next; }
+            onChannelSelect(ch);
             return next;
           });
           break;
@@ -72,8 +78,10 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
         case ' ':
           e.preventDefault();
           if (channels[focusedChannelIdx]) {
-            if (channels[focusedChannelIdx].coming_soon) setShowComingSoon(true);
-            else onChannelSelect(channels[focusedChannelIdx]);
+            const ch = channels[focusedChannelIdx];
+            if (ch.coming_soon) setShowComingSoon(true);
+            else if (ch.channel_type === 'vod') onViewChange?.('ondemand');
+            else onChannelSelect(ch);
           }
           break;
         default:
@@ -125,6 +133,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
           const isSelected = channel.id === selectedChannelId;
           const isFocused = idx === focusedChannelIdx;
           const isComingSoon = !!channel.coming_soon;
+          const isVOD = channel.channel_type === 'vod';
           const channelPrograms = getProgramsForChannel(channel.id);
           const logoSrc = getLogoSrc(channel);
 
@@ -138,6 +147,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
               onClick={() => {
                 setFocusedChannelIdx(idx);
                 if (isComingSoon) setShowComingSoon(true);
+                else if (isVOD) onViewChange?.('ondemand');
                 else onChannelSelect(channel);
               }}
             >
@@ -170,9 +180,9 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
                   <p className="text-white font-medium text-base truncate">{channel.name}</p>
                   <p className="text-gray-400 text-xs flex items-center gap-1">
                     {channel.number}
-                    {channel.quality_label && !isComingSoon && <span className="text-[#0056A8]">• {channel.quality_label}</span>}
+                    {channel.quality_label && !isComingSoon && !isVOD && <span className="text-[#0056A8]">• {channel.quality_label}</span>}
                     {isComingSoon && <span className="text-blue-400 flex items-center gap-1"><Clock className="w-3 h-3" /> Coming Soon</span>}
-                    {channel.channel_type === 'vod' && <span className="text-purple-400">• VOD</span>}
+                    {isVOD && <span className="text-purple-400 flex items-center gap-1"><Play className="w-3 h-3" /> On Demand</span>}
                   </p>
                 </div>
               </div>
@@ -182,6 +192,17 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
                 {isComingSoon ? (
                   <div className="px-5 py-2 text-gray-600 text-sm italic flex items-center gap-2">
                     <Clock className="w-4 h-4" /> Programming not yet available
+                  </div>
+                ) : isVOD ? (
+                  <div className="flex-1 flex items-center justify-between px-5 py-3 bg-gradient-to-r from-purple-900/30 to-transparent">
+                    <div>
+                      <p className="text-white font-medium text-sm">Movies · TV Shows · Mini Series</p>
+                      <p className="text-gray-400 text-xs mt-0.5">Watch what you want, when you want</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-purple-700 hover:bg-purple-600 transition-colors text-white text-sm font-semibold px-4 py-1.5 rounded-lg"
+                      data-testid="vod-browse-btn">
+                      Browse Library <ChevronRight className="w-4 h-4" />
+                    </div>
                   </div>
                 ) : channelPrograms.length > 0 ? (
                   channelPrograms.map((program, pidx) => {
