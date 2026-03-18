@@ -3,13 +3,11 @@
 # Quick Start:
 #   1. cp .env.example .env  and fill in every value
 #   2. docker compose up -d
-#   3. Open http://YOUR_SERVER_IP:8181  (Nginx Proxy Manager admin)
-#      Default login: admin@example.com / changeme  (change immediately)
-#   4. Create Proxy Hosts in NPM:
-#        api.yourdomain.com    →  http://backend:8001
-#        admin.yourdomain.com  →  http://frontend:80
-#        yourdomain.com        →  http://guide-app:80
-#      Enable SSL (Let's Encrypt) for each host.
+#
+# Point your existing Nginx Proxy Manager to:
+#   api.yourdomain.com    →  http://YOUR_SERVER_IP:8001   (Backend API)
+#   admin.yourdomain.com  →  http://YOUR_SERVER_IP:3000   (Admin Dashboard)
+#   yourdomain.com        →  http://YOUR_SERVER_IP:3001   (Customer TV Guide)
 #
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -102,32 +100,11 @@ services:
     networks:
       - proxy
 
-  # ── Nginx Proxy Manager ──────────────────────────────────────────────────────
-  # Handles SSL termination, domain routing, and Let's Encrypt certificates.
-  # Admin UI: http://YOUR_SERVER_IP:8181
-  nginx-proxy-manager:
-    image: jc21/nginx-proxy-manager:2.12.3
-    container_name: streamvault_npm
-    restart: unless-stopped
-    ports:
-      - "80:80"       # HTTP  (redirects to HTTPS)
-      - "443:443"     # HTTPS
-      - "8181:81"     # NPM Admin UI  ← access via http://YOUR_SERVER_IP:8181
-    volumes:
-      - npm_data:/data
-      - npm_letsencrypt:/etc/letsencrypt
-    networks:
-      - proxy
-
 # ── Volumes ───────────────────────────────────────────────────────────────────
 volumes:
   mongo_data:
     driver: local
   uploads:
-    driver: local
-  npm_data:
-    driver: local
-  npm_letsencrypt:
     driver: local
 
 # ── Networks ──────────────────────────────────────────────────────────────────
