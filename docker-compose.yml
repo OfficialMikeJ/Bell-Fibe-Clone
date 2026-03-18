@@ -3,7 +3,7 @@
 # Quick Start:
 #   1. cp .env.example .env  and fill in every value
 #   2. docker compose up -d
-#   3. Open http://YOUR_SERVER_IP:81  (Nginx Proxy Manager admin)
+#   3. Open http://YOUR_SERVER_IP:8181  (Nginx Proxy Manager admin)
 #      Default login: admin@example.com / changeme  (change immediately)
 #   4. Create Proxy Hosts in NPM:
 #        api.yourdomain.com    →  http://backend:8001
@@ -104,24 +104,20 @@ services:
 
   # ── Nginx Proxy Manager ──────────────────────────────────────────────────────
   # Handles SSL termination, domain routing, and Let's Encrypt certificates.
-  # Admin UI: http://YOUR_SERVER_IP:81
+  # Admin UI: http://YOUR_SERVER_IP:8181
   nginx-proxy-manager:
     image: jc21/nginx-proxy-manager:2.12.3
     container_name: streamvault_npm
     restart: unless-stopped
     ports:
-      - "80:80"     # HTTP (redirects to HTTPS)
-      - "443:443"   # HTTPS
-      - "81:81"     # NPM Admin UI
+      - "80:80"       # HTTP  (redirects to HTTPS)
+      - "443:443"     # HTTPS
+      - "8181:81"     # NPM Admin UI  ← access via http://YOUR_SERVER_IP:8181
     volumes:
       - npm_data:/data
       - npm_letsencrypt:/etc/letsencrypt
     networks:
       - proxy
-    depends_on:
-      - frontend
-      - guide-app
-      - backend
 
 # ── Volumes ───────────────────────────────────────────────────────────────────
 volumes:
