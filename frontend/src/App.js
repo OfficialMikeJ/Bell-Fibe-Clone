@@ -103,7 +103,7 @@ const GuideView = ({ onViewChange }) => {  const [channels, setChannels] = useSt
           <EPGGrid
             channels={channels}
             programs={programs}
-            timeSlots={timeSlots.slice(0, 14)}
+            timeSlots={timeSlots}
             selectedChannelId={selectedChannel?.id}
             onChannelSelect={setSelectedChannel}
             onViewChange={onViewChange}

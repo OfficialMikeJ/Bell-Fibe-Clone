@@ -114,14 +114,21 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
       {showComingSoon && <ComingSoonModal onClose={() => setShowComingSoon(false)} />}
 
       {/* Time Header */}
-      <div className="flex mb-3">
-        <div className="w-36 sm:w-44 lg:w-52 flex-shrink-0 px-2 sm:px-3 py-2">
-          <span className="text-lg text-gray-400 font-light">Today</span>
+      <div className="flex mb-3 sticky top-0 z-10">
+        <div className="w-36 sm:w-44 lg:w-52 flex-shrink-0 px-2 sm:px-3 py-2 bg-[#1a1a1a]">
+          <span className="text-base text-gray-400 font-light">Today</span>
         </div>
         <div className="flex gap-0">
           {timeSlots.map((time, index) => (
-            <div key={index} className="w-[160px] px-3 py-2 flex-shrink-0">
-              <span className="text-lg text-gray-300 font-light">{time}</span>
+            <div
+              key={index}
+              className="w-[160px] px-3 py-2 flex-shrink-0 border-r"
+              style={{
+                background: '#261060',
+                borderRightColor: 'rgba(139,92,246,0.2)',
+              }}
+            >
+              <span className="text-sm text-purple-200/80 font-medium whitespace-nowrap">{time}</span>
             </div>
           ))}
         </div>
@@ -188,68 +195,80 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
               </div>
 
               {/* Program Schedule */}
-              <div className="flex-1 flex items-center bg-[#2a2a2a] rounded-r-lg overflow-hidden relative">
+              <div
+                className="flex-1 flex items-center rounded-r-lg overflow-hidden relative"
+                style={{ background: '#1e1050' }}
+              >
                 {isComingSoon ? (
-                  <div className="px-5 py-2 text-gray-600 text-sm italic flex items-center gap-2">
-                    <Clock className="w-4 h-4" /> Programming not yet available
+                  <div
+                    className="flex items-center px-5 py-3"
+                    style={{ minWidth: `${timeSlots.length * 160}px` }}
+                  >
+                    <Clock className="w-4 h-4 text-purple-400/50 flex-shrink-0 mr-2" />
+                    <span className="text-purple-400/50 text-sm italic">Programming not yet available</span>
                   </div>
                 ) : isVOD ? (
-                  <div className="flex-1 flex items-center justify-between px-5 py-3 bg-gradient-to-r from-purple-900/30 to-transparent">
+                  <div className="flex-1 flex items-center justify-between px-5 py-3">
                     <div>
                       <p className="text-white font-medium text-sm">On Demand</p>
-                      <p className="text-gray-400 text-xs mt-0.5">Browse the full library</p>
+                      <p className="text-purple-300/50 text-xs mt-0.5">Browse the full library</p>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-purple-700 hover:bg-purple-600 transition-colors text-white text-sm font-semibold px-4 py-1.5 rounded-lg cursor-pointer"
+                    <div className="flex items-center gap-1.5 bg-purple-700 hover:bg-purple-600 transition-colors text-white text-sm font-semibold px-4 py-1.5 rounded-lg cursor-pointer mr-2"
                       data-testid="vod-browse-btn">
                       Browse <ChevronRight className="w-4 h-4" />
                     </div>
                   </div>
                 ) : channelPrograms.length > 0 ? (
-                  channelPrograms.map((program, pidx) => {
-                    const width = calculateProgramWidth(program.duration_minutes);
-                    const isProgramSelected = selectedProgramId === program.id;
-                    return (
-                      <div
-                        key={pidx}
-                        data-testid={`epg-program-${program.id}`}
-                        className="group relative cursor-pointer flex-shrink-0 transition-all duration-150"
-                        style={{
-                          width: `${width}px`,
-                          minWidth: `${width}px`,
-                          background: isProgramSelected
-                            ? 'linear-gradient(135deg,#3b1f6e,#2d1b69)'
-                            : 'linear-gradient(135deg,#1e0f35,#160a2a)',
-                          borderRight: '1px solid rgba(139,92,246,0.15)',
-                        }}
-                        onClick={(e) => { e.stopPropagation(); setSelectedProgramId(program.id); }}
-                        title={`${program.title}\n${program.description || ''}\nDuration: ${program.duration_minutes}min`}
-                        onMouseEnter={e => { if (!isProgramSelected) e.currentTarget.style.background = 'linear-gradient(135deg,#2d1b55,#1e1040)'; }}
-                        onMouseLeave={e => { if (!isProgramSelected) e.currentTarget.style.background = 'linear-gradient(135deg,#1e0f35,#160a2a)'; }}
-                      >
-                        <div className="flex items-center gap-2 px-3 py-3 h-full min-w-0">
-                          {program.poster_path && (
-                            <img src={`${BACKEND_URL}/api${program.poster_path}`} alt=""
-                              className="w-9 h-9 rounded-md object-cover flex-shrink-0 ring-1 ring-purple-800/50" />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white text-sm font-semibold truncate leading-tight">{program.title}</p>
-                            {program.description && width >= 240 && (
-                              <p className="text-purple-300/60 text-xs truncate mt-0.5 leading-tight">{program.description}</p>
+                  <>
+                    {channelPrograms.map((program, pidx) => {
+                      const width = calculateProgramWidth(program.duration_minutes);
+                      const isProgramSelected = selectedProgramId === program.id;
+                      return (
+                        <div
+                          key={pidx}
+                          data-testid={`epg-program-${program.id}`}
+                          className="group relative cursor-pointer flex-shrink-0 transition-all duration-150 self-stretch flex items-center"
+                          style={{
+                            width: `${width}px`,
+                            minWidth: `${width}px`,
+                            background: isProgramSelected ? '#3b1f6e' : '#2e1660',
+                            borderRight: '1px solid rgba(139,92,246,0.25)',
+                          }}
+                          onClick={(e) => { e.stopPropagation(); setSelectedProgramId(program.id); }}
+                          title={`${program.title}\n${program.description || ''}\nDuration: ${program.duration_minutes}min`}
+                          onMouseEnter={e => { if (!isProgramSelected) e.currentTarget.style.background = '#381a70'; }}
+                          onMouseLeave={e => { if (!isProgramSelected) e.currentTarget.style.background = '#2e1660'; }}
+                        >
+                          <div className="flex items-center gap-2 px-3 py-3 min-w-0 w-full">
+                            {program.poster_path && (
+                              <img src={`${BACKEND_URL}/api${program.poster_path}`} alt=""
+                                className="w-9 h-9 rounded-md object-cover flex-shrink-0 ring-1 ring-purple-700/50" />
                             )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-sm font-semibold truncate leading-tight">{program.title}</p>
+                              {program.description && width >= 240 && (
+                                <p className="text-purple-300/60 text-xs truncate mt-0.5 leading-tight">{program.description}</p>
+                              )}
+                            </div>
+                            <Info className="w-3 h-3 text-purple-400/40 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                           </div>
-                          <Info className="w-3 h-3 text-purple-400/40 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                          {isProgramSelected && (
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />
+                          )}
+                          {isProgramSelected && (
+                            <div className="absolute top-0 left-0 right-0 h-0.5 bg-purple-500" />
+                          )}
                         </div>
-                        {isProgramSelected && (
-                          <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: 'linear-gradient(90deg,#8b5cf6,#6d28d9)' }} />
-                        )}
-                        {isProgramSelected && (
-                          <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: 'linear-gradient(90deg,#8b5cf6,#6d28d9)' }} />
-                        )}
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                  </>
                 ) : (
-                  <div className="px-3 py-2 text-gray-500 text-sm italic">No programs scheduled</div>
+                  <div
+                    className="flex items-center"
+                    style={{ minWidth: `${timeSlots.length * 160}px` }}
+                  >
+                    <span className="px-4 text-purple-400/30 text-xs italic">No schedule</span>
+                  </div>
                 )}
               </div>
             </div>
