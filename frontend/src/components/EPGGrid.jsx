@@ -124,8 +124,8 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
               key={index}
               className="w-[160px] px-3 py-2 flex-shrink-0 border-r"
               style={{
-                background: '#261060',
-                borderRightColor: 'rgba(139,92,246,0.2)',
+                background: '#14092e',
+                borderRightColor: 'rgba(139,92,246,0.12)',
               }}
             >
               <span className="text-sm text-purple-200/80 font-medium whitespace-nowrap">{time}</span>
@@ -197,7 +197,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
               {/* Program Schedule */}
               <div
                 className="flex-1 flex items-center rounded-r-lg overflow-hidden relative"
-                style={{ background: '#1e1050' }}
+                style={{ background: '#0f0820' }}
               >
                 {isComingSoon ? (
                   <div
@@ -231,13 +231,13 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
                           style={{
                             width: `${width}px`,
                             minWidth: `${width}px`,
-                            background: isProgramSelected ? '#3b1f6e' : '#2e1660',
-                            borderRight: '1px solid rgba(139,92,246,0.25)',
+                            background: isProgramSelected ? '#2c1a60' : '#1c1040',
+                            borderRight: '1px solid rgba(139,92,246,0.15)',
                           }}
                           onClick={(e) => { e.stopPropagation(); setSelectedProgramId(program.id); }}
                           title={`${program.title}\n${program.description || ''}\nDuration: ${program.duration_minutes}min`}
-                          onMouseEnter={e => { if (!isProgramSelected) e.currentTarget.style.background = '#381a70'; }}
-                          onMouseLeave={e => { if (!isProgramSelected) e.currentTarget.style.background = '#2e1660'; }}
+                          onMouseEnter={e => { if (!isProgramSelected) e.currentTarget.style.background = '#251450'; }}
+                          onMouseLeave={e => { if (!isProgramSelected) e.currentTarget.style.background = '#1c1040'; }}
                         >
                           <div className="flex items-center gap-2 px-3 py-3 min-w-0 w-full">
                             {program.poster_path && (

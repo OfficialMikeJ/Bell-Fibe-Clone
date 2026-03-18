@@ -12,7 +12,7 @@
   "rca_of_the_issue": {
     "root_cause": "Two duplicate ChannelFeatured.jsx files exist: /app/guide-app/src/components/ChannelFeatured.jsx and /app/frontend/src/components/ChannelFeatured.jsx. The guide-app is NOT a running service (no supervisor process). The main frontend (port 3000, served by supervisor) imports from /app/frontend/src/components/ChannelFeatured.jsx. The size change (w-52 h-36 -> w-96 h-64) was applied to the guide-app file, but the live app uses the frontend file which was untouched.",
     "reproduction_steps": [
-      "1. Access https://vault-home-test.preview.emergentagent.com (port 3000 / main frontend)",
+      "1. Access https://vault-epg-test.preview.emergentagent.com (port 3000 / main frontend)",
       "2. Navigate to Guide view",
       "3. The Channel Preview card top-left shows old size (208x144px / w-52 h-36)",
       "4. This is because App.js imports ChannelFeatured from ./components/ChannelFeatured (frontend version)",

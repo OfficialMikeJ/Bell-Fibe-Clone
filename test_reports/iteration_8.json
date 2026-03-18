@@ -1,11 +1,11 @@
 {
-  "summary": "Iteration 8: Android APK Management feature — full backend (19/19 tests PASS) and frontend (upload, list, delete UI all PASS). One critical bug found: GET /api/apk/latest returns an internal Kubernetes cluster URL (http://apk-preview-env.cluster-5.preview.emergentcf.cloud/uploads/apk/...) that is NOT accessible externally (returns 301→403). Correct public URL is https://vault-home-test.preview.emergentagent.com/api/uploads/apk/... (returns 200).",
+  "summary": "Iteration 8: Android APK Management feature — full backend (19/19 tests PASS) and frontend (upload, list, delete UI all PASS). One critical bug found: GET /api/apk/latest returns an internal Kubernetes cluster URL (http://apk-preview-env.cluster-5.preview.emergentcf.cloud/uploads/apk/...) that is NOT accessible externally (returns 301→403). Correct public URL is https://vault-epg-test.preview.emergentagent.com/api/uploads/apk/... (returns 200).",
 
   "backend_issues": {
     "critical": [
       {
         "endpoint": "GET /api/apk/latest",
-        "issue": "download_url is built using request.base_url which returns the internal Kubernetes cluster hostname (apk-preview-env.cluster-5.preview.emergentcf.cloud), NOT the public external URL. Also uses /uploads/apk/ path which is not routable via Kubernetes ingress (only /api/* paths are proxied). Result: 301→403 when Android device tries to download. The correct accessible URL is https://vault-home-test.preview.emergentagent.com/api/uploads/apk/{filename}.",
+        "issue": "download_url is built using request.base_url which returns the internal Kubernetes cluster hostname (apk-preview-env.cluster-5.preview.emergentcf.cloud), NOT the public external URL. Also uses /uploads/apk/ path which is not routable via Kubernetes ingress (only /api/* paths are proxied). Result: 301→403 when Android device tries to download. The correct accessible URL is https://vault-epg-test.preview.emergentagent.com/api/uploads/apk/{filename}.",
         "priority": "CRITICAL"
       }
     ],
@@ -24,7 +24,7 @@
   ],
 
   "action_items": [
-    "CRITICAL: Fix download_url in apk.py — Two changes needed: (1) Change stored download_url from '/uploads/apk/{filename}' to '/api/uploads/apk/{filename}' (so Kubernetes ingress can route it). (2) Fix request.base_url to use the public hostname — add PUBLIC_BASE_URL=https://vault-home-test.preview.emergentagent.com to backend/.env and in get_latest_apk() use: base = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/') or fall back to request.base_url. Without this fix, Android devices will get a 403 error when trying to download the APK."
+    "CRITICAL: Fix download_url in apk.py — Two changes needed: (1) Change stored download_url from '/uploads/apk/{filename}' to '/api/uploads/apk/{filename}' (so Kubernetes ingress can route it). (2) Fix request.base_url to use the public hostname — add PUBLIC_BASE_URL=https://vault-epg-test.preview.emergentagent.com to backend/.env and in get_latest_apk() use: base = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/') or fall back to request.base_url. Without this fix, Android devices will get a 403 error when trying to download the APK."
   ],
 
   "critical_code_review_comments": [
@@ -51,12 +51,12 @@
 
   "retest_needed": true,
   "main_agent_can_self_test": true,
-  "context_for_next_testing_agent": "APK management feature is fully implemented. The only outstanding bug is the download_url in GET /api/apk/latest returning an internal cluster URL + wrong /uploads/ path. After the fix, verify: curl https://vault-home-test.preview.emergentagent.com/api/apk/latest after an upload should return download_url starting with https://vault-home-test.preview.emergentagent.com/api/uploads/apk/ and that URL should return 200.",
+  "context_for_next_testing_agent": "APK management feature is fully implemented. The only outstanding bug is the download_url in GET /api/apk/latest returning an internal cluster URL + wrong /uploads/ path. After the fix, verify: curl https://vault-epg-test.preview.emergentagent.com/api/apk/latest after an upload should return download_url starting with https://vault-epg-test.preview.emergentagent.com/api/uploads/apk/ and that URL should return 200.",
 
   "rca_of_the_issue": {
     "bug": "GET /api/apk/latest returns inaccessible download_url",
     "root_cause": "FastAPI's request.base_url reflects the internal Kubernetes cluster hostname (apk-preview-env.cluster-5.preview.emergentcf.cloud) instead of the external public hostname. This happens because the Kubernetes ingress does not forward X-Forwarded-Host headers that FastAPI could use to reconstruct the public URL. Additionally, the stored relative path /uploads/apk/ is only mounted directly on the backend; the Kubernetes ingress only routes /api/* paths to the backend, so /uploads/ is not externally accessible.",
     "reproduction": "1. Upload any APK via POST /api/apk/upload. 2. Call GET /api/apk/latest. 3. Copy download_url value. 4. Try curl <download_url> — returns 301→403.",
-    "fix": "In /app/backend/routes/apk.py: (1) Change line 113 to: download_url = f'/api/uploads/apk/{filename}'. (2) In get_latest_apk(), replace 'base = str(request.base_url).rstrip(\"/\")' with: 'base = os.environ.get(\"PUBLIC_BASE_URL\", str(request.base_url)).rstrip(\"/\")'. (3) Add PUBLIC_BASE_URL=https://vault-home-test.preview.emergentagent.com to /app/backend/.env."
+    "fix": "In /app/backend/routes/apk.py: (1) Change line 113 to: download_url = f'/api/uploads/apk/{filename}'. (2) In get_latest_apk(), replace 'base = str(request.base_url).rstrip(\"/\")' with: 'base = os.environ.get(\"PUBLIC_BASE_URL\", str(request.base_url)).rstrip(\"/\")'. (3) Add PUBLIC_BASE_URL=https://vault-epg-test.preview.emergentagent.com to /app/backend/.env."
   }
 }
