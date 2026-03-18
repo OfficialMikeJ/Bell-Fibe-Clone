@@ -185,3 +185,54 @@ async def restore_backup(
 @router.get("/backup-status")
 async def get_restore_status(admin: Admin = Depends(get_current_admin)):
     return _restore_status
+
+
+@router.get("/auto-backups")
+async def list_auto_backups(admin: Admin = Depends(get_current_admin)):
+    """List all auto-generated nightly backups stored on disk."""
+    from utils.scheduler import BACKUPS_DIR
+    if not BACKUPS_DIR.exists():
+        return []
+    backups = sorted(BACKUPS_DIR.glob("auto_backup_*.tar.gz"), reverse=True)
+    result = []
+    for b in backups:
+        stat = b.stat()
+        result.append({
+            "filename": b.name,
+            "size_bytes": stat.st_size,
+            "size_mb": round(stat.st_size / (1024 * 1024), 2),
+            "created_at": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+        })
+    return result
+
+
+@router.get("/auto-backups/{filename}")
+async def download_auto_backup(filename: str, admin: Admin = Depends(get_current_admin)):
+    """Download a specific auto-backup file."""
+    from utils.scheduler import BACKUPS_DIR
+    file_path = BACKUPS_DIR / filename
+    if not file_path.exists() or not filename.endswith(".tar.gz"):
+        raise HTTPException(status_code=404, detail="Backup file not found")
+    content = file_path.read_bytes()
+    return StreamingResponse(
+        io.BytesIO(content),
+        media_type="application/gzip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Length": str(len(content)),
+        },
+    )
+
+
+@router.post("/auto-backups/run-now")
+async def run_backup_now(
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    admin: Admin = Depends(get_current_admin),
+):
+    """Trigger the auto-backup immediately (without downloading)."""
+    from utils.scheduler import run_scheduled_backup
+    await run_scheduled_backup(db)
+    from utils.scheduler import BACKUPS_DIR
+    backups = sorted(BACKUPS_DIR.glob("auto_backup_*.tar.gz"), reverse=True)
+    latest = backups[0].name if backups else None
+    return {"message": "Backup created successfully", "filename": latest}

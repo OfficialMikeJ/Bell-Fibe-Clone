@@ -45,12 +45,17 @@ const SettingsTab = ({ token }) => {
   const [apkReleases, setApkReleases] = useState([]);
   const apkInputRef = useRef(null);
 
+  // Auto-backup state
+  const [autoBackups, setAutoBackups] = useState([]);
+  const [runningBackup, setRunningBackup] = useState(false);
+
   const getHeaders = () => ({ Authorization: `Bearer ${token}` });
 
   useEffect(() => {
     fetchSettings();
     fetchApkReleases();
     fetchOtaReleases();
+    fetchAutoBackups();
   }, []);
 
   const fetchSettings = async () => {
@@ -245,6 +250,28 @@ const SettingsTab = ({ token }) => {
       fetchApkReleases();
     } catch {
       toast.error('Failed to delete release');
+    }
+  };
+
+  const fetchAutoBackups = async () => {
+    try {
+      const res = await axios.get(`${API}/admin/auto-backups`, { headers: getHeaders() });
+      setAutoBackups(res.data);
+    } catch {
+      // Silently fail — directory may not exist yet
+    }
+  };
+
+  const handleRunBackupNow = async () => {
+    setRunningBackup(true);
+    try {
+      const res = await axios.post(`${API}/admin/auto-backups/run-now`, {}, { headers: getHeaders() });
+      toast.success(res.data.message || 'Backup created');
+      fetchAutoBackups();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Backup failed');
+    } finally {
+      setRunningBackup(false);
     }
   };
 
@@ -719,6 +746,50 @@ const SettingsTab = ({ token }) => {
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Scheduled Auto-Backup ─────────────────────────────────────── */}
+      <Card className="bg-[#2a2a2a] border-gray-700">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <RefreshCw className="w-5 h-5 text-green-400" />
+              <div>
+                <CardTitle className="text-white">Scheduled Auto-Backup</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Nightly database backup runs automatically at 03:00 UTC. Last 7 backups are kept on disk.
+                </CardDescription>
+              </div>
+            </div>
+            <Button onClick={handleRunBackupNow} disabled={runningBackup}
+              className="bg-green-700 hover:bg-green-600 shrink-0" data-testid="run-backup-now-btn">
+              <Download className="w-4 h-4 mr-2" />
+              {runningBackup ? 'Running...' : 'Run Now'}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {autoBackups.length === 0 ? (
+            <p className="text-gray-500 text-sm italic">No auto-backups yet. Click "Run Now" to create the first one.</p>
+          ) : (
+            <div className="space-y-2">
+              {autoBackups.map(b => (
+                <div key={b.filename} className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded border border-gray-700"
+                  data-testid={`auto-backup-${b.filename}`}>
+                  <div>
+                    <p className="text-white text-sm font-mono">{b.filename}</p>
+                    <p className="text-gray-500 text-xs mt-0.5">{b.size_mb} MB · {new Date(b.created_at).toLocaleString()}</p>
+                  </div>
+                  <a href={`${API}/admin/auto-backups/${b.filename}`}
+                    className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-sm"
+                    target="_blank" rel="noopener noreferrer" data-testid={`auto-backup-dl-${b.filename}`}>
+                    <Download className="w-4 h-4" /> Download
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

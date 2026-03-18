@@ -11,6 +11,7 @@ class ProgramBase(BaseModel):
     duration_minutes: int  # auto-set from media file or manual
     date: str  # YYYY-MM-DD format
     media_id: Optional[str] = None  # Reference to MediaItem
+    catalog_id: Optional[str] = None  # Reference to Media Catalog entry
     poster_path: Optional[str] = None
     program_type: str = "live"  # live, recorded, movie, episode
 
@@ -23,6 +24,7 @@ class ProgramUpdate(BaseModel):
     start_time: Optional[str] = None
     duration_minutes: Optional[int] = None
     media_id: Optional[str] = None
+    catalog_id: Optional[str] = None
     poster_path: Optional[str] = None
     program_type: Optional[str] = None
 

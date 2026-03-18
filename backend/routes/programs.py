@@ -38,7 +38,20 @@ async def create_program(
 
     program_dict = program.dict()
 
-    # Auto-fill duration and poster from media_id if provided
+    # Auto-fill from catalog entry if provided (takes priority for title/description/poster)
+    if program.catalog_id:
+        catalog = await db.media_catalog.find_one({"id": program.catalog_id})
+        if catalog:
+            if not program_dict.get('title') or program_dict['title'] == program.title:
+                program_dict['title'] = catalog.get('title', program_dict['title'])
+            if not program_dict.get('description'):
+                program_dict['description'] = catalog.get('description', '')
+            if not program_dict.get('poster_path'):
+                program_dict['poster_path'] = catalog.get('poster_path')
+            if not program_dict.get('duration_minutes') or program_dict['duration_minutes'] == 0:
+                program_dict['duration_minutes'] = catalog.get('runtime_minutes', 30)
+
+    # Auto-fill duration and poster from media_id if provided (fallback)
     if program.media_id:
         media = await db.media_items.find_one({"id": program.media_id})
         if media:

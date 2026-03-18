@@ -17,23 +17,26 @@ const CATEGORIES = ['movie', 'tv_show', 'mini_series', 'limited_series'];
 const VODTab = ({ token }) => {
   const [items, setItems] = useState([]);
   const [mediaList, setMediaList] = useState([]);
+  const [catalogList, setCatalogList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterCat, setFilterCat] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState({ title: '', description: '', media_id: '', category: 'movie', genre: '', year: '', rating: '', is_featured: false });
+  const [form, setForm] = useState({ title: '', description: '', media_id: '', catalog_id: '', category: 'movie', genre: '', year: '', rating: '', is_featured: false });
   const posterInputRef = useRef(null);
   const [posterVodId, setPosterVodId] = useState(null);
   const headers = { Authorization: `Bearer ${token}` };
 
   const fetchAll = async () => {
     try {
-      const [vodRes, mediaRes] = await Promise.all([
+      const [vodRes, mediaRes, catalogRes] = await Promise.all([
         axios.get(`${API}/vod`, { params: filterCat !== 'all' ? { category: filterCat } : {} }),
-        axios.get(`${API}/media`, { headers })
+        axios.get(`${API}/media`, { headers }),
+        axios.get(`${API}/catalog`, { headers }),
       ]);
       setItems(vodRes.data);
       setMediaList(mediaRes.data);
+      setCatalogList(catalogRes.data);
     } catch (e) {
       toast.error('Failed to load VOD catalog');
     } finally {
@@ -45,14 +48,32 @@ const VODTab = ({ token }) => {
 
   const openAdd = () => {
     setEditingId(null);
-    setForm({ title: '', description: '', media_id: '', category: 'movie', genre: '', year: '', rating: '', is_featured: false });
+    setForm({ title: '', description: '', media_id: '', catalog_id: '', category: 'movie', genre: '', year: '', rating: '', is_featured: false });
     setIsDialogOpen(true);
   };
 
   const openEdit = (item) => {
     setEditingId(item.id);
-    setForm({ title: item.title, description: item.description || '', media_id: item.media_id || '', category: item.category, genre: item.genre || '', year: item.year || '', rating: item.rating || '', is_featured: item.is_featured });
+    setForm({ title: item.title, description: item.description || '', media_id: item.media_id || '', catalog_id: item.catalog_id || '', category: item.category, genre: item.genre || '', year: item.year || '', rating: item.rating || '', is_featured: item.is_featured });
     setIsDialogOpen(true);
+  };
+
+  const handleCatalogSelect = (catalogId) => {
+    const entry = catalogList.find(c => c.id === catalogId);
+    if (entry) {
+      setForm(f => ({
+        ...f,
+        catalog_id: catalogId,
+        title: f.title || entry.title,
+        description: f.description || entry.description || '',
+        genre: f.genre || (entry.genres || []).join(', '),
+        year: f.year || (entry.release_date ? entry.release_date.slice(0, 4) : ''),
+        rating: f.rating || entry.rating || '',
+        category: entry.content_type === 'tv_series' ? 'tv_show' : f.category,
+      }));
+    } else {
+      setForm(f => ({ ...f, catalog_id: catalogId }));
+    }
   };
 
   const handleMediaSelect = (mediaId) => {
@@ -176,6 +197,15 @@ const VODTab = ({ token }) => {
             <DialogTitle className="text-white">{editingId ? 'Edit VOD Item' : 'Add VOD Item'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            <div>
+              <Label className="text-white text-sm">Link Media Catalog Entry (auto-fills metadata)</Label>
+              <select value={form.catalog_id} onChange={(e) => handleCatalogSelect(e.target.value)}
+                className="w-full mt-1 bg-[#2a2a2a] border border-gray-600 text-white rounded px-3 py-2 text-sm"
+                data-testid="vod-catalog-select">
+                <option value="">— No catalog entry linked —</option>
+                {catalogList.map(c => <option key={c.id} value={c.id}>{c.title} ({c.content_type?.replace(/_/g, ' ')}) {c.release_date ? `[${c.release_date.slice(0,4)}]` : ''}</option>)}
+              </select>
+            </div>
             <div>
               <Label className="text-white text-sm">Link Media File (auto-fills duration & poster)</Label>
               <select value={form.media_id} onChange={(e) => handleMediaSelect(e.target.value)}

@@ -56,9 +56,11 @@ const AdminDashboard = () => {
     start_time: '',
     duration_minutes: 30,
     date: new Date().toISOString().split('T')[0],
-    media_id: ''
+    media_id: '',
+    catalog_id: ''
   });
   const [mediaList, setMediaList] = useState([]);
+  const [catalogList, setCatalogList] = useState([]);
 
   // Device form
   const [isDeviceDialogOpen, setIsDeviceDialogOpen] = useState(false);
@@ -78,6 +80,7 @@ const AdminDashboard = () => {
     fetchDevices();
     fetchPrograms();
     fetchMediaList();
+    fetchCatalogList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -120,6 +123,15 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchCatalogList = async () => {
+    try {
+      const response = await axios.get(`${API}/catalog`, { headers: getHeaders() });
+      setCatalogList(response.data);
+    } catch (error) {
+      console.error('Error fetching catalog:', error);
+    }
+  };
+
   const handleMediaSelectForProgram = async (mediaId) => {
     if (!mediaId) {
       setProgramForm(f => ({ ...f, media_id: '' }));
@@ -137,6 +149,25 @@ const AdminDashboard = () => {
       }));
     } catch (e) {
       console.error('Could not fetch media info', e);
+    }
+  };
+
+  const handleCatalogSelectForProgram = (catalogId) => {
+    if (!catalogId) {
+      setProgramForm(f => ({ ...f, catalog_id: '' }));
+      return;
+    }
+    const entry = catalogList.find(c => c.id === catalogId);
+    if (entry) {
+      setProgramForm(f => ({
+        ...f,
+        catalog_id: catalogId,
+        title: f.title || entry.title || '',
+        description: f.description || entry.description || '',
+        duration_minutes: entry.runtime_minutes || f.duration_minutes,
+      }));
+    } else {
+      setProgramForm(f => ({ ...f, catalog_id: catalogId }));
     }
   };
 
@@ -252,7 +283,8 @@ const AdminDashboard = () => {
         start_time: '',
         duration_minutes: 30,
         date: new Date().toISOString().split('T')[0],
-        media_id: ''
+        media_id: '',
+        catalog_id: ''
       });
       fetchPrograms();
     } catch (error) {
@@ -818,6 +850,22 @@ const AdminDashboard = () => {
               <DialogTitle className="text-2xl text-white">Add Program to EPG</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreateProgram} className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-white text-sm font-medium">Link Catalog Entry (auto-fills title, description & duration)</Label>
+                <select
+                  value={programForm.catalog_id || ''}
+                  onChange={(e) => handleCatalogSelectForProgram(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-md text-white text-sm"
+                  data-testid="program-catalog-select"
+                >
+                  <option value="">— No catalog entry (manual entry) —</option>
+                  {catalogList.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title} ({c.content_type?.replace(/_/g, ' ')}) {c.release_date ? `[${c.release_date.slice(0,4)}]` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="space-y-2">
                 <Label className="text-white text-sm font-medium">Link Media File (auto-fills title, description & duration)</Label>
                 <select

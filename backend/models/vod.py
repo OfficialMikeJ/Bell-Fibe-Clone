@@ -8,7 +8,9 @@ class VODItem(BaseModel):
     title: str
     description: Optional[str] = ""
     media_id: Optional[str] = None  # Reference to MediaItem
+    catalog_id: Optional[str] = None  # Reference to Media Catalog entry
     poster_path: Optional[str] = None
+    media_file_path: Optional[str] = None  # Resolved from media_id at query time
     category: str = "movie"  # movie, tv_show, mini_series, limited_series
     genre: Optional[str] = None
     year: Optional[int] = None
@@ -25,6 +27,7 @@ class VODCreate(BaseModel):
     title: str
     description: Optional[str] = ""
     media_id: Optional[str] = None
+    catalog_id: Optional[str] = None
     category: str = "movie"
     genre: Optional[str] = None
     year: Optional[int] = None
@@ -35,6 +38,7 @@ class VODUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     media_id: Optional[str] = None
+    catalog_id: Optional[str] = None
     category: Optional[str] = None
     genre: Optional[str] = None
     year: Optional[int] = None

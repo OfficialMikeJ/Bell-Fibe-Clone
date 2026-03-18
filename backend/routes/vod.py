@@ -53,6 +53,12 @@ async def get_vod(
                 vod.duration_formatted = media.get('duration_formatted')
                 if not vod.poster_path:
                     vod.poster_path = media.get('poster_path')
+                vod.media_file_path = media.get('file_path')
+        # Attach catalog poster if available
+        if item.get('catalog_id') and not vod.poster_path:
+            catalog = await db.media_catalog.find_one({"id": item['catalog_id']})
+            if catalog:
+                vod.poster_path = catalog.get('poster_path')
         result.append(vod)
     return result
 

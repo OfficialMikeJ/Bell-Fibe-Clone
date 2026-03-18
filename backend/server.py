@@ -38,6 +38,9 @@ from routes.app_version import router as app_version_router
 from routes.migration import router as migration_router
 from routes.ota import router as ota_router
 
+# Scheduler
+from utils.scheduler import start_scheduler
+
 # Import security middleware
 from utils.https_middleware import HTTPSRedirectMiddleware, SecureHeadersMiddleware
 
@@ -261,6 +264,9 @@ async def startup_event():
             await db.admins.insert_one(default_admin.dict())
             logger.info("✅ Default admin created (username: admin, password: admin123)")
             logger.warning("⚠️  Please change default credentials through setup wizard")
+
+    # Start scheduled auto-backup (nightly at 03:00 UTC)
+    start_scheduler(db)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
