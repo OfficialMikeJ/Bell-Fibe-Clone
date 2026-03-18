@@ -115,7 +115,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
 
       {/* Time Header */}
       <div className="flex mb-3">
-        <div className="w-52 flex-shrink-0 px-3 py-2">
+        <div className="w-36 sm:w-44 lg:w-52 flex-shrink-0 px-2 sm:px-3 py-2">
           <span className="text-lg text-gray-400 font-light">Today</span>
         </div>
         <div className="flex gap-0">
@@ -153,7 +153,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
             >
               {/* Channel Info */}
               <div
-                className={`w-52 flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-[#2a2a2a] rounded-l-lg ${
+                className={`w-36 sm:w-44 lg:w-52 flex-shrink-0 flex items-center gap-2 px-2 sm:px-3 py-2 bg-[#2a2a2a] rounded-l-lg ${
                   isSelected ? 'border-2 border-white' : isFocused ? 'border-2 border-[#0056A8]' : 'border-2 border-transparent'
                 }`}
               >

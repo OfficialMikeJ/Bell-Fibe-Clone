@@ -12,7 +12,7 @@ All generated logo assets are in `/app/android/assets/`:
 | `ic_launcher_96.png` | `mipmap-xhdpi` launcher icon |
 | `ic_launcher_144.png` | `mipmap-xxhdpi` launcher icon |
 | `ic_launcher_192.png` | `mipmap-xxxhdpi` launcher icon |
-| `ic_launcher_512.png` | Google Play Store icon |
+| `ic_launcher_512.png` | High-res icon (internal use / future reference) |
 
 ### Adding icons to Android Studio
 1. Copy each `ic_launcher_*.png` to its corresponding `app/src/main/res/mipmap-*/ic_launcher.png` folder
@@ -384,11 +384,30 @@ public class MainActivity extends Activity {
 
         webView = findViewById(R.id.webview);
         WebSettings webSettings = webView.getSettings();
+
+        // ── JavaScript & Storage ──────────────────────────────────────────
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
-        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         webSettings.setGeolocationEnabled(true);
+        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+
+        // ── Screen Scaling (CRITICAL for TV / Tablet / Phone) ────────────
+        // Respect the <meta name="viewport"> tag in the React app
+        webSettings.setUseWideViewPort(true);
+        // Fit page to screen width on initial load (prevents zoomed-out blurry view)
+        webSettings.setLoadWithOverviewMode(true);
+        // Lock text zoom to 100% — prevents OS accessibility font size
+        // from breaking the guide layout
+        webSettings.setTextZoom(100);
+        // Allow pinch-to-zoom but hide the on-screen zoom buttons
+        webSettings.setSupportZoom(true);
+        webSettings.setBuiltInZoomControls(true);
+        webSettings.setDisplayZoomControls(false);
+        // Hardware acceleration for smooth HLS video playback
+        webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null);
+        // Allow autoplay media (needed for HLS preview player)
+        webSettings.setMediaPlaybackRequiresUserGesture(false);
 
         webView.setWebViewClient(new WebViewClient());
         webView.loadUrl(GUIDE_URL);
@@ -602,18 +621,61 @@ adb logcat | grep WebView
 3. Connect device via USB
 4. Run: `adb install app-release.apk`
 
-## Distribution
+## Distribution — Side-Loading Only (No Play Store)
 
-### Google Play Store
-1. Create Play Console account
-2. Upload signed APK
-3. Complete store listing
-4. Submit for review
+StreamVault is distributed **privately via side-loading**. There is no Play Store submission required.
 
-### Direct Distribution
-1. Host APK on your website
-2. Users enable "Install from Unknown Sources"
-3. Download and install APK
+### Method 1 — Download directly from your StreamVault server
+1. On the device, open Chrome or any browser
+2. Navigate to: `https://YOUR_SERVER/api/uploads/apk/streamvault_X_X_X.apk`
+3. Android prompts "Allow installs from Chrome" → tap **Allow**
+4. Tap **Install** when download completes
+
+### Method 2 — ADB (fastest for batch device setup)
+```bash
+adb install streamvault.apk
+# Reinstall keeping data:
+adb install -r streamvault.apk
+```
+
+### Method 3 — USB file transfer
+1. Copy APK to device storage via USB
+2. File manager → tap APK → Install
+
+### Enabling "Install Unknown Apps" (one-time per device)
+**Android 8.0+:** Settings → Apps → Special App Access → Install Unknown Apps → select Chrome/Files → **Allow**
+**Android 7.0 and below:** Settings → Security → Unknown Sources → enable
+
+### build.gradle (sideload config — no Play Store requirements)
+```groovy
+android {
+    defaultConfig {
+        applicationId "com.streamvault.app"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "0.94.0.1"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            debuggable true
+        }
+    }
+}
+```
+
+### Signing (required even for sideloading)
+```bash
+# Generate keystore once — keep this file safe
+keytool -genkey -v -keystore streamvault.jks \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -alias streamvault
+```
 
 ## Security Considerations
 
