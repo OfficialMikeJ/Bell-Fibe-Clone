@@ -48,7 +48,7 @@
   "rca_of_issue": {
     "Media Streaming Public URL": {
       "root_cause": "The /uploads/media/{filename} endpoint in server.py is defined without the /api prefix. Kubernetes ingress only routes /api/* paths to backend port 8001. Frontend routes (no /api prefix) go to port 3000. Therefore /uploads/media/ is served by the React SPA which returns HTML (200) instead of media files.",
-      "reproduction": "Request https://apk-preview-env.preview.emergentagent.com/uploads/media/any.mp4 - returns 200 with HTML content type (frontend SPA response) instead of 404/streaming from backend.",
+      "reproduction": "Request https://vault-home-test.preview.emergentagent.com/uploads/media/any.mp4 - returns 200 with HTML content type (frontend SPA response) instead of 404/streaming from backend.",
       "mitigation": "Option 1: Move endpoint to /api/uploads/media/{filename} and update any frontend media URLs accordingly. Option 2: Add Kubernetes ingress rule to route /uploads/* to port 8001."
     }
   }

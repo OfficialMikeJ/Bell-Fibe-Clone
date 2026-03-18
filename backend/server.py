@@ -32,6 +32,7 @@ from routes.faq import router as faq_router
 from routes.customer import router as customer_router
 from routes.guide_state import router as guide_state_router
 from routes.apk import router as apk_router
+from routes.home_posts import router as home_posts_router
 
 # Import security middleware
 from utils.https_middleware import HTTPSRedirectMiddleware, SecureHeadersMiddleware
@@ -117,6 +118,7 @@ app.include_router(faq_router)
 app.include_router(customer_router)
 app.include_router(guide_state_router)
 app.include_router(apk_router)
+app.include_router(home_posts_router)
 
 # Mount uploads directory for serving files with proper caching headers
 uploads_dir = Path("/app/backend/uploads")

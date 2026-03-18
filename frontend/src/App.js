@@ -12,6 +12,7 @@ import LoginPage from "./components/LoginPage";
 import AdminDashboard from "./components/AdminDashboard";
 import SetupWizard from "./components/SetupWizard";
 import OnDemandPage from "./components/OnDemandPage";
+import HomePage from "./components/HomePage";
 import RecordingsPage from "./components/RecordingsPage";
 import NotificationsPage from "./components/NotificationsPage";
 import ActivatePage from "./pages/ActivatePage";
@@ -140,14 +141,7 @@ const Home = () => {
       case 'notifications':
         return <NotificationsPage onBack={() => setActiveView('guide')} />;
       case 'home':
-        return (
-          <div className="flex-1 bg-[#1a1a1a] flex items-center justify-center">
-            <div className="text-center">
-              <h1 className="text-white text-4xl font-bold mb-4">Welcome</h1>
-              <p className="text-gray-400 text-lg">Select Guide to view TV channels</p>
-            </div>
-          </div>
-        );
+        return <HomePage onViewChange={handleViewChange} />;
       case 'saved':
         return (
           <div className="flex-1 bg-[#1a1a1a] flex items-center justify-center">

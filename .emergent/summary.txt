@@ -1,76 +1,73 @@
 <analysis>**original_problem_statement:**
-The user wants to develop a full-featured TV service clone, which has been named StreamVault. The service includes an IPTV service with a Live TV Guide (EPG) and a Video on Demand (VOD) section. The project also encompasses a comprehensive admin dashboard, a customer-facing support portal, and a public registration website. The application is intended to be containerized and eventually run on a user-provided server with a custom domain.
+The user wants to develop a full-featured TV service clone, which has been named StreamVault. The service includes an IPTV service with a Live TV Guide (EPG) and a Video on Demand (VOD) section. The project also encompasses a comprehensive admin dashboard for managing all aspects of the service, a customer-facing support portal, and a public registration website. The application is intended to be containerized for deployment on a user-provided server with a custom domain and an external Nginx Proxy Manager setup.
 
 **PRODUCT REQUIREMENTS:**
-- **Core Functionality:** A full-stack application with a live TV guide (EPG) and a VOD section. The branding is StreamVault.
-- **Admin Dashboard:** A comprehensive backend for managing channels, EPG, media, users, devices, CVR, analytics, a support ticket system, and an FAQ section. It should also include a section for uploading new versions of the Android APK.
-- **Customer Portal:** A separate web portal () for customers to log in via QR code to submit support tickets and view FAQs.
-- **Public Website:** A public-facing site for new customer registration. The activation flow now uses Google Authenticator (TOTP), replacing the previous PIN-based system.
-- **Security & Infrastructure:**
-    - Multi-layered admin authentication (JWT, 2FA, Master PIN).
-    - Device authentication uses a TOTP code from Google Authenticator, with an IP-based lockout mechanism for security.
-    - The application is containerized using Docker and is being configured to work with a user-provided static IP for testing, with plans for a future SSL domain.
+- **Core Functionality:** A full-stack application branded as StreamVault, featuring a live TV guide (EPG), a Video-on-Demand (VOD) section, and a dynamic Home page with curated content.
+- **Admin Dashboard:** A backend for managing channels, EPG, VOD media, users, devices, CVR, analytics, and a support ticket system. It includes an APK upload manager and a Home Feed manager to publish content to the customer-facing home page.
+- **Customer Application:** A single React application that serves as the customer-facing TV guide. It includes an EPG, VOD browser, and a home page. It is intended to be wrapped in an Android WebView.
+- **Authentication & Security:**
+    - Admin authentication is JWT-based.
+    - Customer device activation uses a unique, randomly generated username and password. These credentials are created upon customer registration and are visible to the admin in the dashboard for manual setup on customer devices. This system replaced the previous Google Authenticator (TOTP) flow.
+- **Infrastructure & Deployment:**
+    - The entire application stack (backend, frontend, database) is defined in a  file, ready for production deployment.
+    - The setup is designed to integrate with an external Nginx Proxy Manager, for which setup instructions have been provided.
 - **Client Applications:**
-    - A dedicated React application () for the customer-facing TV guide, featuring UI animations.
-    - A placeholder Android project () to wrap the , which needs to include an in-app update check mechanism.
-    - A  file with specifications for a future Roku application (note: no Roku code should be implemented).
+    - A detailed  in the  directory provides the complete, updated Java and XML code for an Android Studio project that will wrap the customer application in a WebView. It includes logic for an in-app update check.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A feature-rich full-stack application. The backend is a FastAPI server, and the frontend consists of three parts: a large admin dashboard, a public registration/customer portal, and a separate, dedicated React app () for the main user-facing TV Guide. Major features like the support portal and the new Google Authenticator-based registration are complete and tested. The project has been fully rebranded to StreamVault. The architecture has been set up for containerization with Docker. The agent was in the process of implementing a self-hosted Android app (APK) update system.
+The project is a comprehensive, full-stack StreamVault IPTV application. The backend is FastAPI, and the frontend is a single React app serving both the admin dashboard and the customer-facing guide. Key features are complete, including the admin-managed username/password activation system, a self-hosted Android APK update mechanism, a VOD section, and HLS video previews in the guide. The Coming Soon channels have been fixed to show a popup, and a dedicated On Demand channel has been added to the EPG. The entire stack has been containerized with a production-ready  file designed for use with an external reverse proxy. A new dynamic Home page feature was just built.
 
 **Last working item**:
-- **Last item agent was working**: The agent was implementing a multi-part user request to facilitate self-hosting and updates for the Android application. This involved:
-    1.  Adding a Close button to the guide's auto-refresh notification.
-    2.  Creating backend API endpoints to upload and retrieve the latest Android APK file.
-    3.  Creating an admin UI to upload the APK.
-    4.  Planning the logic for an in-app update check within the Android app.
-    5.  Configuring the application to use the user's provided static IP () for testing.
+- **Last item agent was working**: Implementing a new dynamic Home page for the customer-facing application. This involved creating:
+    1.  A new backend API () and database collection () for managing informational posts.
+    2.  A new Home Feed tab in the admin dashboard to allow the admin to create, edit, and delete posts (e.g., App Updates, Upcoming Features).
+    3.  A new  component that fetches and displays these posts, along with VOD content like Upcoming Movies and New on TV.
+    4.  Wiring this new page into the main application's navigation.
 - **Status**: IN PROGRESS
 - **Agent Testing Done**: N
-- **Which testing method agent to use?** both. The new API endpoints () require backend testing via . The new UI elements (notification button, admin upload form) require frontend testing via screenshot or the testing agent.
+- **Which testing method agent to use?** both. The new  CRUD endpoints require backend testing via . The new admin Home Feed tab and the customer-facing Home page require frontend testing via the testing agent to verify the full flow.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
 - There are no known bugs or blocking issues.
 
 **In progress Task List**:
-- **Task 1: Implement Android APK Hosting and Update Flow** (Priority: P0)
-    - **Where to resume**: The agent has created the file  and the directory . The next step is to implement the logic for the  and  endpoints within that file and register the router in .
-    - **What will be achieved with this?**: This will create a complete system allowing the admin to upload new Android app versions through the dashboard, which the Android app can then check against to prompt users to update.
+- **Task 1: Test the new Home page feature** (Priority: P0)
+    - **Where to resume**: The agent has created , , added a  to , and updated . The next step is to test the entire feature end-to-end.
+    - **What will be achieved with this?**: A fully functional, dynamic home page for users, with content that can be easily managed by the admin.
     - **Status**: IN PROGRESS
     - **Should Test frontend/backend/both after fix?**: both
     - **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **P0: Complete APK Update Flow & Static IP Integration**:
-        - Add the blue Close button to the  component.
-        - Build the admin UI in  for APK uploading.
-        - Implement the update-check logic in the placeholder .
-        - Configure all relevant  and config files to point to the user's static IP ().
-    - **P1: Flesh out Android App Wrapper**: Implement the WebView in the  project to load the  URL, creating a functional Android application.
-    - **P2: Finalize Docker and Nginx Proxy Manager Integration**: Refine the  and provide documentation on how to use it with Nginx Proxy Manager to set up the user's future custom SSL domain.
+    - **P1: Finalize Android App build**: The user needs to take the code from , create an Android Studio project, and compile the APK. The  contains the complete, corrected code.
+    - **P2: Finalize Nginx Proxy Manager Integration**: The user needs to configure their existing NPM instance to create proxy hosts for the backend () and admin frontend () as per the instructions provided.
 - **Future Tasks**:
-    - **TV Tuner Integration**: Implement the backend logic to interface with a TV tuner card for streaming Free-to-Air channels and activate the Live TV Coming Soon channels.
+    - **TV Tuner Integration**: Implement backend logic to interface with a TV tuner for streaming Free-to-Air channels and activate the Live TV channels.
+    - **VOD Content Ingestion**: The VOD pages are built, but a system for the admin to upload and manage movie/show files is needed.
+    - **Add Volume Slider**: An enhancement for the HLS video preview player in the guide.
+    - **Cleanup Deprecated Code**: Delete the  directory as it has been identified as unused/dead code.
 
 **Completed work in this session**
-- **Authentication Overhaul**: Replaced the entire PIN-based activation system with a more secure Google Authenticator (TOTP) flow. This included backend logic for secret generation and verification () and frontend UI for displaying QR codes.
-- **Full Rebranding**: Systematically removed all references to Bell Canada and replaced them with StreamVault across all source code, documentation, UI text, and database default values.
-- **Architectural Separation**: Successfully migrated the customer-facing UI (EPG, VOD, etc.) into a new, separate React project at .
-- **UI/UX Animations**:
-    - Implemented a Netflix-style entrance animation for the  activation screen.
-    - Added subtle, staggered slide-in and fade animations to the main guide interface for a more polished feel.
-- **Guide Auto-Refresh**: Built a polling mechanism where the  checks for content updates every 30 seconds. If new content is detected, the guide automatically refreshes and displays a notification.
-- **EPG Enhancements**:
-    - Added two grayed-out, non-interactive Live TV Coming Soon channels.
-    - Renamed and re-numbered existing channels as per the user's request.
-- **Code Cleanup**: Removed all server-side Roku implementation code that was added in error, reverting to the user's original request of just a  file.
-- **Containerization Setup**: Created  and associated Dockerfiles for the backend and two frontend applications.
+- **Username/Password Authentication System**: Completely removed the Google Authenticator (TOTP) system and replaced it with an admin-managed, credential-based activation flow.
+- **Android APK Management**: Implemented a full feature for the admin to upload new Android APKs, which the client app can check against to prompt users for updates.
+- **Android  Overhaul**: Updated the Android wrapper code in  to use modern  instead of the deprecated , and fixed package name inconsistencies.
+- **HLS Video Previews**: Integrated  into the TV guide, enabling auto-playing, muted video previews for channels with a valid stream URL.
+- **Coming Soon Channel Fix**: Re-implemented the Coming Soon feature to show a popup modal on click, rather than having the text in the channel name.
+- **Dedicated VOD Channel**: Added a special On Demand channel to the EPG grid that navigates the user to the VOD section, pre-filtered to Movies.
+- **Docker Production Setup**: Created and refined  and associated  for all services, adding health checks,  files, and finally removing the Nginx Proxy Manager service at the user's request.
+- **UI Size Adjustments**: Iteratively increased the size of the featured channel preview card based on user feedback.
+- **Home Page Feature**: Built the backend, admin UI, and customer-facing UI for a new dynamic Home page.
 
 **Earlier issues found/mentioned but not fixed**
-- None. A previous misunderstanding where the agent built Roku backend code instead of just a README was identified by the user and fully corrected by removing all related code. Another issue where Bell Canada TV was still visible due to a database value was also fully resolved.
+- **Issue 1: Redundant Frontend Code**
+    - The testing agent discovered that the  directory is unused and all live frontend code resides in .
+    - **Next debug checklist**: The  directory should be deleted to prevent future confusion and reduce code duplication.
+    - **Why fix this issue and what will be achieved with the fix?**: Simplifies the codebase, reduces confusion for future development, and removes dead code.
+    - **Status**: NOT STARTED
 
 **Known issue recurrence from previous fork**
 - None.
@@ -79,87 +76,87 @@ A feature-rich full-stack application. The backend is a FastAPI server, and the 
 
 
 **Key Technical Concepts**
-- **Frontend**: React, React Router, TailwindCSS, Shadcn UI, Axios, CSS Keyframe Animations.
-- **Backend**: FastAPI (Python), Motor (async MongoDB),  for TOTP.
+- **Frontend**: React, React Router, TailwindCSS, Shadcn UI, Axios, .
+- **Backend**: FastAPI (Python), Motor (async MongoDB).
 - **Database**: MongoDB.
-- **Authentication**: JWT, 2FA, Master PIN, Geo-location, IP-based lockout, and TOTP via Google Authenticator.
-- **Deployment**: Docker Compose.
+- **Authentication**: JWT (for admin), custom-generated username/password (for customer devices).
+- **Deployment**: Docker Compose, designed for an external Nginx Proxy Manager.
 
 **key DB schema**
-- **users**: Now includes  (string),  (boolean).  is deprecated.
-- **channels**: Includes an optional  (boolean) flag.
-- **guide_refresh_state**: Contains a single  (datetime) field to track content changes.
-- **apk_releases**: A new collection will be needed to store APK metadata (e.g., , , ).
+- **users**: Removed , . Added  (string),  (string).
+- **channels**: Added  (boolean),  (string: 'live' or 'vod').
+- **home_posts**: **New collection** to store posts for the home page (e.g., ).
 
 **changes in tech stack**
--  library was added to the backend for TOTP implementation.
+- **Added**:  library to the frontend for HLS video streaming.
+- **Removed**:  library from the backend as TOTP is no longer used.
 
 **All files of reference**
-- : **New file** for the APK upload/download logic.
-- : Heavily modified to replace PIN logic with TOTP.
-- : **New file** for the guide auto-refresh endpoint.
-- : Rewritten to use TOTP and add animations.
-- : Rewritten to incorporate the auto-refresh hook and notification system.
-- : **New file** containing the polling logic.
-- : Modified to include several new CSS keyframe animations.
-- : **New file** defining the three services (backend, frontend, guide-app).
-- : **New file** created for future Roku development specs.
+- : Rewritten to implement username/password activation.
+- : **New file** for the Home page content API.
+- : Rewritten to integrate  and a special VOD card.
+- : Heavily modified to handle coming soon popups and the VOD channel link.
+- : **New file** for the dynamic home page.
+- : Rewritten for username/password login.
+- : Modified to display the new user credentials.
+- : Rewritten for production, simplified to exclude Nginx Proxy Manager.
+- : Significantly updated with production-ready code for the Android wrapper.
 
 **Areas that need refactoring**:
-- No major refactoring is currently needed. The primary architectural change of separating the  has been completed.
+- The  directory is now confirmed to be dead code and should be deleted to avoid confusion and streamline the project structure.
 
 **key api endpoints**
-- : **New endpoint** to activate a device using an email and a TOTP code.
-- : **New endpoint** for the guide-app to poll for content changes.
-- : **New endpoint (In Progress)** for admins to upload a new APK file.
-- : **New endpoint (In Progress)** for the Android app to check for updates.
-- : Deprecated and replaced by .
+- : **New endpoint** to activate a device with a username and password.
+- : Endpoint for the Android app to check for updates.
+- : Endpoint for admins to upload new APKs.
+- : **New endpoint** to fetch content for the home page.
+- : **Deprecated** and removed.
 
 **Critical Info for New Agent**
-- **Stick to the User's Request:** The previous agent over-implemented a feature (Roku) and had to remove the work. Be very careful to only build what is explicitly asked for.
-- **Static IP Configuration:** The user has provided a temporary static IP (). Your immediate task includes configuring the  and Android app to point to this IP for API calls and for loading the web content. This is for testing, and the user plans to provide an SSL domain later.
-- **Authentication is TOTP:** The entire user activation flow is now based on Google Authenticator. The old PIN system is gone.
-- **Two Separate Frontends:** Remember that  is for the admin/public site and  is the main customer-facing TV application. They are distinct projects.
+- **The  project is obsolete.** All frontend development for the TV guide and admin panel now occurs in the single  project. Do not make changes in .
+- **Authentication is now username/password.** The entire Google Authenticator/TOTP flow has been removed. The admin generates and views credentials for manual setup on customer devices.
+- **Docker setup is for external NPM.** The  does not include a reverse proxy. The user has their own Nginx Proxy Manager instance that they will configure to point to the services.
+- **The Home page feature is brand new and untested.** The immediate next task is to thoroughly test the creation of posts in the admin panel and their display on the customer home page.
 
 **documents and test reports created in this job**
 - 
--  (updated multiple times)
 - 
--  (TOTP flow tests)
--  (Branding and final verification tests)
+- 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (latest):** Requested the APK self-hosting/update feature, a close button on the refresh notification, and provided a static IP () for testing. (Status: IN PROGRESS)
-2.  **Agent:** Outlined the plan to implement the APK hosting feature and static IP configuration.
-3.  **User:** Agreed with the agent's plan for animations.
-4.  **Agent:** Completed the auto-refresh feature and asked about next steps.
-5.  **User:** Requested two grayed-out Live TV Coming Soon channels. (Status: COMPLETED)
-6.  **Agent:** Implemented the Coming Soon channels.
-7.  **User:** Asked to rename/renumber three specific test channels. (Status: COMPLETED)
-8.  **Agent:** Updated the channels in the database.
-9.  **User:** Agreed to the agent's suggestion to add staggered slide-in animations to the guide. (Status: COMPLETED)
-10. **Agent:** Proposed adding animations to the main guide interface after completing the login animation.
+1.  **User:** Requested the Home tab be filled with dynamic information like upcoming movies, new seasons, app updates, and upcoming features. (Status: IN PROGRESS)
+2.  **Agent:** Laid out the plan to create a new backend API, admin tab, and frontend page for the Home feature.
+3.  **User:** Filter the VOD channel to only show Movies. (Status: COMPLETED)
+4.  **Agent:** Implemented the filtering logic by passing a prop to the .
+5.  **User:** Add a dedicated VOD channel in the EPG that links to the On Demand tab. (Status: COMPLETED)
+6.  **Agent:** Created the VOD channel and wired up the navigation in the EPG and featured channel components.
+7.  **User:** Fix the Coming Soon channels to show a popup message instead of text in the channel name. (Status: COMPLETED)
+8.  **Agent:** Fixed the database entries and updated the EPG component to handle clicks on  channels with a modal popup.
+9.  **User:** Clarified that the TV guide is part of the Android app's WebView, so no domain is needed for it. (Status: ACKNOWLEDGED)
+10. **Agent:** Corrected the Nginx Proxy Manager setup instructions, removing the proxy host for the guide app.
 
 **Project Health Check:**
-- **Broken**: None. The application is stable.
+- **Broken**: None.
 - **Mocked**:
-    - The Live TV feature is visually represented by non-functional Coming Soon channels.
-    - The  project is a placeholder and does not yet contain a functional WebView to display the .
+    - Live TV is visually represented, but no channels have actual stream URLs connected.
+    - The  project is a  file with code, not a compiled application.
+    - The new Home page is built but contains no content and is untested.
 
 **3rd Party Integrations**
-- **ffmpeg**: System-level dependency for media processing.
-- **Uptime Kuma**: URL configuration supported in admin settings.
-- **pyotp**: Python library used for Google Authenticator (TOTP) integration.
+- **hls.js**: Frontend library for playing HLS video streams.
+- **ffmpeg**: System-level dependency for media processing (backend).
+- **Uptime Kuma**: Supported in admin settings but not a core dependency.
 
 **Testing status**
-- **Testing agent used after significant changes**: YES. Used successfully after the TOTP implementation and the StreamVault rebranding.
+- **Testing agent used after significant changes**: YES. Used to validate the Docker setup, the username/password system, and to identify the unused  directory.
 - **Troubleshoot agent used after agent stuck in loop**: NO.
 - **Test files created**: None.
 - **Known regressions**: None.
 
 **Credentials to test flow:**
-- Admin credentials can be found in the setup logic () if the app is freshly installed.
-- New user registration is done via the public registration page and requires the use of an authenticator app like Google Authenticator.
+- Admin credentials can be found in  for a fresh installation.
+- New customer accounts are created via the public registration page. Their auto-generated username and password can be viewed in the Users tab of the admin dashboard.
 
 **What agent forgot to execute**
-- The agent was actively working on the user's latest request when the session ended. No tasks were forgotten, but the implementation of the APK hosting and update mechanism is incomplete.</analysis>
+- The agent implemented the entire Home page feature (backend, admin UI, frontend UI) but did not perform any testing (, screenshot, or testing agent) to validate that it works. This is the highest priority next step.</analysis>
