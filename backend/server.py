@@ -66,6 +66,12 @@ class StatusCheckCreate(BaseModel):
 async def root():
     return {"message": "IPTV Service API - Running", "version": "1.0.0"}
 
+
+@api_router.get("/health")
+async def health_check():
+    """Docker health check endpoint — returns 200 when the app is ready."""
+    return {"status": "ok"}
+
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
     status_dict = input.model_dump()
