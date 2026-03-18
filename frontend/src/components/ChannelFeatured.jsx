@@ -232,7 +232,7 @@ const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
           className="w-96 h-64 bg-[#0a0a0a] rounded-2xl overflow-hidden relative flex-shrink-0 shadow-2xl border border-gray-700 cursor-pointer"
           onMouseEnter={() => setShowControls(true)}
           onMouseLeave={() => setShowControls(false)}
-          onClick={() => showVideo && setIsMuted(m => !m)}
+          onClick={() => showVideo && setVolume(v => v === 0 ? (getStoredVolume() || 0.3) : 0)}
           data-testid="channel-preview-card"
         >
           {/* Video layer */}
