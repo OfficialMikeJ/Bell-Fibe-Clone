@@ -31,6 +31,25 @@ The Android app is a WebView wrapper around the TV Guide (guide-app).
 - Offline guide caching
 - Push notifications
 
+## Channel Behaviour Notes
+
+### Coming Soon Channels (Live TV 1, Live TV 2)
+These channels are placeholder entries for future live TV integration. They are flagged with `coming_soon: true` in the database.
+
+**Behaviour in the guide:**
+- Channel rows appear greyed out (50% opacity) in the EPG grid
+- Clicking/selecting a coming-soon channel does **not** switch the preview player
+- Instead, a full-screen popup modal appears with the message:
+  > *"Live TV channels coming soon. Stay tuned for updates on when live TV will be added."*
+- A **"Got It"** button dismisses the popup
+- The program schedule area shows *"Programming not yet available"* instead of a time grid
+
+**How to activate them when live TV is ready:**
+1. In Admin → Channels, edit the channel
+2. Add the HLS stream URL (e.g. `http://your-server/stream/livetv1.m3u8`)
+3. Set `coming_soon` to `false` (uncheck in the channel editor)
+4. The channel will immediately become fully interactive in the guide
+
 ## Requirements
 - Android Studio Arctic Fox or higher
 - Android SDK 24+ (Android 7.0+)
