@@ -1,0 +1,75 @@
+{
+  "summary": "Iteration 13: Full testing of new StreamVault features: version popup, EPG purple cards, sidebar new nav items, User Settings page, App Info page, Admin Media Catalog tab (CRUD + cast + upload areas). All 26 backend API tests pass (100%). All frontend flows verified with Playwright. One critical code-level bug found in ChannelFeatured.jsx (setIsMuted not defined - latent bug when stream is playing).",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "ChannelFeatured.jsx",
+        "issue": "Line 235: `onClick={() => showVideo && setIsMuted(m => !m)}` — `setIsMuted` is NOT defined anywhere in the component. When showVideo=true (stream playing) and user clicks the preview card, a ReferenceError will be thrown. Currently silent in test env because channels have no stream URLs. Fix: replace with volume toggle logic e.g. `setVolume(v => v === 0 ? getStoredVolume() || 0.3 : 0)` or simply remove the click handler.",
+        "selector": "[data-testid=\"channel-preview-card\"]",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Volume slider in HLS player",
+        "issue": "Cannot fully test volume slider/controls appearance on hover since no stream URLs are configured in this test environment. Code review confirms volume toggle btn (data-testid=volume-toggle-btn) and slider (data-testid=volume-slider with showVolSlider state) are correctly implemented. Volume initializes at 30% from localStorage (getStoredVolume). Video starts unmuted (muted=false set in useEffect).",
+        "affected_selectors": ["[data-testid=\"volume-toggle-btn\"]", "[data-testid=\"volume-slider\"]"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "Admin Dashboard - Catalog Dialog",
+        "issues": ["Minor: Missing <DialogDescription> in CatalogTab.jsx Dialog — console warning: 'Missing Description or aria-describedby for DialogContent'. Same issue existed in HomeFeedTab (noted in iter12). Non-functional."]
+      }
+    ]
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_catalog_appversion_iter13.py",
+    "/app/test_reports/pytest/pytest_results_iter13.xml"
+  ],
+
+  "action_items": [
+    "CRITICAL: Fix ChannelFeatured.jsx line 235 — replace undefined `setIsMuted` with valid volume toggle: change `onClick={() => showVideo && setIsMuted(m => !m)}` to remove the click or use `setVolume(v => v === 0 ? (getStoredVolume() || 0.3) : 0)`",
+    "OPTIONAL: Add <DialogDescription> to CatalogTab.jsx Dialog to suppress accessibility warning"
+  ],
+
+  "critical_code_review_comments": [
+    "BUG: ChannelFeatured.jsx line 235 - `setIsMuted` is not defined. The component removed isMuted state but forgot to update the click handler on the preview card. Will throw ReferenceError in production when stream is live.",
+    "GOOD: catalog.py properly handles doc.pop('_id', None) after insert to avoid MongoDB ObjectId leakage.",
+    "GOOD: EPGGrid.jsx correctly uses deep purple gradient `linear-gradient(135deg,#1e0f35,#160a2a)` for program cards, verified visually.",
+    "GOOD: Channel info panel correctly uses #1e1040 (normal) / #2d1b55 (selected) dark purple backgrounds.",
+    "GOOD: VersionPopup correctly saves version to localStorage on dismiss and checks against current version to suppress repeat showings.",
+    "GOOD: UserSettingsPage persists all 3 settings (volume, autoplay, quality) to localStorage with correct keys (sv_volume_preference, sv_autoplay_enabled, sv_quality_preference).",
+    "NOTE: AdminDashboard.jsx is 1019 lines — exceeds 700-line guideline. Consider splitting catalog-related code to reduce file size."
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_catalog_appversion_iter13.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (26/26 tests pass)",
+    "frontend": "95% (all flows working except volume slider untestable without live stream; 1 code bug found)"
+  },
+
+  "seed_data_creation": "Created 'Inception' catalog entry during testing. Entry was deleted at end of test. DB is clean.",
+
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Iteration 13 tested: version popup, EPG purple cards, sidebar new nav items (user-settings + app-info), User Settings page (volume/autoplay/quality with localStorage persistence), App Info page (version display + Show version popup button), Admin Media Catalog (CRUD + cast management + poster/backdrop upload areas). All 26 backend tests in /app/backend/tests/test_catalog_appversion_iter13.py. Critical bug: ChannelFeatured.jsx line 235 setIsMuted undefined — needs fix. Volume slider on hover (volume-toggle-btn, volume-slider) could not be tested without a live stream URL configured. Backend catalog route at /api/catalog fully functional. App version at /api/app-version returns correct version 0.94.0.1.A (Alpha build).",
+
+  "rca_of_issue": {
+    "bug": "setIsMuted ReferenceError in ChannelFeatured.jsx",
+    "reproduction": "1. Configure a channel with a valid HLS stream URL. 2. Navigate to the Guide tab. 3. Select the channel — stream should play (showVideo=true). 4. Click on the preview card. 5. Browser console throws: ReferenceError: setIsMuted is not defined",
+    "root_cause": "The `isMuted` state and `setIsMuted` setter were removed from the component (in favor of volume-based muting), but the `onClick` handler on the channel-preview-card div (line 235) still references the old `setIsMuted` setter. The JavaScript short-circuit evaluation (`showVideo && setIsMuted(...)`) prevents the error when `showVideo` is false, but will trigger it when a stream is actively playing.",
+    "mitigation": "Replace line 235: `onClick={() => showVideo && setIsMuted(m => !m)}` with: `onClick={() => showVideo && setVolume(v => v === 0 ? (getStoredVolume() || 0.3) : 0)}` — this toggles mute via the volume state which is the correct approach."
+  }
+}

@@ -1,22 +1,45 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Hls from 'hls.js';
-import { Volume2, VolumeX, Maximize2, Radio, Wifi, WifiOff, Play, ChevronRight } from 'lucide-react';
+import { Volume2, VolumeX, Volume1, Maximize2, Radio, Wifi, WifiOff, Play, ChevronRight } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Detect if a URL is an HLS stream
 const isHLS = (url) => url && (url.includes('.m3u8') || url.includes('/hls/') || url.includes('playlist'));
 
+// Read/write user volume preference from localStorage
+const getStoredVolume = () => {
+  try {
+    const v = localStorage.getItem('sv_volume_preference');
+    if (v !== null) {
+      const num = parseFloat(v);
+      if (!isNaN(num) && num >= 0 && num <= 1) return num;
+    }
+  } catch { /* ignore */ }
+  return 0.3; // default 30%
+};
+const setStoredVolume = (v) => {
+  try { localStorage.setItem('sv_volume_preference', String(v)); } catch { /* ignore */ }
+};
+
+const getStoredAutoplay = () => {
+  try {
+    const v = localStorage.getItem('sv_autoplay_enabled');
+    return v === null ? true : v === 'true';
+  } catch { return true; }
+};
+
 const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
   const videoRef    = useRef(null);
   const hlsRef      = useRef(null);
   const retryRef    = useRef(null);
 
-  const [isMuted,      setIsMuted]      = useState(true);
+  const [volume,       setVolume]       = useState(getStoredVolume);
   const [hasError,     setHasError]     = useState(false);
   const [isBuffering,  setIsBuffering]  = useState(false);
   const [isLive,       setIsLive]       = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [showVolSlider, setShowVolSlider] = useState(false);
 
   const videoSrc = currentProgram?.media_file_path
     ? `${BACKEND_URL}/api${currentProgram.media_file_path}`
@@ -70,7 +93,9 @@ const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           setIsBuffering(false);
-          video.play().catch(() => {});
+          if (getStoredAutoplay()) {
+            video.play().catch(() => {});
+          }
         });
 
         hls.on(Hls.Events.ERROR, (_, data) => {
@@ -96,7 +121,7 @@ const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
         video.src = src;
         video.addEventListener('loadedmetadata', () => {
           setIsBuffering(false);
-          video.play().catch(() => {});
+          if (getStoredAutoplay()) video.play().catch(() => {});
         }, { once: true });
       } else {
         setHasError(true);
@@ -108,7 +133,7 @@ const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
       video.load();
       video.addEventListener('canplay', () => {
         setIsBuffering(false);
-        video.play().catch(() => {});
+        if (getStoredAutoplay()) video.play().catch(() => {});
       }, { once: true });
       video.addEventListener('error', () => {
         setHasError(true);
@@ -130,10 +155,19 @@ const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
     return destroyHls;
   }, [videoSrc, attachStream, destroyHls]);
 
-  // Sync muted state to video element
+  // Sync volume to video element + localStorage whenever volume changes
   useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = isMuted;
-  }, [isMuted]);
+    if (videoRef.current) {
+      videoRef.current.volume = volume;
+      videoRef.current.muted = false;
+    }
+    setStoredVolume(volume);
+  }, [volume]);
+
+  // Apply stored volume whenever a new stream attaches
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.volume = volume;
+  });
 
   const handleFullscreen = () => {
     const el = videoRef.current;
@@ -206,7 +240,6 @@ const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
             <video
               ref={videoRef}
               className="w-full h-full object-cover"
-              muted={isMuted}
               playsInline
               autoPlay
               poster={posterSrc || undefined}
@@ -278,15 +311,39 @@ const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
             <div className={`absolute inset-0 transition-opacity duration-200 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
               <div className="absolute bottom-3 right-3 flex items-center gap-2">
-                <button
-                  onClick={(e) => { e.stopPropagation(); setIsMuted(m => !m); }}
-                  className="w-9 h-9 rounded-full bg-black/60 backdrop-blur flex items-center justify-center hover:bg-black/80 transition-colors"
-                  data-testid="mute-toggle-btn"
+                {/* Volume slider */}
+                <div
+                  className="flex items-center gap-2 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full"
+                  onMouseEnter={() => setShowVolSlider(true)}
+                  onMouseLeave={() => setShowVolSlider(false)}
                 >
-                  {isMuted
-                    ? <VolumeX className="w-4 h-4 text-white" />
-                    : <Volume2 className="w-4 h-4 text-white" />}
-                </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setVolume(v => v === 0 ? getStoredVolume() || 0.3 : 0); }}
+                    className="flex items-center justify-center hover:text-white transition-colors text-white/80"
+                    data-testid="volume-toggle-btn"
+                  >
+                    {volume === 0
+                      ? <VolumeX className="w-4 h-4" />
+                      : volume < 0.5
+                      ? <Volume1 className="w-4 h-4" />
+                      : <Volume2 className="w-4 h-4" />}
+                  </button>
+                  {showVolSlider && (
+                    <input
+                      type="range"
+                      min="0" max="1" step="0.05"
+                      value={volume}
+                      onChange={e => { e.stopPropagation(); setVolume(parseFloat(e.target.value)); }}
+                      onClick={e => e.stopPropagation()}
+                      className="w-20 accent-white cursor-pointer"
+                      data-testid="volume-slider"
+                      style={{ height: 4 }}
+                    />
+                  )}
+                  {showVolSlider && (
+                    <span className="text-white text-xs w-7 text-center">{Math.round(volume * 100)}%</span>
+                  )}
+                </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleFullscreen(); }}
                   className="w-9 h-9 rounded-full bg-black/60 backdrop-blur flex items-center justify-center hover:bg-black/80 transition-colors"
@@ -296,11 +353,11 @@ const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
                 </button>
               </div>
 
-              {/* Click to unmute hint */}
-              {isMuted && (
+              {/* Volume hint when low */}
+              {volume === 0 && (
                 <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-white/60 text-xs pointer-events-none">
                   <VolumeX className="w-3.5 h-3.5" />
-                  Click to unmute
+                  Muted
                 </div>
               )}
             </div>

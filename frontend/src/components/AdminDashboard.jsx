@@ -21,6 +21,7 @@ import AnalyticsTab from './AnalyticsTab';
 import TicketsTab from './admin/TicketsTab';
 import FAQTab from './admin/FAQTab';
 import HomeFeedTab from './HomeFeedTab';
+import CatalogTab from './CatalogTab';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -352,6 +353,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="stats" className="data-[state=active]:bg-[#0056A8]" data-testid="stats-tab-trigger">Statistics</TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-[#0056A8]" data-testid="analytics-tab-trigger">Analytics</TabsTrigger>
             <TabsTrigger value="branding" className="data-[state=active]:bg-[#0056A8]" data-testid="branding-tab-trigger">Branding</TabsTrigger>
+            <TabsTrigger value="catalog" className="data-[state=active]:bg-purple-700" data-testid="catalog-tab-trigger">Media Catalog</TabsTrigger>
             <TabsTrigger value="home-feed" className="data-[state=active]:bg-[#0056A8]" data-testid="home-feed-tab-trigger">Home Feed</TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-[#0056A8]" data-testid="settings-tab-trigger">Settings</TabsTrigger>
           </TabsList>
@@ -665,6 +667,11 @@ const AdminDashboard = () => {
           {/* Home Feed Tab */}
           <TabsContent value="home-feed">
             <HomeFeedTab token={token} />
+          </TabsContent>
+
+          {/* Media Catalog Tab */}
+          <TabsContent value="catalog">
+            <CatalogTab token={token} />
           </TabsContent>
 
           {/* Statistics Tab */}

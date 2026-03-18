@@ -13,6 +13,9 @@ import AdminDashboard from "./components/AdminDashboard";
 import SetupWizard from "./components/SetupWizard";
 import OnDemandPage from "./components/OnDemandPage";
 import HomePage from "./components/HomePage";
+import UserSettingsPage from "./components/UserSettingsPage";
+import AppInfoPage from "./components/AppInfoPage";
+import { VersionPopup } from "./components/AppInfoPage";
 import RecordingsPage from "./components/RecordingsPage";
 import NotificationsPage from "./components/NotificationsPage";
 import ActivatePage from "./pages/ActivatePage";
@@ -142,6 +145,10 @@ const Home = () => {
         return <NotificationsPage onBack={() => setActiveView('guide')} />;
       case 'home':
         return <HomePage onViewChange={handleViewChange} />;
+      case 'user-settings':
+        return <UserSettingsPage />;
+      case 'app-info':
+        return <AppInfoPage />;
       case 'saved':
         return (
           <div className="flex-1 bg-[#1a1a1a] flex items-center justify-center">
@@ -159,6 +166,7 @@ const Home = () => {
 
   return (
     <div className="flex min-h-screen bg-[#1a1a1a]">
+      <VersionPopup />
       <Sidebar activeView={activeView} onViewChange={handleViewChange} />
       <div className="pl-20 flex-1 flex flex-col">
         {renderView()}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Home, Tv, Video, Radio, Bell, BookMarked, Settings, Lock, Signal, AlertTriangle, X } from 'lucide-react';
+import { Home, Tv, Video, Radio, Bell, BookMarked, Settings, Lock, Signal, AlertTriangle, X, SlidersHorizontal, Info } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -16,7 +16,9 @@ const Sidebar = ({ activeView, onViewChange }) => {
     { id: 'recordings', label: 'Recordings', icon: Radio },
     { id: 'notifications', label: "What's New", icon: Bell },
     { id: 'saved', label: 'Saved', icon: BookMarked },
-    { id: 'settings', label: 'Settings', icon: Settings, adminOnly: true },
+    { id: 'user-settings', label: 'Settings', icon: SlidersHorizontal },
+    { id: 'app-info', label: 'App Info', icon: Info },
+    { id: 'settings', label: 'Admin', icon: Settings, adminOnly: true },
     { id: 'tuner', label: 'Live TV', icon: Signal, comingSoon: true },
   ];
 
