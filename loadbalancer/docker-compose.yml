@@ -1,0 +1,76 @@
+# ============================================================
+#  StreamVault Load Balancer — docker-compose.yml
+#  Deploy this on your dedicated cheap desktop (LB machine).
+#
+#  Copy this file to your LB machine, create a .env file
+#  alongside it (see .env.example), then run:
+#    docker compose up -d
+# ============================================================
+
+services:
+
+  # ── HAProxy ────────────────────────────────────────────────
+  haproxy:
+    image: haproxy:2.9-alpine
+    container_name: streamvault_haproxy
+    restart: unless-stopped
+    ports:
+      - "80:80"       # HTTP → redirect to HTTPS
+      - "443:443"     # HTTPS — main entry point
+      - "8404:8404"   # Stats dashboard (restrict at firewall to your IP)
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./certs:/etc/ssl/certs:ro
+      - haproxy_socket:/var/run/haproxy
+    environment:
+      - NODE_A_HOST=${NODE_A_HOST}
+      - NODE_B_HOST=${NODE_B_HOST}
+    depends_on:
+      - monitor
+    networks:
+      - lb_net
+
+  # ── Load Monitor (weight adjuster) ─────────────────────────
+  monitor:
+    build: ./monitor
+    container_name: streamvault_monitor
+    restart: unless-stopped
+    environment:
+      NODE_A_HOST: ${NODE_A_HOST}
+      NODE_B_HOST: ${NODE_B_HOST}
+      BACKEND_PORT: ${BACKEND_PORT:-8001}
+      FRONTEND_PORT: ${FRONTEND_PORT:-3000}
+      POLL_INTERVAL: ${POLL_INTERVAL:-10}
+      REQUEST_TIMEOUT: ${REQUEST_TIMEOUT:-5}
+      HIGH_LOAD_THRESHOLD: ${HIGH_LOAD_THRESHOLD:-50}
+      HAPROXY_SOCKET: /var/run/haproxy/haproxy.sock
+    volumes:
+      - haproxy_socket:/var/run/haproxy
+    networks:
+      - lb_net
+
+  # ── Certbot (Let's Encrypt SSL certs) ──────────────────────
+  certbot:
+    image: certbot/certbot:latest
+    container_name: streamvault_certbot
+    restart: unless-stopped
+    volumes:
+      - ./certs:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    # Renews certs every 12 hours (only actually renews when < 30 days left)
+    entrypoint: >
+      sh -c "trap exit TERM;
+             while :; do
+               certbot renew --webroot -w /var/www/certbot --quiet;
+               sleep 12h & wait $${!};
+             done"
+    networks:
+      - lb_net
+
+volumes:
+  haproxy_socket:
+    driver: local
+
+networks:
+  lb_net:
+    driver: bridge
