@@ -13,6 +13,7 @@ from models.admin import Admin
 from utils.security import verify_token
 from datetime import datetime, timezone
 from pathlib import Path
+import os
 import uuid
 import shutil
 
@@ -222,5 +223,3 @@ async def get_update_status(
         "unknown": unknown,
     }
 
-
-import os

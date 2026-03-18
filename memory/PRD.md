@@ -56,10 +56,10 @@ StreamVault — a full-featured IPTV service with Live TV Guide (EPG), VOD secti
 ### Admin Dashboard (16 tabs)
 1. Channels — CRUD, logo upload, quality label, channel_type, stream URL, coming_soon flag
 2. EPG Programs — Create/delete, media file link, FFmpeg duration auto-fill
-3. Media Library — Upload video files, FFmpeg metadata
+3. Media Library — Upload video files, FFmpeg metadata; **channel-based subfolders** (`{show_slug}_ch{num}`)
 4. VOD — VOD catalog management
 5. **Media Catalog** — Full IMDB-like system: title, tagline, content_type, genres, release_date, runtime, director, producers, cast (w/ photos), studio, rating, language, country, tags, poster, backdrop, gallery images
-6. Devices — UUID display, geo, IP tracking
+6. Devices — UUID display, geo, IP tracking, **installed_app_version** column
 7. Users — Full CRUD, auto-generated credentials, status, notes
 8. Notifications — Create/toggle/delete
 9. CVR — Cloud Video Recording management
@@ -68,7 +68,7 @@ StreamVault — a full-featured IPTV service with Live TV Guide (EPG), VOD secti
 12. Statistics — Channel/program/device counts
 13. Analytics — Charts
 14. Branding — Logo, service name, Master PIN
-15. Settings — APK upload, domain config, Uptime Kuma
+15. Settings — APK upload, domain config, Uptime Kuma, **OTA Auto-Update**, **Server Migration/Backup**
 16. **Home Feed** — Create/edit/delete/publish announcement posts
 
 ### Customer-Facing Guide App (at /)
