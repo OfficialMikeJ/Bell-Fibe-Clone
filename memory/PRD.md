@@ -24,7 +24,7 @@ StreamVault — a full-featured IPTV service with Live TV Guide (EPG), VOD secti
 │       ├── components/
 │       │   ├── AdminDashboard.jsx   (16 tabs including Catalog + Home Feed)
 │       │   │                        EPG Programs form: catalog dropdown + media dropdown
-│       │   ├── EPGGrid.jsx          (dark purple card system #1c1040/#0f0820)
+│       │   ├── EPGGrid.jsx          (dark purple card system #1c1040/#0f0820, CATEGORY_COLORS left-accent + badge system)
 │       │   ├── ChannelFeatured.jsx  (hls.js player, auto-volume 30%, slider)
 │       │   ├── HomePage.jsx         (dynamic home: VOD + posts)
 │       │   ├── HomeFeedTab.jsx      (admin: create/edit/delete home posts)

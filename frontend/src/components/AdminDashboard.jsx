@@ -18,6 +18,22 @@ import NotificationsTab from './NotificationsTab';
 import CVRTab from './CVRTab';
 import BrandingTab from './BrandingTab';
 import AnalyticsTab from './AnalyticsTab';
+
+// Shared category color map (keep in sync with EPGGrid)
+const CATEGORY_COLORS = {
+  entertainment: { accent: '#3a7fc4', badgeBg: '#0f1e2e', badgeText: '#7ab3d8', label: 'Entertainment' },
+  movies:        { accent: '#b07a3a', badgeBg: '#2a1c0a', badgeText: '#c49050', label: 'Cinema'        },
+  sports:        { accent: '#3a8f4a', badgeBg: '#0d2414', badgeText: '#72b07e', label: 'Sports'        },
+  news:          { accent: '#a84040', badgeBg: '#280f0f', badgeText: '#c07272', label: 'News'          },
+  kids:          { accent: '#a0a030', badgeBg: '#262610', badgeText: '#b8b052', label: 'Kids'          },
+  music:         { accent: '#9a3a9a', badgeBg: '#250f25', badgeText: '#b87ab8', label: 'Music'         },
+  nature:        { accent: '#349494', badgeBg: '#0c2828', badgeText: '#6aacac', label: 'Nature'        },
+  tech:          { accent: '#3a5aa0', badgeBg: '#101828', badgeText: '#7090c0', label: 'Tech'          },
+  drama:         { accent: '#7a3ab0', badgeBg: '#1c0d2e', badgeText: '#a470c4', label: 'Drama'         },
+  lifestyle:     { accent: '#3a9470', badgeBg: '#0d261e', badgeText: '#68b094', label: 'Lifestyle'     },
+  gaming:        { accent: '#8a5030', badgeBg: '#200f08', badgeText: '#aa7050', label: 'Gaming'        },
+};
+const getCatColor = (cat) => CATEGORY_COLORS[cat] || CATEGORY_COLORS.entertainment;
 import TicketsTab from './admin/TicketsTab';
 import FAQTab from './admin/FAQTab';
 import HomeFeedTab from './HomeFeedTab';
@@ -42,7 +58,8 @@ const AdminDashboard = () => {
     description: '',
     quality_label: '1080p',
     channel_type: 'live',
-    stream_url: ''
+    stream_url: '',
+    category: 'entertainment'
   });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
@@ -241,7 +258,8 @@ const AdminDashboard = () => {
       description: channel.description || '',
       quality_label: channel.quality_label || '1080p',
       channel_type: channel.channel_type || 'live',
-      stream_url: channel.stream_url || ''
+      stream_url: channel.stream_url || '',
+      category: channel.category || 'entertainment'
     });
     setLogoPreview(channel.logo_path ? `${BACKEND_URL}/api${channel.logo_path}` : '');
     setIsChannelDialogOpen(true);
@@ -250,7 +268,7 @@ const AdminDashboard = () => {
   const handleAddNewChannel = () => {
     setIsEditMode(false);
     setEditingChannelId(null);
-    setChannelForm({ name: '', number: '', description: '', quality_label: '1080p', channel_type: 'live', stream_url: '' });
+    setChannelForm({ name: '', number: '', description: '', quality_label: '1080p', channel_type: 'live', stream_url: '', category: 'entertainment' });
     setLogoFile(null);
     setLogoPreview('');
     setIsChannelDialogOpen(true);
@@ -419,7 +437,15 @@ const AdminDashboard = () => {
                         />
                         <div>
                           <CardTitle className="text-white text-lg">{channel.name}</CardTitle>
-                          <CardDescription className="text-gray-400">Ch {channel.number}</CardDescription>
+                          <CardDescription className="text-gray-400 flex items-center gap-2">
+                            Ch {channel.number}
+                            {channel.category && (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                                style={{ background: getCatColor(channel.category).badgeBg, color: getCatColor(channel.category).badgeText }}>
+                                {getCatColor(channel.category).label}
+                              </span>
+                            )}
+                          </CardDescription>
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -826,6 +852,27 @@ const AdminDashboard = () => {
                   placeholder="https://stream.example.com/channel.m3u8"
                   className="bg-[#2a2a2a] border-gray-600 text-white"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-white">Category (sets EPG color coding)</Label>
+                <select
+                  value={channelForm.category || 'entertainment'}
+                  onChange={(e) => setChannelForm({ ...channelForm, category: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-md text-white text-sm"
+                  data-testid="channel-category-select"
+                >
+                  <option value="entertainment">Entertainment</option>
+                  <option value="movies">Cinema / Movies</option>
+                  <option value="sports">Sports</option>
+                  <option value="news">News</option>
+                  <option value="kids">Kids</option>
+                  <option value="music">Music</option>
+                  <option value="nature">Nature / Science</option>
+                  <option value="tech">Tech / Gaming Adjacent</option>
+                  <option value="drama">Drama</option>
+                  <option value="lifestyle">Lifestyle / Travel</option>
+                  <option value="gaming">Gaming / Esports</option>
+                </select>
               </div>
               <DialogFooter>
                 <Button

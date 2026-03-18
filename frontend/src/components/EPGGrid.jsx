@@ -3,6 +3,24 @@ import { Info, Clock, Tv, Play, ChevronRight } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Muted, TV-friendly category color palette
+const CATEGORY_COLORS = {
+  entertainment: { accent: '#3a7fc4', badgeBg: '#0f1e2e', badgeText: '#7ab3d8', label: 'Entertainment' },
+  movies:        { accent: '#b07a3a', badgeBg: '#2a1c0a', badgeText: '#c49050', label: 'Cinema'        },
+  sports:        { accent: '#3a8f4a', badgeBg: '#0d2414', badgeText: '#72b07e', label: 'Sports'        },
+  news:          { accent: '#a84040', badgeBg: '#280f0f', badgeText: '#c07272', label: 'News'          },
+  kids:          { accent: '#a0a030', badgeBg: '#262610', badgeText: '#b8b052', label: 'Kids'          },
+  music:         { accent: '#9a3a9a', badgeBg: '#250f25', badgeText: '#b87ab8', label: 'Music'         },
+  nature:        { accent: '#349494', badgeBg: '#0c2828', badgeText: '#6aacac', label: 'Nature'        },
+  tech:          { accent: '#3a5aa0', badgeBg: '#101828', badgeText: '#7090c0', label: 'Tech'          },
+  drama:         { accent: '#7a3ab0', badgeBg: '#1c0d2e', badgeText: '#a470c4', label: 'Drama'         },
+  lifestyle:     { accent: '#3a9470', badgeBg: '#0d261e', badgeText: '#68b094', label: 'Lifestyle'     },
+  gaming:        { accent: '#8a5030', badgeBg: '#200f08', badgeText: '#aa7050', label: 'Gaming'        },
+};
+
+const getCategoryColors = (category) =>
+  CATEGORY_COLORS[category] || CATEGORY_COLORS.entertainment;
+
 const ComingSoonModal = ({ onClose }) => (
   <div
     className="fixed inset-0 z-50 flex items-center justify-center"
@@ -149,7 +167,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
               key={channel.id}
               data-testid={`epg-channel-row-${channel.id}`}
               className={`flex transition-all duration-200 ${
-                isComingSoon ? 'opacity-50 cursor-pointer' : 'cursor-pointer'
+                isComingSoon ? 'opacity-55 cursor-pointer' : 'cursor-pointer'
               } ${isSelected && !isComingSoon ? 'scale-[1.01]' : ''}`}
               onClick={() => {
                 setFocusedChannelIdx(idx);
@@ -160,11 +178,15 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
             >
               {/* Channel Info */}
               <div
-                className={`w-36 sm:w-44 lg:w-52 flex-shrink-0 flex items-center gap-2 px-2 sm:px-3 py-2 bg-[#2a2a2a] rounded-l-lg ${
-                  isSelected ? 'border-2 border-white' : isFocused ? 'border-2 border-[#0056A8]' : 'border-2 border-transparent'
+                className={`w-36 sm:w-44 lg:w-52 flex-shrink-0 flex items-center gap-2 px-2 sm:px-3 py-2 rounded-l-lg overflow-hidden relative ${
+                  isSelected ? 'ring-2 ring-white/70' : isFocused ? 'ring-2 ring-blue-500/60' : ''
                 }`}
+                style={{
+                  background: '#202020',
+                  borderLeft: `3px solid ${isVOD ? '#7c3aed' : isComingSoon ? '#374151' : getCategoryColors(channel.category).accent}`,
+                }}
               >
-                <div className="w-12 h-12 bg-[#3a3a3a] rounded-md overflow-hidden flex-shrink-0 relative">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#333] rounded-md overflow-hidden flex-shrink-0 relative">
                   {logoSrc ? (
                     <>
                       <img
@@ -174,23 +196,40 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
                         onError={(e) => getLogoFallback(channel, e)}
                       />
                       <div className="w-full h-full items-center justify-center bg-[#0056A8] absolute inset-0 hidden">
-                        <span className="text-white text-sm font-bold">{channel.number}</span>
+                        <span className="text-white text-xs font-bold">{channel.number}</span>
                       </div>
                     </>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0056A8] to-[#003d7a]">
-                      <span className="text-white text-sm font-bold">{channel.number}</span>
+                    <div
+                      className="w-full h-full flex items-center justify-center"
+                      style={{ background: getCategoryColors(channel.category).badgeBg }}
+                    >
+                      <span className="text-xs font-bold" style={{ color: getCategoryColors(channel.category).accent }}>{channel.number}</span>
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium text-base truncate">{channel.name}</p>
-                  <p className="text-gray-400 text-xs flex items-center gap-1">
-                    {channel.number}
-                    {channel.quality_label && !isComingSoon && !isVOD && <span className="text-[#0056A8]">• {channel.quality_label}</span>}
-                    {isComingSoon && <span className="text-blue-400 flex items-center gap-1"><Clock className="w-3 h-3" /> Coming Soon</span>}
-                    {isVOD && <span className="text-purple-400 flex items-center gap-1"><Play className="w-3 h-3" /> On Demand</span>}
-                  </p>
+                  <p className="text-white font-medium text-sm truncate leading-tight">{channel.name}</p>
+                  <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                    {isComingSoon ? (
+                      <span className="text-gray-500 text-xs flex items-center gap-1"><Clock className="w-3 h-3" /> Soon</span>
+                    ) : isVOD ? (
+                      <span className="text-purple-400 text-xs flex items-center gap-1"><Play className="w-3 h-3" /> On Demand</span>
+                    ) : (
+                      <>
+                        <span
+                          className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none"
+                          style={{ background: getCategoryColors(channel.category).badgeBg, color: getCategoryColors(channel.category).badgeText }}
+                          data-testid={`channel-category-badge-${channel.id}`}
+                        >
+                          {getCategoryColors(channel.category).label}
+                        </span>
+                        {channel.quality_label && (
+                          <span className="text-gray-500 text-[10px]">{channel.quality_label}</span>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 

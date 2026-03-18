@@ -12,6 +12,7 @@ class ChannelBase(BaseModel):
     channel_type: str = "live"
     stream_url: Optional[str] = None
     coming_soon: Optional[bool] = False
+    category: Optional[str] = "entertainment"  # entertainment, movies, sports, news, kids, music, nature, tech, drama, lifestyle, gaming
 
 class ChannelCreate(ChannelBase):
     pass
@@ -25,6 +26,7 @@ class ChannelUpdate(BaseModel):
     channel_type: Optional[str] = None
     stream_url: Optional[str] = None
     coming_soon: Optional[bool] = None
+    category: Optional[str] = None
 
 class Channel(ChannelBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
