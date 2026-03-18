@@ -35,6 +35,8 @@ from routes.apk import router as apk_router
 from routes.home_posts import router as home_posts_router
 from routes.catalog import router as catalog_router
 from routes.app_version import router as app_version_router
+from routes.migration import router as migration_router
+from routes.ota import router as ota_router
 
 # Import security middleware
 from utils.https_middleware import HTTPSRedirectMiddleware, SecureHeadersMiddleware
@@ -123,6 +125,8 @@ app.include_router(apk_router)
 app.include_router(home_posts_router)
 app.include_router(catalog_router)
 app.include_router(app_version_router)
+app.include_router(migration_router)
+app.include_router(ota_router)
 
 # Mount uploads directory for serving files with proper caching headers
 uploads_dir = Path("/app/backend/uploads")

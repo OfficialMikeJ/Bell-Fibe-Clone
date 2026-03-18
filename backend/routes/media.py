@@ -11,6 +11,8 @@ from pathlib import Path
 import shutil
 import uuid
 
+import re
+
 router = APIRouter(prefix="/api/media", tags=["media"])
 
 MEDIA_DIR = Path("/app/backend/uploads/media")
@@ -20,6 +22,32 @@ POSTER_DIR.mkdir(parents=True, exist_ok=True)
 
 ALLOWED_VIDEO = {'.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.m4v', '.ts', '.m3u8'}
 ALLOWED_IMAGE = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
+
+
+def make_channel_slug(channel_name: str, channel_number: Optional[int] = None) -> str:
+    """Convert channel name + number to a safe folder name.
+    e.g. 'Everybody Loves Raymond', 100 → 'everybodylovesraymond_ch100'
+    """
+    slug = re.sub(r'[^a-z0-9]+', '', channel_name.lower().replace(' ', ''))
+    if channel_number is not None:
+        return f"{slug}_ch{channel_number}"
+    return slug
+
+
+def get_media_path(
+    filename: str,
+    channel_name: Optional[str] = None,
+    channel_number: Optional[int] = None,
+) -> tuple[Path, str]:
+    """Return (absolute_path, server_relative_path) for a media file.
+    Uses channel subfolder when channel info is provided.
+    """
+    if channel_name:
+        subfolder = make_channel_slug(channel_name, channel_number)
+        dir_path = MEDIA_DIR / subfolder
+        dir_path.mkdir(parents=True, exist_ok=True)
+        return dir_path / filename, f"/uploads/media/{subfolder}/{filename}"
+    return MEDIA_DIR / filename, f"/uploads/media/{filename}"
 
 async def get_db():
     from server import db
@@ -64,6 +92,8 @@ async def create_media(
 @router.post("/upload-file", response_model=MediaItem)
 async def upload_media_file(
     file: UploadFile = File(...),
+    channel_name: Optional[str] = None,
+    channel_number: Optional[int] = None,
     db: AsyncIOMotorDatabase = Depends(get_db),
     admin: Admin = Depends(get_current_admin)
 ):
@@ -73,8 +103,7 @@ async def upload_media_file(
 
     file_id = str(uuid.uuid4())
     filename = f"{file_id}{suffix}"
-    file_path = MEDIA_DIR / filename
-    server_path = f"/uploads/media/{filename}"
+    file_path, server_path = get_media_path(filename, channel_name, channel_number)
 
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
@@ -83,9 +112,11 @@ async def upload_media_file(
     meta = analyze_media_file(str(file_path))
 
     title = Path(file.filename).stem.replace('_', ' ').replace('-', ' ').title()
+    channel_folder = make_channel_slug(channel_name, channel_number) if channel_name else None
     item = MediaItem(
         title=title,
         file_path=server_path,
+        channel_folder=channel_folder,
         duration_seconds=meta.get('duration_seconds'),
         duration_formatted=meta.get('duration_formatted'),
         duration_minutes=meta.get('duration_minutes'),

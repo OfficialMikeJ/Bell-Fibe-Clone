@@ -16,6 +16,7 @@ class MediaItem(BaseModel):
     fps: Optional[float] = None
     quality_label: Optional[str] = "1080p"  # 720p, 1080p, 1440p, 4K, 720p60, etc.
     file_size: Optional[int] = None  # bytes
+    channel_folder: Optional[str] = None  # e.g. "everybodylovesraymond_ch100"
     media_type: str = "movie"  # movie, tv_show, episode, mini_series, limited_series
     genre: Optional[str] = None
     year: Optional[int] = None

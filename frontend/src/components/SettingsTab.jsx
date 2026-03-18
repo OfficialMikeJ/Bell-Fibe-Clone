@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Settings as SettingsIcon, Server, Lock, Globe, Save, Smartphone, Upload, Trash2 } from 'lucide-react';
+import { Settings as SettingsIcon, Server, Lock, Globe, Save, Smartphone, Upload, Trash2, Radio, HardDrive, Download, RefreshCw, CheckCircle, AlertTriangle as AlertIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import TwoFactorSetup from './TwoFactorSetup';
 
@@ -26,7 +26,19 @@ const SettingsTab = ({ token }) => {
     uptime_kuma_url: '',
   });
 
-  // APK state
+  // OTA state
+  const [otaReleases, setOtaReleases]     = useState([]);
+  const [otaStatus,   setOtaStatus]       = useState(null);
+  const [otaForm,     setOtaForm]         = useState({ version_name: '', version_code: '', release_notes: '' });
+  const [otaApkFile,  setOtaApkFile]      = useState(null);
+  const [otaCreating, setOtaCreating]     = useState(false);
+  const otaApkRef = useRef(null);
+
+  // Migration state
+  const [backupLoading,  setBackupLoading]  = useState(false);
+  const [restoreFile,    setRestoreFile]    = useState(null);
+  const [restoreLoading, setRestoreLoading] = useState(false);
+  const restoreRef = useRef(null);
   const [apkFile, setApkFile] = useState(null);
   const [apkForm, setApkForm] = useState({ version: '', version_code: '', release_notes: '', required: false });
   const [apkUploading, setApkUploading] = useState(false);
@@ -38,6 +50,7 @@ const SettingsTab = ({ token }) => {
   useEffect(() => {
     fetchSettings();
     fetchApkReleases();
+    fetchOtaReleases();
   }, []);
 
   const fetchSettings = async () => {
@@ -91,6 +104,109 @@ const SettingsTab = ({ token }) => {
       setApkReleases(res.data || []);
     } catch {
       // silently fail — not critical
+    }
+  };
+
+  const fetchOtaReleases = async () => {
+    try {
+      const [relRes, statRes] = await Promise.all([
+        axios.get(`${API}/ota/releases`, { headers: getHeaders() }),
+        axios.get(`${API}/ota/status`, { headers: getHeaders() }),
+      ]);
+      setOtaReleases(relRes.data || []);
+      setOtaStatus(statRes.data);
+    } catch { /* silently fail */ }
+  };
+
+  const handleOtaCreate = async (e) => {
+    e.preventDefault();
+    if (!otaApkFile) return toast.error('Select an APK file');
+    if (!otaForm.version_name.trim()) return toast.error('Version name required (e.g. 0.94.0.1)');
+    if (!otaForm.version_code || isNaN(parseInt(otaForm.version_code))) return toast.error('Version code must be a number');
+    setOtaCreating(true);
+    try {
+      const createRes = await axios.post(`${API}/ota/releases`, null, {
+        params: {
+          version_name: otaForm.version_name.trim(),
+          version_code: parseInt(otaForm.version_code),
+          release_notes: otaForm.release_notes.trim(),
+        },
+        headers: getHeaders(),
+      });
+      const releaseId = createRes.data.id;
+
+      const fd = new FormData();
+      fd.append('file', otaApkFile);
+      const uploadRes = await axios.post(`${API}/ota/releases/${releaseId}/upload`, fd, { headers: getHeaders() });
+      toast.success(`OTA release v${uploadRes.data.version_name} created`);
+      setOtaForm({ version_name: '', version_code: '', release_notes: '' });
+      setOtaApkFile(null);
+      if (otaApkRef.current) otaApkRef.current.value = '';
+      fetchOtaReleases();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Failed to create OTA release');
+    } finally {
+      setOtaCreating(false);
+    }
+  };
+
+  const handleOtaActivate = async (releaseId, versionName) => {
+    if (!window.confirm(`Activate v${versionName}? All devices will be prompted to update.`)) return;
+    try {
+      await axios.post(`${API}/ota/releases/${releaseId}/activate`, null, { headers: getHeaders() });
+      toast.success(`v${versionName} is now the active release`);
+      fetchOtaReleases();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Activation failed');
+    }
+  };
+
+  const handleOtaDelete = async (releaseId, versionName) => {
+    if (!window.confirm(`Delete OTA release v${versionName}?`)) return;
+    try {
+      await axios.delete(`${API}/ota/releases/${releaseId}`, { headers: getHeaders() });
+      toast.success('Release deleted');
+      fetchOtaReleases();
+    } catch { toast.error('Delete failed'); }
+  };
+
+  const handleBackup = async () => {
+    setBackupLoading(true);
+    try {
+      const res = await axios.get(`${API}/admin/backup`, {
+        headers: getHeaders(),
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g, '-');
+      a.href = url;
+      a.download = `streamvault_backup_${ts}.tar.gz`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Backup downloaded successfully');
+    } catch {
+      toast.error('Backup failed');
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!restoreFile) return toast.error('Select a backup archive (.tar.gz)');
+    if (!window.confirm('This will overwrite ALL data. Are you sure?')) return;
+    setRestoreLoading(true);
+    const fd = new FormData();
+    fd.append('file', restoreFile);
+    try {
+      const res = await axios.post(`${API}/admin/restore`, fd, { headers: getHeaders() });
+      toast.success(res.data.message || 'Restore complete — please reload the page');
+      setRestoreFile(null);
+      if (restoreRef.current) restoreRef.current.value = '';
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Restore failed');
+    } finally {
+      setRestoreLoading(false);
     }
   };
 
@@ -432,6 +548,177 @@ const SettingsTab = ({ token }) => {
           {apkReleases.length === 0 && (
             <p className="text-gray-500 text-sm italic" data-testid="apk-no-releases">No APK releases uploaded yet.</p>
           )}
+        </CardContent>
+      </Card>
+
+      {/* ── OTA Auto-Update System ──────────────────────────────────────── */}
+      <Card className="bg-[#2a2a2a] border-gray-700">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Radio className="w-5 h-5 text-purple-400" />
+            <div>
+              <CardTitle className="text-white">OTA Auto-Update</CardTitle>
+              <CardDescription className="text-gray-400">
+                Push Android app updates to all customer devices automatically. Devices poll for updates every 24 hours.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* OTA Status */}
+          {otaStatus && (
+            <div className="grid grid-cols-4 gap-3">
+              {[
+                { label: 'Active Version', value: otaStatus.active_version || '—', color: 'text-white' },
+                { label: 'Total Devices', value: otaStatus.total_devices, color: 'text-white' },
+                { label: 'Up to Date', value: otaStatus.up_to_date, color: 'text-green-400' },
+                { label: 'Needs Update', value: otaStatus.needs_update, color: 'text-yellow-400' },
+              ].map(s => (
+                <div key={s.label} className="bg-[#1a1a1a] rounded-lg p-3 border border-gray-800">
+                  <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+                  <p className="text-gray-500 text-xs mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Create new OTA release */}
+          <form onSubmit={handleOtaCreate} className="space-y-3 p-4 rounded-xl border border-gray-700" style={{ background: '#1a1a1a' }}>
+            <p className="text-white text-sm font-semibold">New OTA Release</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-gray-400 text-xs">Version Name</Label>
+                <Input value={otaForm.version_name} onChange={e => setOtaForm({...otaForm, version_name: e.target.value})}
+                  placeholder="e.g. 0.94.0.1" className="bg-[#2a2a2a] border-gray-600 text-white text-sm mt-1"
+                  data-testid="ota-version-name" />
+              </div>
+              <div>
+                <Label className="text-gray-400 text-xs">Version Code (integer)</Label>
+                <Input type="number" value={otaForm.version_code} onChange={e => setOtaForm({...otaForm, version_code: e.target.value})}
+                  placeholder="e.g. 1" min="1" className="bg-[#2a2a2a] border-gray-600 text-white text-sm mt-1"
+                  data-testid="ota-version-code" />
+              </div>
+            </div>
+            <div>
+              <Label className="text-gray-400 text-xs">Release Notes</Label>
+              <Input value={otaForm.release_notes} onChange={e => setOtaForm({...otaForm, release_notes: e.target.value})}
+                placeholder="What's new in this version?"
+                className="bg-[#2a2a2a] border-gray-600 text-white text-sm mt-1" data-testid="ota-release-notes" />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 border-2 border-dashed border-gray-700 rounded-lg p-3 text-center cursor-pointer hover:border-purple-600 transition-colors"
+                onClick={() => otaApkRef.current?.click()}>
+                {otaApkFile
+                  ? <p className="text-green-400 text-sm">{otaApkFile.name} ({(otaApkFile.size / 1048576).toFixed(1)} MB)</p>
+                  : <p className="text-gray-500 text-sm">Click to select APK file</p>}
+              </div>
+              <input ref={otaApkRef} type="file" accept=".apk" className="hidden"
+                onChange={e => setOtaApkFile(e.target.files[0] || null)} data-testid="ota-apk-input" />
+              <Button type="submit" disabled={otaCreating} className="bg-purple-700 hover:bg-purple-600 shrink-0"
+                data-testid="ota-create-btn">
+                {otaCreating ? 'Uploading...' : 'Create Release'}
+              </Button>
+            </div>
+          </form>
+
+          {/* OTA Releases list */}
+          {otaReleases.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wide">All Releases</p>
+              {otaReleases.map(r => (
+                <div key={r.id} className={`flex items-center justify-between p-3 rounded-lg border ${
+                  r.is_active ? 'border-green-700/50 bg-green-900/10' : 'border-gray-700 bg-[#1a1a1a]'
+                }`} data-testid={`ota-release-${r.id}`}>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-mono text-sm font-semibold">v{r.version_name}</span>
+                      <span className="text-gray-500 text-xs">build {r.version_code}</span>
+                      {r.is_active && (
+                        <span className="bg-green-700 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" /> Active
+                        </span>
+                      )}
+                    </div>
+                    {r.release_notes && <p className="text-gray-500 text-xs mt-0.5">{r.release_notes}</p>}
+                    <p className="text-gray-600 text-xs">{r.file_path ? 'APK uploaded' : 'No APK'} · {r.created_at?.slice(0,10)}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!r.is_active && r.file_path && (
+                      <Button size="sm" onClick={() => handleOtaActivate(r.id, r.version_name)}
+                        className="bg-green-700 hover:bg-green-600 text-xs" data-testid={`ota-activate-${r.id}`}>
+                        Push Update
+                      </Button>
+                    )}
+                    <button onClick={() => handleOtaDelete(r.id, r.version_name)}
+                      className="text-red-400 hover:text-red-300" data-testid={`ota-delete-${r.id}`}>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Server Migration / Backup ───────────────────────────────────── */}
+      <Card className="bg-[#2a2a2a] border-gray-700">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <HardDrive className="w-5 h-5 text-blue-400" />
+            <div>
+              <CardTitle className="text-white">Server Migration & Backup</CardTitle>
+              <CardDescription className="text-gray-400">
+                Move your entire StreamVault installation to new hardware. Backup includes: database, all uploads, APKs, catalog images, and config.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Backup */}
+          <div className="p-4 rounded-xl border border-gray-700" style={{ background: '#1a1a1a' }}>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <p className="text-white text-sm font-semibold">Create Backup</p>
+                <p className="text-gray-500 text-xs mt-0.5">
+                  Downloads a <code className="text-gray-400">.tar.gz</code> archive of your entire system. Store it safely before migrating.
+                </p>
+              </div>
+              <Button onClick={handleBackup} disabled={backupLoading}
+                className="bg-blue-700 hover:bg-blue-600 shrink-0" data-testid="backup-btn">
+                <Download className="w-4 h-4 mr-2" />
+                {backupLoading ? 'Preparing...' : 'Download Backup'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Restore */}
+          <div className="p-4 rounded-xl border border-yellow-800/40" style={{ background: '#1a0e00' }}>
+            <div className="flex items-start gap-3 mb-3">
+              <AlertIcon className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-yellow-400 text-sm font-semibold">Restore from Backup</p>
+                <p className="text-yellow-600 text-xs mt-0.5">
+                  Warning: This will overwrite ALL current data with the backup contents. Use only on a fresh server.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 border-2 border-dashed border-yellow-800/50 rounded-lg p-3 text-center cursor-pointer hover:border-yellow-600/50 transition-colors"
+                onClick={() => restoreRef.current?.click()}>
+                {restoreFile
+                  ? <p className="text-yellow-400 text-sm">{restoreFile.name} ({(restoreFile.size / 1048576).toFixed(1)} MB)</p>
+                  : <p className="text-gray-600 text-sm">Click to select backup archive (.tar.gz)</p>}
+              </div>
+              <input ref={restoreRef} type="file" accept=".tar.gz,.tgz" className="hidden"
+                onChange={e => setRestoreFile(e.target.files[0] || null)} data-testid="restore-file-input" />
+              <Button onClick={handleRestore} disabled={restoreLoading || !restoreFile}
+                className="bg-yellow-700 hover:bg-yellow-600 shrink-0 text-white" data-testid="restore-btn">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                {restoreLoading ? 'Restoring...' : 'Restore'}
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

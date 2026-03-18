@@ -1,6 +1,25 @@
-# Android App Wrapper
+# StreamVault Android App
 
-This directory contains configuration and build files for wrapping the TV Guide in an Android app.
+## App Assets (Logo & Icons)
+All generated logo assets are in `/app/android/assets/`:
+| File | Use |
+|------|-----|
+| `streamvault_icon.png` | Source logo (1024×1024) |
+| `streamvault.ico` | Windows/web .ico (16–256px all sizes) |
+| `streamvault_banner.png` | Horizontal banner (1536×1024) |
+| `ic_launcher_48.png` | `mipmap-mdpi` launcher icon |
+| `ic_launcher_72.png` | `mipmap-hdpi` launcher icon |
+| `ic_launcher_96.png` | `mipmap-xhdpi` launcher icon |
+| `ic_launcher_144.png` | `mipmap-xxhdpi` launcher icon |
+| `ic_launcher_192.png` | `mipmap-xxxhdpi` launcher icon |
+| `ic_launcher_512.png` | Google Play Store icon |
+
+### Adding icons to Android Studio
+1. Copy each `ic_launcher_*.png` to its corresponding `app/src/main/res/mipmap-*/ic_launcher.png` folder
+2. Copy `ic_launcher_192.png` as `ic_launcher_round.png` for adaptive icons
+3. The `streamvault.ico` can be used as the app's Windows shortcut icon or web favicon
+
+---
 
 ## Overview
 The Android app is a WebView wrapper around the TV Guide (guide-app).
@@ -50,11 +69,246 @@ These channels are placeholder entries for future live TV integration. They are 
 3. Set `coming_soon` to `false` (uncheck in the channel editor)
 4. The channel will immediately become fully interactive in the guide
 
-## Requirements
-- Android Studio Arctic Fox or higher
-- Android SDK 24+ (Android 7.0+)
-- Java JDK 11+
-- Gradle 7.0+
+## OTA Auto-Update System
+The app uses **WorkManager** to poll for updates every 24 hours. When a new APK is available, it downloads silently and shows a notification. One tap installs it.
+
+### Required permissions (AndroidManifest.xml)
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    android:maxSdkVersion="28" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+<!-- FileProvider for APK install on Android 7+ -->
+<provider
+    android:name="androidx.core.content.FileProvider"
+    android:authorities="${applicationId}.provider"
+    android:exported="false"
+    android:grantUriPermissions="true">
+    <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/file_paths" />
+</provider>
+```
+
+### res/xml/file_paths.xml
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <cache-path name="apk_downloads" path="apk_downloads/"/>
+</paths>
+```
+
+### build.gradle (app) — dependencies
+```groovy
+implementation 'androidx.work:work-runtime:2.9.0'
+implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+implementation 'org.json:json:20231013'
+```
+
+### OtaUpdateWorker.java
+```java
+package com.streamvault.app;
+
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.net.Uri;
+import android.os.Build;
+import android.util.Log;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.core.content.FileProvider;
+import androidx.work.Worker;
+import androidx.work.WorkerParameters;
+import org.json.JSONObject;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+public class OtaUpdateWorker extends Worker {
+    private static final String TAG = "OtaUpdateWorker";
+    private static final String CHANNEL_ID = "streamvault_updates";
+    // ⚠️ Replace with your server URL
+    private static final String OTA_CHECK_URL = "https://YOUR_SERVER/api/ota/latest";
+    private static final String REPORT_URL    = "https://YOUR_SERVER/api/ota/report-version";
+
+    public OtaUpdateWorker(@NonNull Context context, @NonNull WorkerParameters params) {
+        super(context, params);
+    }
+
+    @NonNull
+    @Override
+    public Result doWork() {
+        try {
+            OkHttpClient client = new OkHttpClient();
+
+            // 1. Check for updates
+            Request checkReq = new Request.Builder().url(OTA_CHECK_URL).build();
+            try (Response checkRes = client.newCall(checkReq).execute()) {
+                if (!checkRes.isSuccessful() || checkRes.body() == null) return Result.success();
+
+                JSONObject json = new JSONObject(checkRes.body().string());
+                if (!json.optBoolean("has_update", false)) return Result.success();
+
+                String newVersion  = json.getString("version_name");
+                int    newCode     = json.getInt("version_code");
+                String downloadUrl = json.getString("download_url");
+                String notes       = json.optString("release_notes", "");
+
+                // 2. Check installed version
+                PackageInfo pInfo = getApplicationContext().getPackageManager()
+                        .getPackageInfo(getApplicationContext().getPackageName(), 0);
+                int currentCode = pInfo.versionCode;
+                if (newCode <= currentCode) return Result.success();
+
+                Log.i(TAG, "New version found: " + newVersion + " (code " + newCode + ")");
+
+                // 3. Download APK silently
+                File apkFile = downloadApk(client, downloadUrl, newVersion);
+                if (apkFile == null) return Result.retry();
+
+                // 4. Show notification with install intent
+                showInstallNotification(apkFile, newVersion, notes);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "OTA check failed", e);
+            return Result.retry();
+        }
+        return Result.success();
+    }
+
+    private File downloadApk(OkHttpClient client, String url, String version) {
+        try {
+            Request req = new Request.Builder().url(url).build();
+            try (Response res = client.newCall(req).execute()) {
+                if (!res.isSuccessful() || res.body() == null) return null;
+
+                File dir = new File(getApplicationContext().getCacheDir(), "apk_downloads");
+                dir.mkdirs();
+                File apk = new File(dir, "streamvault_" + version.replace(".", "_") + ".apk");
+
+                try (InputStream in = res.body().byteStream();
+                     FileOutputStream out = new FileOutputStream(apk)) {
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+                }
+                return apk;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "APK download failed", e);
+            return null;
+        }
+    }
+
+    private void showInstallNotification(File apkFile, String version, String notes) {
+        Context ctx = getApplicationContext();
+        NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel ch = new NotificationChannel(
+                CHANNEL_ID, "App Updates", NotificationManager.IMPORTANCE_HIGH);
+            nm.createNotificationChannel(ch);
+        }
+
+        Uri apkUri = FileProvider.getUriForFile(ctx, ctx.getPackageName() + ".provider", apkFile);
+        Intent installIntent = new Intent(Intent.ACTION_VIEW)
+                .setDataAndType(apkUri, "application/vnd.android.package-archive")
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent pi = PendingIntent.getActivity(ctx, 0, installIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        String body = notes.isEmpty()
+                ? "Tap to install StreamVault " + version
+                : notes;
+
+        NotificationCompat.Builder nb = new NotificationCompat.Builder(ctx, CHANNEL_ID)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("StreamVault Update Available — v" + version)
+                .setContentText(body)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pi)
+                .setAutoCancel(true);
+
+        nm.notify(1001, nb.build());
+    }
+}
+```
+
+### Schedule the worker in MainActivity.java (add in onCreate)
+```java
+import androidx.work.*;
+import java.util.concurrent.TimeUnit;
+
+// In onCreate(), after super.onCreate():
+private void scheduleOtaCheck() {
+    PeriodicWorkRequest workReq = new PeriodicWorkRequest.Builder(
+            OtaUpdateWorker.class,
+            24, TimeUnit.HOURS          // Check every 24 hours
+    )
+    .setConstraints(new Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build())
+    .build();
+
+    WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "streamvault_ota_check",
+            ExistingPeriodicWorkPolicy.KEEP,  // Don't replace if already scheduled
+            workReq
+    );
+}
+```
+
+### Report version after install (call this in MainActivity.onCreate)
+```java
+private void reportInstalledVersion() {
+    try {
+        PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+        String version = pInfo.versionName;
+        int versionCode = pInfo.versionCode;
+
+        // Get device ID from SharedPreferences
+        String deviceId = getSharedPreferences("streamvault", MODE_PRIVATE)
+                .getString("device_id", "");
+        if (deviceId.isEmpty()) return;
+
+        new Thread(() -> {
+            try {
+                OkHttpClient client = new OkHttpClient();
+                String body = "{\"device_id\":\"" + deviceId + "\",\"installed_version\":\"" + version + "\",\"version_code\":" + versionCode + "}";
+                okhttp3.RequestBody rb = okhttp3.RequestBody.create(body, okhttp3.MediaType.parse("application/json"));
+                Request req = new Request.Builder()
+                        .url("https://YOUR_SERVER/api/ota/report-version")
+                        .post(rb).build();
+                client.newCall(req).execute().close();
+            } catch (Exception ignored) {}
+        }).start();
+    } catch (Exception ignored) {}
+}
+```
+
+### How it works end-to-end
+1. Admin uploads APK via **Admin → Settings → OTA Auto-Update** → clicks **Push Update**
+2. Within 24 hours, every customer device's WorkManager job polls `/api/ota/latest`
+3. If `version_code` is higher than installed, APK is downloaded silently in background
+4. User sees a notification: **"StreamVault Update Available — tap to install"**
+5. User taps → standard Android install screen → one tap to confirm
+6. App reports new version back to server → admin dashboard shows "Up to Date" count increase
+
+---
+
+
 
 ## Setup Instructions
 
