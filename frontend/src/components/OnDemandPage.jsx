@@ -9,10 +9,10 @@ const CATEGORIES = ['all', 'movie', 'tv_show', 'mini_series', 'limited_series'];
 const catLabels = { all: 'All', movie: 'Movies', tv_show: 'TV Shows', mini_series: 'Mini Series', limited_series: 'Limited Series' };
 const catColors = { movie: '#1d4ed8', tv_show: '#16a34a', mini_series: '#7c3aed', limited_series: '#dc2626' };
 
-const OnDemandPage = ({ onBack }) => {
+const OnDemandPage = ({ onBack, defaultCategory = 'all' }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState('all');
+  const [category, setCategory] = useState(defaultCategory);
   const [playingItem, setPlayingItem] = useState(null);
 
   useEffect(() => {

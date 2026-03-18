@@ -58,7 +58,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
             const next = Math.min(prev + 1, channels.length - 1);
             const ch = channels[next];
             if (ch?.coming_soon) return next;
-            if (ch?.channel_type === 'vod') { onViewChange?.('ondemand'); return next; }
+            if (ch?.channel_type === 'vod') { onViewChange?.('ondemand', 'movie'); return next; }
             onChannelSelect(ch);
             return next;
           });
@@ -69,7 +69,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
             const next = Math.max(prev - 1, 0);
             const ch = channels[next];
             if (ch?.coming_soon) return next;
-            if (ch?.channel_type === 'vod') { onViewChange?.('ondemand'); return next; }
+            if (ch?.channel_type === 'vod') { onViewChange?.('ondemand', 'movie'); return next; }
             onChannelSelect(ch);
             return next;
           });
@@ -80,7 +80,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
           if (channels[focusedChannelIdx]) {
             const ch = channels[focusedChannelIdx];
             if (ch.coming_soon) setShowComingSoon(true);
-            else if (ch.channel_type === 'vod') onViewChange?.('ondemand');
+            else if (ch.channel_type === 'vod') onViewChange?.('ondemand', 'movie');
             else onChannelSelect(ch);
           }
           break;
@@ -147,7 +147,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
               onClick={() => {
                 setFocusedChannelIdx(idx);
                 if (isComingSoon) setShowComingSoon(true);
-                else if (isVOD) onViewChange?.('ondemand');
+                else if (isVOD) onViewChange?.('ondemand', 'movie');
                 else onChannelSelect(channel);
               }}
             >
@@ -196,7 +196,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
                 ) : isVOD ? (
                   <div className="flex-1 flex items-center justify-between px-5 py-3 bg-gradient-to-r from-purple-900/30 to-transparent">
                     <div>
-                      <p className="text-white font-medium text-sm">Movies · TV Shows · Mini Series</p>
+                      <p className="text-white font-medium text-sm">Movies</p>
                       <p className="text-gray-400 text-xs mt-0.5">Watch what you want, when you want</p>
                     </div>
                     <div className="flex items-center gap-1.5 bg-purple-700 hover:bg-purple-600 transition-colors text-white text-sm font-semibold px-4 py-1.5 rounded-lg"

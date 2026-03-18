@@ -117,13 +117,15 @@ const GuideView = ({ onViewChange }) => {  const [channels, setChannels] = useSt
 
 const Home = () => {
   const [activeView, setActiveView] = useState('guide');
+  const [onDemandFilter, setOnDemandFilter] = useState('all');
   const navigate = useNavigate();
 
-  const handleViewChange = (viewId) => {
+  const handleViewChange = (viewId, filter = 'all') => {
     if (viewId === 'settings') {
       navigate('/admin');
       return;
     }
+    if (viewId === 'ondemand') setOnDemandFilter(filter);
     setActiveView(viewId);
   };
 
@@ -132,7 +134,7 @@ const Home = () => {
       case 'guide':
         return <GuideView onViewChange={handleViewChange} />;
       case 'ondemand':
-        return <OnDemandPage onBack={() => setActiveView('guide')} />;
+        return <OnDemandPage onBack={() => { setActiveView('guide'); setOnDemandFilter('all'); }} defaultCategory={onDemandFilter} />;
       case 'recordings':
         return <RecordingsPage userId={null} onBack={() => setActiveView('guide')} />;
       case 'notifications':

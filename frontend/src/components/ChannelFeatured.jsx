@@ -151,7 +151,7 @@ const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
           <div
             className="w-96 h-64 rounded-2xl overflow-hidden relative flex-shrink-0 shadow-2xl border border-purple-700/50 cursor-pointer group"
             style={{ background: 'linear-gradient(135deg, #2d1b69 0%, #1a0a3d 100%)' }}
-            onClick={() => onViewChange?.('ondemand')}
+            onClick={() => onViewChange?.('ondemand', 'movie')}
             data-testid="vod-preview-card"
           >
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6">
@@ -160,7 +160,7 @@ const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
               </div>
               <div className="text-center">
                 <p className="text-white text-xl font-bold">On Demand</p>
-                <p className="text-purple-300 text-sm mt-1">Movies · TV Shows · Mini Series</p>
+                <p className="text-purple-300 text-sm mt-1">Movies</p>
               </div>
               <div className="mt-2 flex items-center gap-2 bg-purple-700 group-hover:bg-purple-600 transition-colors text-white text-sm font-semibold px-5 py-2 rounded-xl">
                 Browse Library <ChevronRight className="w-4 h-4" />
@@ -172,7 +172,7 @@ const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
             <p className="text-base text-gray-400 mb-4">{channel.number} • On Demand</p>
             <p className="text-base text-gray-300 leading-relaxed">{channel.description}</p>
             <button
-              onClick={() => onViewChange?.('ondemand')}
+              onClick={() => onViewChange?.('ondemand', 'movie')}
               className="mt-5 flex items-center gap-2 bg-purple-700 hover:bg-purple-600 transition-colors text-white font-semibold px-6 py-3 rounded-xl"
               data-testid="vod-open-btn"
             >
