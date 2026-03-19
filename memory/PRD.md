@@ -189,4 +189,9 @@ NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serve
 - Load Balancer docker files (/app/loadbalancer/ — build-ready with .env.example, HAProxy, monitor): COMPLETE
 - docker-compose.yml guide-app service removed (dead code cleanup): COMPLETE
 - loadbalancer/README.md TrueNAS Scale correction: COMPLETE
+- Portainer CE Docker manager (/app/portainer/ folder, docker-compose.yml + README): COMPLETE — Admin dashboard header has "Docker Manager" button (opens http://server-ip:9000)
+- Token-Protected Media URLs: COMPLETE — HMAC-SHA256 signed tokens (4hr expiry) required on /api/uploads/media/{filename}; channels endpoint now returns signed URLs; verify_media_token in utils/security.py
+- Android back-button fix: COMPLETE — onBackPressed now injects JS to check data-sv-player-active attribute, dispatches Escape to close fullscreen player before falling back to WebView history
+- FullscreenPlayer data-sv-player-active attribute added for Android detection: COMPLETE
+
 - Storage monitoring widget (Admin → Statistics tab): COMPLETE — /api/health/storage endpoint returns full disk stats + per-folder uploads breakdown in human-readable format (B/KB/MB/GB/TB); frontend StorageWidget.jsx shows visual bar, color-coded health badges (ok/watch/warn/critical), per-folder breakdown with file counts

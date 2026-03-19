@@ -232,7 +232,7 @@ const FullscreenPlayer = ({
   const hasNav = playable.length > 1;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black" data-testid="fullscreen-player">
+    <div className="fixed inset-0 z-[9999] bg-black" data-testid="fullscreen-player" data-sv-player-active="true">
 
       {/* ── Video ─────────────────────────────────────────────────────────── */}
       <video

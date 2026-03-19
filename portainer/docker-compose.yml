@@ -1,0 +1,42 @@
+# ─── StreamVault — Portainer CE (Docker Manager) ─────────────────────────────
+#
+# Portainer gives you a clean web UI to monitor all your Docker containers,
+# view logs, restart services, check CPU/RAM per container, and manage
+# images and volumes — all from your browser.
+#
+# Deploy on ANY machine that is running the StreamVault Docker stack.
+# Can also run on its own dedicated machine if preferred.
+#
+# Quick Start:
+#   cd portainer
+#   docker compose up -d
+#
+# Then open:  http://YOUR_SERVER_IP:9000
+#   (first launch asks you to create an admin password)
+#
+# The StreamVault admin dashboard has a "Docker Manager" button that
+# opens this URL automatically.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: streamvault_portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"    # HTTP  — use this for local network access
+      - "9443:9443"    # HTTPS — use this if you proxy through NPM
+    volumes:
+      # Gives Portainer read/write access to the Docker socket so it can
+      # manage containers, images, volumes, and networks
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Persistent storage for Portainer's own settings and users
+      - portainer_data:/data
+    environment:
+      # Disable the Portainer analytics/telemetry
+      - PORTAINER_TELEMETRY_DISABLED=1
+
+volumes:
+  portainer_data:
+    driver: local

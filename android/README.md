@@ -424,11 +424,33 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
+        // Step 1: Check if the fullscreen video player is open in the WebView.
+        // The player root div has data-sv-player-active="true" when visible.
+        // If it is, dispatch an Escape keydown event to close it gracefully
+        // instead of navigating the WebView history back (which would exit the app).
+        webView.evaluateJavascript(
+            "(function() {" +
+            "  var player = document.querySelector('[data-sv-player-active]');" +
+            "  if (player) {" +
+            "    var evt = new KeyboardEvent('keydown', {key:'Escape', code:'Escape', bubbles:true, cancelable:true});" +
+            "    window.dispatchEvent(evt);" +
+            "    return 'player_closed';" +
+            "  }" +
+            "  return 'no_player';" +
+            "})()",
+            result -> runOnUiThread(() -> {
+                if ("\"player_closed\"".equals(result)) {
+                    // Player was open — Escape was sent, nothing else to do
+                    return;
+                }
+                // No player: fall back to WebView history navigation
+                if (webView.canGoBack()) {
+                    webView.goBack();
+                } else {
+                    finish();  // Clean app exit
+                }
+            })
+        );
     }
 
     // ── Background update check using Executors (replaces deprecated AsyncTask) ──

@@ -386,9 +386,25 @@ const AdminDashboard = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-4xl font-bold text-white">Admin Dashboard</h1>
-          <Button onClick={logout} variant="outline" className="bg-transparent border-gray-600 text-white">
-            Logout
-          </Button>
+          <div className="flex items-center gap-3">
+            <a
+              href={`http://${window.location.hostname}:9000`}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="docker-manager-btn"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-200 border border-gray-600 hover:bg-[#0056A8] hover:border-[#0056A8] transition-all"
+              style={{ background: '#2a2a2a' }}
+              title="Open Portainer Docker Manager"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/>
+              </svg>
+              Docker Manager
+            </a>
+            <Button onClick={logout} variant="outline" className="bg-transparent border-gray-600 text-white">
+              Logout
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="channels" className="w-full" data-testid="admin-tabs">

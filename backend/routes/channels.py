@@ -7,6 +7,7 @@ import os
 import uuid
 from pathlib import Path
 import shutil
+from utils.security import sign_media_url
 
 router = APIRouter(prefix="/api/channels", tags=["channels"])
 
@@ -30,11 +31,13 @@ async def get_channels(db: AsyncIOMotorDatabase = Depends(get_db)):
     result = []
     for ch in channels:
         obj = Channel(**ch)
-        # Resolve media_id → file_path so the player can use it directly
+        # Resolve media_id → signed file URL so the player can use it directly
         if ch.get("media_id"):
             media = await db.media_items.find_one({"id": ch["media_id"]}, {"_id": 0})
             if media:
-                obj.media_file_path = media.get("file_path")
+                raw_path = media.get("file_path", "")
+                fname = raw_path.split("/")[-1]
+                obj.media_file_path = f"/uploads/media/{fname}" + sign_media_url(fname)
         result.append(obj)
     return result
 
@@ -47,7 +50,9 @@ async def get_channel(channel_id: str, db: AsyncIOMotorDatabase = Depends(get_db
     if channel.get("media_id"):
         media = await db.media_items.find_one({"id": channel["media_id"]}, {"_id": 0})
         if media:
-            obj.media_file_path = media.get("file_path")
+            raw_path = media.get("file_path", "")
+            fname = raw_path.split("/")[-1]
+            obj.media_file_path = f"/uploads/media/{fname}" + sign_media_url(fname)
     return obj
 
 @router.put("/{channel_id}", response_model=Channel)
