@@ -105,6 +105,8 @@ const GuideView = ({ onViewChange }) => {
         <FullscreenPlayer
           channel={playingChannel}
           currentProgram={getCurrentProgram(playingChannel.id)}
+          channels={channels}
+          getProgram={getCurrentProgram}
           onClose={() => setPlayingChannel(null)}
         />
       )}

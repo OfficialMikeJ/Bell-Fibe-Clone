@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Star, Filter } from 'lucide-react';
+import { Play, Star } from 'lucide-react';
+import FullscreenPlayer from './FullscreenPlayer';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -32,92 +33,91 @@ const OnDemandPage = ({ onBack, defaultCategory = 'all' }) => {
   }, [category]);
 
   const featured = items.filter(i => i.is_featured);
-  const regular = items.filter(i => !i.is_featured);
+  const regular  = items.filter(i => !i.is_featured);
 
-  if (playingItem) {
-    return (
-      <div className="fixed inset-0 bg-black z-50 flex flex-col">
-        <div className="flex items-center justify-between p-4 bg-black/80">
-          <h2 className="text-white text-xl font-semibold">{playingItem.title}</h2>
-          <button onClick={() => setPlayingItem(null)} className="text-white text-2xl hover:text-gray-300 px-4">✕</button>
+  // Build a channel-like object FullscreenPlayer can consume
+  const vodAsChannel = playingItem ? {
+    id:              playingItem.id,
+    name:            playingItem.title,
+    number:          '',
+    category:        playingItem.category || 'movies',
+    media_file_path: playingItem.media_file_path || null,
+    stream_url:      null,
+  } : null;
+
+  return (
+    <>
+      {/* ── Fullscreen VOD player — no controls, Back exits ────────────── */}
+      {vodAsChannel && (
+        <FullscreenPlayer
+          channel={vodAsChannel}
+          currentProgram={null}
+          channels={[]}
+          getProgram={null}
+          onClose={() => setPlayingItem(null)}
+        />
+      )}
+
+      <div className="flex-1 overflow-y-auto bg-[#1a1a1a] text-white" data-testid="on-demand-page">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-[#1a1a1a]/95 backdrop-blur px-6 py-4 border-b border-gray-800">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-light">On Demand</h1>
+            <button onClick={onBack} className="text-gray-400 hover:text-white text-sm flex items-center gap-2">
+              ← Back to Guide
+            </button>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {CATEGORIES.map(cat => (
+              <button key={cat} onClick={() => setCategory(cat)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                  category === cat ? 'bg-[#0056A8] text-white' : 'bg-[#2a2a2a] text-gray-400 hover:text-white'
+                }`}>
+                {catLabels[cat]}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex-1 flex items-center justify-center bg-black">
-          {playingItem.media_file_path ? (
-            <video
-              controls
-              autoPlay
-              className="max-w-full max-h-full"
-              src={`${BACKEND_URL}/api${playingItem.media_file_path}`}
-            />
-          ) : (
-            <div className="text-center text-gray-400">
-              <Play className="w-20 h-20 mx-auto mb-4 opacity-30" />
-              <p className="text-xl">No video file linked to this title</p>
-              <p className="text-sm mt-2 opacity-60">Assign a media file from the admin Media Library</p>
+
+        <div className="px-6 py-6 space-y-8">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#0056A8]" />
             </div>
+          ) : items.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-400 text-xl mb-2">No content available</p>
+              <p className="text-gray-600 text-sm">Check back soon for new titles</p>
+            </div>
+          ) : (
+            <>
+              {featured.length > 0 && (
+                <section>
+                  <h2 className="text-xl font-medium text-white mb-4 flex items-center gap-2">
+                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" /> Featured
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {featured.map(item => (
+                      <VODCard key={item.id} item={item} onPlay={() => setPlayingItem(item)} />
+                    ))}
+                  </div>
+                </section>
+              )}
+              {regular.length > 0 && (
+                <section>
+                  {featured.length > 0 && <h2 className="text-xl font-medium text-white mb-4">More Titles</h2>}
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {regular.map(item => (
+                      <VODCard key={item.id} item={item} onPlay={() => setPlayingItem(item)} />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
           )}
         </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="flex-1 overflow-y-auto bg-[#1a1a1a] text-white" data-testid="on-demand-page">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#1a1a1a]/95 backdrop-blur px-6 py-4 border-b border-gray-800">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-3xl font-light">On Demand</h1>
-          <button onClick={onBack} className="text-gray-400 hover:text-white text-sm flex items-center gap-2">
-            ← Back to Guide
-          </button>
-        </div>
-        {/* Category Filter */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {CATEGORIES.map(cat => (
-            <button key={cat} onClick={() => setCategory(cat)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${category === cat ? 'bg-[#0056A8] text-white' : 'bg-[#2a2a2a] text-gray-400 hover:text-white'}`}>
-              {catLabels[cat]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="px-6 py-6 space-y-8">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#0056A8]" />
-          </div>
-        ) : items.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-gray-400 text-xl mb-2">No content available</p>
-            <p className="text-gray-600 text-sm">Check back soon for new titles</p>
-          </div>
-        ) : (
-          <>
-            {/* Featured */}
-            {featured.length > 0 && (
-              <section>
-                <h2 className="text-xl font-medium text-white mb-4 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" /> Featured
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {featured.map(item => <VODCard key={item.id} item={item} onPlay={() => setPlayingItem(item)} />)}
-                </div>
-              </section>
-            )}
-            {/* Regular */}
-            {regular.length > 0 && (
-              <section>
-                {featured.length > 0 && <h2 className="text-xl font-medium text-white mb-4">More Titles</h2>}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {regular.map(item => <VODCard key={item.id} item={item} onPlay={() => setPlayingItem(item)} />)}
-                </div>
-              </section>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+    </>
   );
 };
 
@@ -125,7 +125,8 @@ const VODCard = ({ item, onPlay }) => (
   <div className="group cursor-pointer" onClick={onPlay} data-testid={`vod-card-${item.id}`}>
     <div className="aspect-[2/3] bg-[#2a2a2a] rounded-lg overflow-hidden relative mb-2">
       {item.poster_path ? (
-        <img src={`${BACKEND_URL}/api${item.poster_path}`} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <img src={`${BACKEND_URL}/api${item.poster_path}`} alt={item.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0056A8] to-[#003d7a]">
           <Play className="w-12 h-12 text-white opacity-60" />
@@ -136,6 +137,11 @@ const VODCard = ({ item, onPlay }) => (
           <Play className="w-7 h-7 text-white ml-1" />
         </div>
       </div>
+      {!item.media_file_path && (
+        <div className="absolute top-2 right-2 bg-black/70 text-gray-400 text-[10px] px-1.5 py-0.5 rounded">
+          No file
+        </div>
+      )}
       {item.category && (
         <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded text-xs text-white font-medium"
           style={{ backgroundColor: catColors[item.category] || '#555' }}>
