@@ -188,3 +188,4 @@ NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serve
 - Load Balancer docker files (/app/loadbalancer/ — build-ready with .env.example, HAProxy, monitor): COMPLETE
 - docker-compose.yml guide-app service removed (dead code cleanup): COMPLETE
 - loadbalancer/README.md TrueNAS Scale correction: COMPLETE
+- Storage monitoring widget (Admin → Statistics tab): COMPLETE — /api/health/storage endpoint returns full disk stats + per-folder uploads breakdown in human-readable format (B/KB/MB/GB/TB); frontend StorageWidget.jsx shows visual bar, color-coded health badges (ok/watch/warn/critical), per-folder breakdown with file counts

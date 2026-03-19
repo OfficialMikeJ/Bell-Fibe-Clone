@@ -38,6 +38,7 @@ import TicketsTab from './admin/TicketsTab';
 import FAQTab from './admin/FAQTab';
 import HomeFeedTab from './HomeFeedTab';
 import CatalogTab from './CatalogTab';
+import StorageWidget from './StorageWidget';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -735,35 +736,27 @@ const AdminDashboard = () => {
           </TabsContent>
 
           {/* Statistics Tab */}
-          <TabsContent value="stats" className="space-y-4">
-            <h2 className="text-2xl font-semibold text-white mb-4">System Statistics</h2>
+          <TabsContent value="stats" className="space-y-6">
+            <h2 className="text-2xl font-semibold text-white mb-2">System Statistics</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="bg-[#2a2a2a] border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Total Channels</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-4xl font-bold text-[#0056A8]">{channels.length}</p>
-                </CardContent>
+                <CardHeader><CardTitle className="text-white">Total Channels</CardTitle></CardHeader>
+                <CardContent><p className="text-4xl font-bold text-[#0056A8]">{channels.length}</p></CardContent>
               </Card>
               <Card className="bg-[#2a2a2a] border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Total Programs</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-4xl font-bold text-[#0056A8]">{programs.length}</p>
-                </CardContent>
+                <CardHeader><CardTitle className="text-white">Total Programs</CardTitle></CardHeader>
+                <CardContent><p className="text-4xl font-bold text-[#0056A8]">{programs.length}</p></CardContent>
               </Card>
               <Card className="bg-[#2a2a2a] border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Active Devices</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle className="text-white">Active Devices</CardTitle></CardHeader>
                 <CardContent>
-                  <p className="text-4xl font-bold text-[#0056A8]">
-                    {devices.filter(d => d.status === 'active').length}
-                  </p>
+                  <p className="text-4xl font-bold text-[#0056A8]">{devices.filter(d => d.status === 'active').length}</p>
                 </CardContent>
               </Card>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-3">Storage</h3>
+              <StorageWidget token={token} />
             </div>
           </TabsContent>
         </Tabs>
