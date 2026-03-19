@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Video, Trash2, Play, Clock, CheckCircle, XCircle, Circle, Plus, ArrowUpDown, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -52,7 +53,7 @@ const RecordingsPage = ({ userId, username, onBack }) => {
       await axios.delete(`${API}/recordings/${id}`);
       setRecordings(prev => prev.filter(r => r.id !== id));
     } catch (e) {
-      alert('Failed to delete');
+      toast.error('Failed to delete recording');
     } finally {
       setDeleteConfirmId(null);
     }

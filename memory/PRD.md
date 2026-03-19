@@ -39,10 +39,16 @@ StreamVault — a full-featured IPTV service with Live TV Guide (EPG), VOD secti
 │           ├── ActivationGate.jsx   (username+password device login)
 │           └── RegisterPage.jsx     (no TOTP)
 ├── android/           README.md with full Android WebView wrapper code
+├── loadbalancer/      Standalone load balancer stack (HAProxy + Python monitor + Certbot)
+│   ├── docker-compose.yml  Build directly from repo: docker compose up -d
+│   ├── .env.example        Copy → .env and set NODE_A_HOST / NODE_B_HOST
+│   ├── haproxy/            haproxy.cfg with weight-based routing
+│   └── monitor/            Dockerfile + monitor.py (polls /api/health/metrics)
 ├── APRIL_ANDROID_UPDATE_FEATURES.md  (for Gemini updates)
-└── docker-compose.yml Production deployment (external NPM)
+└── docker-compose.yml Production deployment (external NPM, no guide-app service)
 ```
 NOTE: /app/guide-app was deleted (confirmed dead code, Feb 2026)
+NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serves both admin and customer views
 
 ## Core Features — Implemented & Tested
 
@@ -176,3 +182,9 @@ NOTE: /app/guide-app was deleted (confirmed dead code, Feb 2026)
 - guide-app dead code deletion: COMPLETE & TESTED (iteration_15: 100%)
 - Scheduled Auto-Backup (APScheduler): COMPLETE & TESTED (iteration_15: 100%)
 - Catalog↔VOD+EPG Linking (catalog_id field): COMPLETE & TESTED (iteration_15: 100%)
+
+- Controls Hint card (bottom-right, 10s auto-dismiss, gradient glow, re-triggerable from Settings): COMPLETE & TESTED (iteration_16: 100%)
+- Recordings QOL (status filter tabs, sort toggle, inline delete confirm, toast errors): COMPLETE & TESTED (iteration_16: 100%)
+- Load Balancer docker files (/app/loadbalancer/ — build-ready with .env.example, HAProxy, monitor): COMPLETE
+- docker-compose.yml guide-app service removed (dead code cleanup): COMPLETE
+- loadbalancer/README.md TrueNAS Scale correction: COMPLETE
