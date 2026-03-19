@@ -1,0 +1,33 @@
+# ─── StreamVault TV — Storage Override (TrueNAS NFS) ───────────────────────────
+#
+# Use this INSTEAD of docker-compose.yml when running in multi-server mode
+# with shared TrueNAS Scale storage.
+#
+# Start command:
+#   docker compose -f docker-compose.yml -f docker-compose.storage.yml up -d
+#
+# Required .env variables:
+#   TRUENAS_IP          Local IP of your TrueNAS Scale server  e.g. 192.168.2.200
+#   TRUENAS_NFS_PATH    NFS export path on TrueNAS             e.g. /mnt/tank/streamvault-uploads
+#
+# What this does:
+#   Replaces the local `uploads` Docker volume with one backed by your TrueNAS NFS
+#   share. Docker mounts it automatically on every `docker compose up`, so every
+#   application node (Node A, Node B, …) reads and writes the same files.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # No service changes needed — the backend already mounts `uploads:/app/backend/uploads`
+  # Docker will use the NFS-backed volume defined below automatically.
+  backend: {}
+
+# ── Override the uploads volume with NFS ─────────────────────────────────────
+volumes:
+  uploads:
+    driver: local
+    driver_opts:
+      type: nfs
+      # nfsvers=4.1 is TrueNAS Scale default; change to nfsvers=3 if you hit issues
+      o: "addr=${TRUENAS_IP},nfsvers=4.1,rw,soft,timeo=30,retrans=3,_netdev"
+      device: ":${TRUENAS_NFS_PATH}"

@@ -45,7 +45,8 @@ StreamVault — a full-featured IPTV service with Live TV Guide (EPG), VOD secti
 │   ├── haproxy/            haproxy.cfg with weight-based routing
 │   └── monitor/            Dockerfile + monitor.py (polls /api/health/metrics)
 ├── APRIL_ANDROID_UPDATE_FEATURES.md  (for Gemini updates)
-└── docker-compose.yml Production deployment (external NPM, no guide-app service)
+├── docker-compose.yml           Production deployment (external NPM, no guide-app service)
+└── docker-compose.storage.yml  NFS override — run with -f docker-compose.storage.yml for multi-server
 ```
 NOTE: /app/guide-app was deleted (confirmed dead code, Feb 2026)
 NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serves both admin and customer views
