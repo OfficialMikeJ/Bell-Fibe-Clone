@@ -50,7 +50,7 @@ const ComingSoonModal = ({ onClose }) => (
   </div>
 );
 
-const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSelect, onViewChange }) => {
+const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSelect, onChannelPlay, onViewChange }) => {
   const [focusedChannelIdx, setFocusedChannelIdx] = useState(0);
   const [selectedProgramId, setSelectedProgramId] = useState(null);
   const [showComingSoon, setShowComingSoon] = useState(false);
@@ -75,9 +75,8 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
           setFocusedChannelIdx(prev => {
             const next = Math.min(prev + 1, channels.length - 1);
             const ch = channels[next];
-            if (ch?.coming_soon) return next;
-            if (ch?.channel_type === 'vod') { onViewChange?.('ondemand', 'movie'); return next; }
-            onChannelSelect(ch);
+            // Arrow keys only update the preview panel, never play
+            if (ch && !ch.coming_soon && ch.channel_type !== 'vod') onChannelSelect(ch);
             return next;
           });
           break;
@@ -86,20 +85,18 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
           setFocusedChannelIdx(prev => {
             const next = Math.max(prev - 1, 0);
             const ch = channels[next];
-            if (ch?.coming_soon) return next;
-            if (ch?.channel_type === 'vod') { onViewChange?.('ondemand', 'movie'); return next; }
-            onChannelSelect(ch);
+            if (ch && !ch.coming_soon && ch.channel_type !== 'vod') onChannelSelect(ch);
             return next;
           });
           break;
         case 'Enter':
         case ' ':
+          // OK button / Enter → play immediately full screen
           e.preventDefault();
           if (channels[focusedChannelIdx]) {
             const ch = channels[focusedChannelIdx];
-            if (ch.coming_soon) setShowComingSoon(true);
-            else if (ch.channel_type === 'vod') onViewChange?.('ondemand', 'movie');
-            else onChannelSelect(ch);
+            if (ch.coming_soon) { setShowComingSoon(true); return; }
+            onChannelPlay?.(ch);
           }
           break;
         default:
@@ -108,7 +105,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [channels, focusedChannelIdx, onChannelSelect]);
+  }, [channels, focusedChannelIdx, onChannelSelect, onChannelPlay, onViewChange]);
 
   // Sync focus idx with selected channel
   useEffect(() => {
@@ -171,9 +168,9 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
               } ${isSelected && !isComingSoon ? 'scale-[1.01]' : ''}`}
               onClick={() => {
                 setFocusedChannelIdx(idx);
-                if (isComingSoon) setShowComingSoon(true);
-                else if (isVOD) onViewChange?.('ondemand', 'movie');
-                else onChannelSelect(channel);
+                if (isComingSoon) { setShowComingSoon(true); return; }
+                // Click = play immediately
+                onChannelPlay?.(channel);
               }}
             >
               {/* Channel Info */}

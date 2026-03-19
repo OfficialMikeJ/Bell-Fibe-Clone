@@ -7,6 +7,7 @@ import { ServiceProvider } from "./contexts/ServiceContext";
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
 import ChannelFeatured from "./components/ChannelFeatured";
+import FullscreenPlayer from "./components/FullscreenPlayer";
 import EPGGrid from "./components/EPGGrid";
 import LoginPage from "./components/LoginPage";
 import AdminDashboard from "./components/AdminDashboard";
@@ -46,9 +47,11 @@ const generateTimeSlots = () => {
 
 const timeSlots = generateTimeSlots();
 
-const GuideView = ({ onViewChange }) => {  const [channels, setChannels] = useState([]);
+const GuideView = ({ onViewChange }) => {
+  const [channels, setChannels] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState(null);
+  const [playingChannel, setPlayingChannel]   = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -70,15 +73,22 @@ const GuideView = ({ onViewChange }) => {  const [channels, setChannels] = useSt
     fetchAll();
   }, []);
 
-  // Get current program for selected channel
-  const getCurrentProgram = useCallback(() => {
-    if (!selectedChannel || programs.length === 0) return null;
+  const getCurrentProgram = useCallback((channelId) => {
+    if (!channelId || programs.length === 0) return null;
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
     const nowTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    const chProgs = programs.filter(p => p.channel_id === selectedChannel.id && p.date === todayStr);
+    const chProgs = programs.filter(p => p.channel_id === channelId && p.date === todayStr);
     return chProgs.find(p => p.start_time <= nowTime) || chProgs[0] || null;
-  }, [selectedChannel, programs]);
+  }, [programs]);
+
+  // Called when user clicks a channel card or presses OK — go straight to fullscreen
+  const handleChannelPlay = useCallback((channel) => {
+    if (!channel || channel.coming_soon) return;
+    if (channel.channel_type === 'vod') { onViewChange('ondemand', 'movie'); return; }
+    setSelectedChannel(channel);
+    setPlayingChannel(channel);
+  }, [onViewChange]);
 
   if (loading) {
     return (
@@ -90,12 +100,20 @@ const GuideView = ({ onViewChange }) => {  const [channels, setChannels] = useSt
 
   return (
     <div className="flex-1 bg-[#1a1a1a] overflow-y-auto">
+      {/* Fullscreen player — no controls, ESC/back to exit */}
+      {playingChannel && (
+        <FullscreenPlayer
+          channel={playingChannel}
+          currentProgram={getCurrentProgram(playingChannel.id)}
+          onClose={() => setPlayingChannel(null)}
+        />
+      )}
       <TopBar />
       <div className="pt-16 pl-8 pr-6 py-6">
         {selectedChannel && (
           <ChannelFeatured
             channel={selectedChannel}
-            currentProgram={getCurrentProgram()}
+            currentProgram={getCurrentProgram(selectedChannel.id)}
             onViewChange={onViewChange}
           />
         )}
@@ -106,6 +124,7 @@ const GuideView = ({ onViewChange }) => {  const [channels, setChannels] = useSt
             timeSlots={timeSlots}
             selectedChannelId={selectedChannel?.id}
             onChannelSelect={setSelectedChannel}
+            onChannelPlay={handleChannelPlay}
             onViewChange={onViewChange}
           />
         ) : (
