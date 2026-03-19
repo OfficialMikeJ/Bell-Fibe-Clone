@@ -19,6 +19,7 @@ import AppInfoPage from "./components/AppInfoPage";
 import { VersionPopup } from "./components/AppInfoPage";
 import RecordingsPage from "./components/RecordingsPage";
 import NotificationsPage from "./components/NotificationsPage";
+import ControlsHint from "./components/ControlsHint";
 import ActivatePage from "./pages/ActivatePage";
 import PortalLayout from "./pages/PortalLayout";
 import PortalHome from "./pages/PortalHome";
@@ -188,6 +189,7 @@ const Home = () => {
   return (
     <div className="flex min-h-screen bg-[#1a1a1a]">
       <VersionPopup />
+      <ControlsHint />
       <Sidebar activeView={activeView} onViewChange={handleViewChange} />
       <div className="pl-20 flex-1 flex flex-col">
         {renderView()}

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Volume1, Play, Pause, Monitor, Sun, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { Volume2, VolumeX, Volume1, Play, Pause, Monitor, Info, Tv } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { toast } from 'sonner';
 
@@ -134,6 +134,27 @@ const UserSettingsPage = () => {
                 </button>
               ))}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Controls Hint */}
+        <Card className="mb-8 border-purple-900/40" style={{ background: '#1a0e30' }}>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white text-base flex items-center gap-2">
+              <Tv className="w-5 h-5 text-purple-400" />
+              Remote Controls Guide
+            </CardTitle>
+            <p className="text-purple-300/60 text-xs">Review the keyboard and remote control shortcuts</p>
+          </CardHeader>
+          <CardContent>
+            <button
+              data-testid="settings-show-controls-hint"
+              onClick={() => window.dispatchEvent(new CustomEvent('sv-show-controls'))}
+              className="w-full py-2.5 rounded-xl text-sm font-medium text-purple-200 border border-purple-700/50 hover:bg-purple-700/20 transition-all"
+              style={{ background: '#0d0820' }}
+            >
+              Show Controls Hint Card
+            </button>
           </CardContent>
         </Card>
 

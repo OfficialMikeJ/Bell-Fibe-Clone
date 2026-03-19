@@ -82,23 +82,6 @@ services:
     networks:
       - proxy
 
-  # ── Customer TV Guide App (React + Nginx) ───────────────────────────────────
-  guide-app:
-    build:
-      context: ./guide-app
-      dockerfile: Dockerfile
-      args:
-        REACT_APP_API_URL: ${REACT_APP_BACKEND_URL}
-        REACT_APP_GUIDE_TITLE: ${SERVICE_NAME:-StreamVault TV}
-    container_name: streamvault_guide
-    restart: unless-stopped
-    ports:
-      - "3001:80"
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - proxy
 
 # ── Volumes ───────────────────────────────────────────────────────────────────
 volumes:

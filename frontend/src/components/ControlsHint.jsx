@@ -68,9 +68,21 @@ const ControlsHint = () => {
       }}
       data-testid="controls-hint"
     >
+      {/* Gradient glow backdrop */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: '-18px',
+          background: 'radial-gradient(ellipse at 60% 60%, rgba(59,130,246,0.22) 0%, rgba(139,92,246,0.14) 45%, transparent 72%)',
+          filter: 'blur(18px)',
+          borderRadius: '32px',
+          pointerEvents: 'none',
+          zIndex: -1,
+        }}
+      />
       {/* Card */}
-      <div className="rounded-2xl overflow-hidden shadow-2xl"
-        style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="rounded-2xl overflow-hidden shadow-2xl relative"
+        style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.09)' }}>
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3"

@@ -48,7 +48,7 @@ Bell Home Hub
                   │  NFS mount (shared uploads)
                   ▼
         ┌──────────────────┐
-        │   TrueNAS Core   │
+        │  TrueNAS Scale   │
         │  Shared Storage  │
         │  + MongoDB VM    │
         └──────────────────┘
@@ -194,7 +194,7 @@ On the Bell Home Hub (router):
 
 ---
 
-## Shared Storage (TrueNAS NFS Mount)
+## Shared Storage (TrueNAS Scale — NFS Share)
 
 Both Node A and Node B must read and write media files from the **same location**.
 Without shared storage, a file uploaded through Node A would not be visible through Node B.
