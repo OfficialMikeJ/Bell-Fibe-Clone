@@ -36,6 +36,8 @@ const ChannelFeatured = ({ channel, currentProgram, onViewChange }) => {
 
   const videoSrc = currentProgram?.media_file_path
     ? `${BACKEND_URL}/api${currentProgram.media_file_path}`
+    : channel?.media_file_path
+    ? `${BACKEND_URL}/api${channel.media_file_path}`
     : channel?.stream_url || null;
 
   const posterSrc = currentProgram?.poster_path

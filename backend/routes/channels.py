@@ -26,15 +26,29 @@ async def create_channel(channel: ChannelCreate, db: AsyncIOMotorDatabase = Depe
 
 @router.get("", response_model=List[Channel])
 async def get_channels(db: AsyncIOMotorDatabase = Depends(get_db)):
-    channels = await db.channels.find().to_list(1000)
-    return [Channel(**channel) for channel in channels]
+    channels = await db.channels.find().sort("number", 1).to_list(1000)
+    result = []
+    for ch in channels:
+        obj = Channel(**ch)
+        # Resolve media_id → file_path so the player can use it directly
+        if ch.get("media_id"):
+            media = await db.media_items.find_one({"id": ch["media_id"]}, {"_id": 0})
+            if media:
+                obj.media_file_path = media.get("file_path")
+        result.append(obj)
+    return result
 
 @router.get("/{channel_id}", response_model=Channel)
 async def get_channel(channel_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
     channel = await db.channels.find_one({"id": channel_id})
     if not channel:
         raise HTTPException(status_code=404, detail="Channel not found")
-    return Channel(**channel)
+    obj = Channel(**channel)
+    if channel.get("media_id"):
+        media = await db.media_items.find_one({"id": channel["media_id"]}, {"_id": 0})
+        if media:
+            obj.media_file_path = media.get("file_path")
+    return obj
 
 @router.put("/{channel_id}", response_model=Channel)
 async def update_channel(

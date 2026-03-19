@@ -10,9 +10,10 @@ class ChannelBase(BaseModel):
     logo_path: Optional[str] = ""
     quality_label: Optional[str] = "1080p"
     channel_type: str = "live"
-    stream_url: Optional[str] = None
+    stream_url: Optional[str] = None      # Reserved for future HLS/RTSP use
+    media_id: Optional[str] = None        # Direct uploaded media file for this channel
     coming_soon: Optional[bool] = False
-    category: Optional[str] = "entertainment"  # entertainment, movies, sports, news, kids, music, nature, tech, drama, lifestyle, gaming
+    category: Optional[str] = "entertainment"
 
 class ChannelCreate(ChannelBase):
     pass
@@ -25,11 +26,13 @@ class ChannelUpdate(BaseModel):
     quality_label: Optional[str] = None
     channel_type: Optional[str] = None
     stream_url: Optional[str] = None
+    media_id: Optional[str] = None
     coming_soon: Optional[bool] = None
     category: Optional[str] = None
 
 class Channel(ChannelBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    media_file_path: Optional[str] = None  # Resolved from media_id at query time
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

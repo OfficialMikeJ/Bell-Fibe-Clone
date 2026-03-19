@@ -26,8 +26,10 @@ const FullscreenPlayer = ({ channel, currentProgram, onClose }) => {
   const retryRef = useRef(null);
 
   const videoSrc = currentProgram?.media_file_path
-    ? `${BACKEND_URL}/api${currentProgram.media_file_path}`
-    : channel?.stream_url || null;
+    ? `${BACKEND_URL}/api${currentProgram.media_file_path}`   // Scheduled program file
+    : channel?.media_file_path
+    ? `${BACKEND_URL}/api${channel.media_file_path}`          // Channel's directly linked file
+    : channel?.stream_url || null;                            // Fallback (future HLS use)
 
   const posterSrc = currentProgram?.poster_path
     ? `${BACKEND_URL}/api${currentProgram.poster_path}`

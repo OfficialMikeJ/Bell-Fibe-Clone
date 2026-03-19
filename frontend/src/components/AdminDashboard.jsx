@@ -59,6 +59,7 @@ const AdminDashboard = () => {
     quality_label: '1080p',
     channel_type: 'live',
     stream_url: '',
+    media_id: '',
     category: 'entertainment'
   });
   const [logoFile, setLogoFile] = useState(null);
@@ -259,6 +260,7 @@ const AdminDashboard = () => {
       quality_label: channel.quality_label || '1080p',
       channel_type: channel.channel_type || 'live',
       stream_url: channel.stream_url || '',
+      media_id: channel.media_id || '',
       category: channel.category || 'entertainment'
     });
     setLogoPreview(channel.logo_path ? `${BACKEND_URL}/api${channel.logo_path}` : '');
@@ -268,7 +270,7 @@ const AdminDashboard = () => {
   const handleAddNewChannel = () => {
     setIsEditMode(false);
     setEditingChannelId(null);
-    setChannelForm({ name: '', number: '', description: '', quality_label: '1080p', channel_type: 'live', stream_url: '', category: 'entertainment' });
+    setChannelForm({ name: '', number: '', description: '', quality_label: '1080p', channel_type: 'live', stream_url: '', media_id: '', category: 'entertainment' });
     setLogoFile(null);
     setLogoPreview('');
     setIsChannelDialogOpen(true);
@@ -845,13 +847,25 @@ const AdminDashboard = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-white">Stream URL (optional)</Label>
-                <Input
-                  value={channelForm.stream_url || ''}
-                  onChange={(e) => setChannelForm({ ...channelForm, stream_url: e.target.value })}
-                  placeholder="https://stream.example.com/channel.m3u8"
-                  className="bg-[#2a2a2a] border-gray-600 text-white"
-                />
+                <Label className="text-white">Media File (the video that plays when this channel is selected)</Label>
+                <select
+                  value={channelForm.media_id || ''}
+                  onChange={(e) => setChannelForm({ ...channelForm, media_id: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-md text-white text-sm"
+                  data-testid="channel-media-select"
+                >
+                  <option value="">— No file linked yet —</option>
+                  {mediaList.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.title} ({m.duration_formatted || 'no duration'}) [{m.quality_label || '?'}]
+                    </option>
+                  ))}
+                </select>
+                {channelForm.media_id && (
+                  <p className="text-green-400 text-xs mt-1">
+                    File linked — clicking this channel will play it immediately.
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="text-white">Category (sets EPG color coding)</Label>
