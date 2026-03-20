@@ -157,7 +157,7 @@ const AppInfoPage = () => {
               <button
                 onClick={replayPopup}
                 data-testid="replay-version-popup-btn"
-                className="flex-1 py-2.5 rounded-xl bg-[#0056A8] hover:bg-[#0066c8] text-white text-sm font-medium transition-colors"
+                className="px-6 py-2.5 rounded-xl bg-[#0056A8] hover:bg-[#0066c8] text-white text-sm font-medium transition-colors"
               >
                 What's New
               </button>
