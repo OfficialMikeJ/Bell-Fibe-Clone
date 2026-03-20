@@ -3,7 +3,7 @@ import { Volume2, VolumeX, Volume1, Play, Pause, Monitor, Info, Tv } from 'lucid
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { toast } from 'sonner';
 
-const SETTINGS_KEY_VOLUME  = 'sv_volume_preference';
+const SETTINGS_KEY_VOLUME   = 'sv_volume_preference';
 const SETTINGS_KEY_AUTOPLAY = 'sv_autoplay_enabled';
 const SETTINGS_KEY_QUALITY  = 'sv_quality_preference';
 
@@ -38,39 +38,41 @@ const UserSettingsPage = () => {
   const VolumeIcon = volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
   return (
-    <div className="flex-1 overflow-y-auto" style={{ background: '#0d0820' }}>
+    <div className="flex-1 overflow-y-auto" style={{ background: '#1a1a1a' }}>
       <div className="max-w-2xl mx-auto px-8 py-10">
+
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-white text-3xl font-bold mb-1">User Settings</h1>
-          <p className="text-purple-300/60 text-sm">Personalise your StreamVault experience</p>
+          <p className="text-gray-500 text-sm">Personalise your StreamVault experience</p>
         </div>
 
         {/* Volume */}
-        <Card className="mb-5 border-purple-900/40" style={{ background: '#1a0e30' }}>
+        <Card className="mb-5 border-gray-800" style={{ background: '#222222' }}>
           <CardHeader className="pb-3">
             <CardTitle className="text-white text-base flex items-center gap-2">
-              <VolumeIcon className="w-5 h-5 text-purple-400" />
+              <VolumeIcon className="w-5 h-5 text-[#0056A8]" />
               Preview Volume
             </CardTitle>
-            <p className="text-purple-300/60 text-xs">Sets the default volume for the HLS channel preview player</p>
+            <p className="text-gray-500 text-xs">Sets the default volume for the HLS channel preview player</p>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
-              <VolumeX className="w-4 h-4 text-purple-400/50 flex-shrink-0" />
+              <VolumeX className="w-4 h-4 text-gray-600 flex-shrink-0" />
               <input
                 type="range" min="0" max="1" step="0.05"
                 value={volume}
                 onChange={e => setVolume(parseFloat(e.target.value))}
-                className="flex-1 accent-purple-500 cursor-pointer"
+                className="flex-1 cursor-pointer"
                 data-testid="settings-volume-slider"
-                style={{ accentColor: '#8b5cf6' }}
+                style={{ accentColor: '#0056A8' }}
               />
-              <Volume2 className="w-4 h-4 text-purple-400/50 flex-shrink-0" />
+              <Volume2 className="w-4 h-4 text-gray-600 flex-shrink-0" />
               <span className="text-white text-sm font-mono w-12 text-right" data-testid="settings-volume-value">
                 {Math.round(volume * 100)}%
               </span>
             </div>
-            <div className="flex justify-between text-purple-400/40 text-xs mt-1 px-5">
+            <div className="flex justify-between text-gray-600 text-xs mt-1 px-5">
               <span>Silent</span>
               <span>Comfortable (30%)</span>
               <span>Full</span>
@@ -79,24 +81,26 @@ const UserSettingsPage = () => {
         </Card>
 
         {/* Auto-play */}
-        <Card className="mb-5 border-purple-900/40" style={{ background: '#1a0e30' }}>
+        <Card className="mb-5 border-gray-800" style={{ background: '#222222' }}>
           <CardHeader className="pb-3">
             <CardTitle className="text-white text-base flex items-center gap-2">
-              {autoplay ? <Play className="w-5 h-5 text-purple-400" /> : <Pause className="w-5 h-5 text-purple-400" />}
+              {autoplay
+                ? <Play  className="w-5 h-5 text-[#0056A8]" />
+                : <Pause className="w-5 h-5 text-[#0056A8]" />}
               Auto-play Preview
             </CardTitle>
-            <p className="text-purple-300/60 text-xs">Automatically start the HLS video preview when switching channels</p>
+            <p className="text-gray-500 text-xs">Automatically start the HLS video preview when switching channels</p>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white text-sm">{autoplay ? 'Enabled — preview starts automatically' : 'Disabled — press play to start preview'}</p>
-              </div>
+              <p className="text-gray-300 text-sm">
+                {autoplay ? 'Enabled — preview starts automatically' : 'Disabled — press play to start preview'}
+              </p>
               <button
                 onClick={() => setAutoplay(a => !a)}
                 data-testid="settings-autoplay-toggle"
                 className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${
-                  autoplay ? 'bg-purple-600' : 'bg-gray-700'
+                  autoplay ? 'bg-[#0056A8]' : 'bg-gray-700'
                 }`}
               >
                 <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-200 ${
@@ -108,13 +112,13 @@ const UserSettingsPage = () => {
         </Card>
 
         {/* Quality Preference */}
-        <Card className="mb-8 border-purple-900/40" style={{ background: '#1a0e30' }}>
+        <Card className="mb-5 border-gray-800" style={{ background: '#222222' }}>
           <CardHeader className="pb-3">
             <CardTitle className="text-white text-base flex items-center gap-2">
-              <Monitor className="w-5 h-5 text-purple-400" />
+              <Monitor className="w-5 h-5 text-[#0056A8]" />
               Preferred Quality
             </CardTitle>
-            <p className="text-purple-300/60 text-xs">Hint for adaptive streaming quality selection</p>
+            <p className="text-gray-500 text-xs">Hint for adaptive streaming quality selection</p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-2">
@@ -123,12 +127,11 @@ const UserSettingsPage = () => {
                   key={q}
                   onClick={() => setQuality(q)}
                   data-testid={`settings-quality-${q}`}
-                  className={`py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  className={`py-2.5 rounded-xl text-sm font-medium text-white transition-all ${
                     quality === q
-                      ? 'bg-purple-600 text-white'
-                      : 'text-purple-300/60 border border-purple-900/40 hover:border-purple-600/50'
+                      ? 'bg-[#0056A8] hover:bg-[#0066c8]'
+                      : 'bg-[#2a2a2a] border border-gray-700 text-gray-400 hover:border-gray-500 hover:text-white'
                   }`}
-                  style={quality !== q ? { background: '#0d0820' } : {}}
                 >
                   {q === 'auto' ? 'Auto (Recommended)' : q === 'high' ? 'High (HD)' : 'Low (Data Saver)'}
                 </button>
@@ -138,20 +141,19 @@ const UserSettingsPage = () => {
         </Card>
 
         {/* Controls Hint */}
-        <Card className="mb-8 border-purple-900/40" style={{ background: '#1a0e30' }}>
+        <Card className="mb-8 border-gray-800" style={{ background: '#222222' }}>
           <CardHeader className="pb-3">
             <CardTitle className="text-white text-base flex items-center gap-2">
-              <Tv className="w-5 h-5 text-purple-400" />
+              <Tv className="w-5 h-5 text-[#0056A8]" />
               Remote Controls Guide
             </CardTitle>
-            <p className="text-purple-300/60 text-xs">Review the keyboard and remote control shortcuts</p>
+            <p className="text-gray-500 text-xs">Review the keyboard and remote control shortcuts</p>
           </CardHeader>
           <CardContent>
             <button
               data-testid="settings-show-controls-hint"
               onClick={() => window.dispatchEvent(new CustomEvent('sv-show-controls'))}
-              className="w-full py-2.5 rounded-xl text-sm font-medium text-purple-200 border border-purple-700/50 hover:bg-purple-700/20 transition-all"
-              style={{ background: '#0d0820' }}
+              className="w-full py-2.5 rounded-xl text-sm font-medium text-white bg-[#0056A8] hover:bg-[#0066c8] transition-all"
             >
               Show Controls Hint Card
             </button>
@@ -160,8 +162,8 @@ const UserSettingsPage = () => {
 
         {/* Info */}
         <div className="flex items-start gap-2 mb-8 px-1">
-          <Info className="w-4 h-4 text-purple-400/40 flex-shrink-0 mt-0.5" />
-          <p className="text-purple-300/40 text-xs leading-relaxed">
+          <Info className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
+          <p className="text-gray-600 text-xs leading-relaxed">
             Settings are saved to this device only. They will reset if you clear your browser data.
           </p>
         </div>
@@ -171,11 +173,12 @@ const UserSettingsPage = () => {
           onClick={handleSave}
           data-testid="settings-save-btn"
           className={`w-full py-3 rounded-xl text-white font-semibold text-base transition-all duration-200 ${
-            saved ? 'bg-green-600' : 'bg-purple-600 hover:bg-purple-500'
+            saved ? 'bg-green-600' : 'bg-[#0056A8] hover:bg-[#0066c8]'
           }`}
         >
           {saved ? 'Saved!' : 'Save Settings'}
         </button>
+
       </div>
     </div>
   );
