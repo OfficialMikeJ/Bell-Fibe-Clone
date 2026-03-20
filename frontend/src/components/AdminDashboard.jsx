@@ -39,6 +39,7 @@ import FAQTab from './admin/FAQTab';
 import HomeFeedTab from './HomeFeedTab';
 import CatalogTab from './CatalogTab';
 import StorageWidget from './StorageWidget';
+import SystemHealthWidget from './SystemHealthWidget';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -420,6 +421,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="tickets" className="data-[state=active]:bg-[#0056A8]" data-testid="tickets-tab-trigger">Support Tickets</TabsTrigger>
             <TabsTrigger value="faq" className="data-[state=active]:bg-[#0056A8]" data-testid="faq-tab-trigger">FAQ</TabsTrigger>
             <TabsTrigger value="stats" className="data-[state=active]:bg-[#0056A8]" data-testid="stats-tab-trigger">Statistics</TabsTrigger>
+            <TabsTrigger value="system" className="data-[state=active]:bg-[#0056A8]" data-testid="system-tab-trigger">System Health</TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-[#0056A8]" data-testid="analytics-tab-trigger">Analytics</TabsTrigger>
             <TabsTrigger value="branding" className="data-[state=active]:bg-[#0056A8]" data-testid="branding-tab-trigger">Branding</TabsTrigger>
             <TabsTrigger value="catalog" className="data-[state=active]:bg-purple-700" data-testid="catalog-tab-trigger">Media Catalog</TabsTrigger>
@@ -772,6 +774,16 @@ const AdminDashboard = () => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-white mb-3">Storage</h3>
+              <StorageWidget token={token} />
+            </div>
+          </TabsContent>
+
+          {/* System Health Tab */}
+          <TabsContent value="system" className="space-y-6">
+            <h2 className="text-2xl font-semibold text-white mb-2">System Health</h2>
+            <SystemHealthWidget token={token} />
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-3">Storage Breakdown</h3>
               <StorageWidget token={token} />
             </div>
           </TabsContent>

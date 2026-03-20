@@ -189,7 +189,7 @@ NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serve
 - Load Balancer docker files (/app/loadbalancer/ — build-ready with .env.example, HAProxy, monitor): COMPLETE
 - docker-compose.yml guide-app service removed (dead code cleanup): COMPLETE
 - loadbalancer/README.md TrueNAS Scale correction: COMPLETE
-- VOD media signing (routes/vod.py): COMPLETE — same HMAC pattern applied to VOD items
+- System Health dashboard (Admin → System Health tab): COMPLETE — live-polling circular gauges for CPU/RAM/Disk, animated progress rings, color-coded thresholds (Normal/Elevated/Critical), RAM/Load/Disk detail strip, 5s auto-refresh, "All Good"/"Elevated"/"Critical" status pill with pulsing dot
 - Recordings CVR signing (routes/recordings.py + server.py): COMPLETE — /api/uploads/cvr/{filename} added with token validation; get_user_recordings signs file_path
 - NginxProxyManagerGuide.md: COMPLETE — full proxy host config, SSL, custom nginx directives, security headers, troubleshooting
 - DeploymentChecklist.md: COMPLETE — step-by-step multi-server deployment from TrueNAS to HAProxy to NPM
