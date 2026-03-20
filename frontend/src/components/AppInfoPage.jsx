@@ -153,20 +153,13 @@ const AppInfoPage = () => {
         ) : (
           <>
             <VersionCard data={versionData} isPopup={false} />
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 flex justify-center">
               <button
                 onClick={replayPopup}
                 data-testid="replay-version-popup-btn"
                 className="px-6 py-2.5 rounded-xl bg-[#0056A8] hover:bg-[#0066c8] text-white text-sm font-medium transition-colors"
               >
                 What's New
-              </button>
-              <button
-                onClick={() => localStorage.removeItem(LS_KEY)}
-                className="px-4 py-2.5 rounded-xl border border-gray-700 text-gray-500 hover:text-white hover:border-gray-500 text-sm transition-colors"
-                title="Reset — popup will show again on next load"
-              >
-                Reset
               </button>
             </div>
           </>
