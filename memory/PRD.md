@@ -189,7 +189,11 @@ NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serve
 - Load Balancer docker files (/app/loadbalancer/ — build-ready with .env.example, HAProxy, monitor): COMPLETE
 - docker-compose.yml guide-app service removed (dead code cleanup): COMPLETE
 - loadbalancer/README.md TrueNAS Scale correction: COMPLETE
-- System Health dashboard (Admin → System Health tab): COMPLETE — live-polling circular gauges for CPU/RAM/Disk, animated progress rings, color-coded thresholds (Normal/Elevated/Critical), RAM/Load/Disk detail strip, 5s auto-refresh, "All Good"/"Elevated"/"Critical" status pill with pulsing dot
+- Version bumped to 0.97.1.3.B (Alpha build): COMPLETE — DB updated with full 3-section changelog (New Features, Improvements, Infrastructure)
+- AppInfoPage.jsx full grayscale rewrite — dark cards, blue buttons, blue section icons, matches system theme: COMPLETE
+- AdminDashboard purple tab fix (Media Catalog): COMPLETE — now blue
+- CatalogTab, SettingsTab, AnalyticsTab, VODTab, MediaLibraryTab, NotificationsPage, HomeFeedTab — all purple replaced with #0056A8 blue / gray: COMPLETE
+- HomePage purple icon/button refs replaced with blue: COMPLETE
 - Recordings CVR signing (routes/recordings.py + server.py): COMPLETE — /api/uploads/cvr/{filename} added with token validation; get_user_recordings signs file_path
 - NginxProxyManagerGuide.md: COMPLETE — full proxy host config, SSL, custom nginx directives, security headers, troubleshooting
 - DeploymentChecklist.md: COMPLETE — step-by-step multi-server deployment from TrueNAS to HAProxy to NPM

@@ -8,7 +8,7 @@ const API = `${BACKEND_URL}/api`;
 const typeConfig = {
   movie: { label: 'Movie', icon: Film, color: 'bg-blue-700', border: 'border-blue-600' },
   tv_show: { label: 'TV Show', icon: Tv, color: 'bg-green-700', border: 'border-green-600' },
-  mini_series: { label: 'Mini Series', icon: Star, color: 'bg-purple-700', border: 'border-purple-600' },
+  mini_series: { label: 'Mini Series', icon: Star, color: 'bg-[#0056A8]', border: 'border-[#0056A8]' },
   limited_series: { label: 'Limited Series', icon: Star, color: 'bg-red-700', border: 'border-red-600' },
   system: { label: 'System', icon: Info, color: 'bg-gray-700', border: 'border-gray-600' },
 };

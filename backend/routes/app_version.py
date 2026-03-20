@@ -7,7 +7,7 @@ from utils.security import verify_token
 
 router = APIRouter(prefix="/api/app-version", tags=["app-version"])
 
-DEFAULT_VERSION = "0.94.0.1.A (Alpha build)"
+DEFAULT_VERSION = "0.97.1.3.B (Alpha build)"
 
 
 async def get_db():

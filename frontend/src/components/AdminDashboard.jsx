@@ -424,7 +424,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="system" className="data-[state=active]:bg-[#0056A8]" data-testid="system-tab-trigger">System Health</TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-[#0056A8]" data-testid="analytics-tab-trigger">Analytics</TabsTrigger>
             <TabsTrigger value="branding" className="data-[state=active]:bg-[#0056A8]" data-testid="branding-tab-trigger">Branding</TabsTrigger>
-            <TabsTrigger value="catalog" className="data-[state=active]:bg-purple-700" data-testid="catalog-tab-trigger">Media Catalog</TabsTrigger>
+            <TabsTrigger value="catalog" className="data-[state=active]:bg-[#0056A8]" data-testid="catalog-tab-trigger">Media Catalog</TabsTrigger>
             <TabsTrigger value="home-feed" className="data-[state=active]:bg-[#0056A8]" data-testid="home-feed-tab-trigger">Home Feed</TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-[#0056A8]" data-testid="settings-tab-trigger">Settings</TabsTrigger>
           </TabsList>

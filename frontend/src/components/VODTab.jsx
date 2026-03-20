@@ -127,7 +127,7 @@ const VODTab = ({ token }) => {
     finally { setPosterVodId(null); if (posterInputRef.current) posterInputRef.current.value = ''; }
   };
 
-  const catColors = { movie: 'bg-blue-600', tv_show: 'bg-green-600', mini_series: 'bg-purple-600', limited_series: 'bg-red-600' };
+  const catColors = { movie: 'bg-blue-600', tv_show: 'bg-green-600', mini_series: 'bg-indigo-500', limited_series: 'bg-red-600' };
 
   return (
     <div className="space-y-6">

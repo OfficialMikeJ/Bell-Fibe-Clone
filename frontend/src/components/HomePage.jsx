@@ -6,7 +6,7 @@ const API = process.env.REACT_APP_BACKEND_URL;
 
 const SECTION_COLORS = {
   app_update:       { bg: 'from-blue-900/40 to-transparent',   border: 'border-blue-700/40',   badge: 'bg-blue-700',      icon: <Zap className="w-4 h-4" /> },
-  upcoming_feature: { bg: 'from-purple-900/40 to-transparent', border: 'border-purple-700/40', badge: 'bg-purple-700',    icon: <Star className="w-4 h-4" /> },
+  upcoming_feature: { bg: 'from-gray-800/60 to-transparent', border: 'border-gray-700/40', badge: 'bg-[#0056A8]',    icon: <Star className="w-4 h-4" /> },
 };
 
 const timeAgo = (iso) => {
@@ -186,11 +186,11 @@ const HomePage = ({ onViewChange }) => {
         {/* New on TV */}
         <Section
           title="New on TV"
-          icon={<Tv className="w-5 h-5 text-purple-400" />}
+          icon={<Tv className="w-5 h-5 text-[#0056A8]" />}
           action={
             <button
               onClick={() => onViewChange?.('ondemand', 'tv_show')}
-              className="flex items-center gap-1 text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
+              className="flex items-center gap-1 text-[#0056A8] hover:text-blue-400 text-sm font-medium transition-colors"
               data-testid="home-see-all-shows"
             >
               See all <ChevronRight className="w-4 h-4" />
@@ -225,7 +225,7 @@ const HomePage = ({ onViewChange }) => {
         {/* Upcoming Features */}
         <Section
           title="Upcoming Features & Changes"
-          icon={<Star className="w-5 h-5 text-purple-400" />}
+          icon={<Star className="w-5 h-5 text-[#0056A8]" />}
         >
           {upcomingFeatures.length === 0 ? (
             <Empty message="No upcoming features posted yet. Add announcements in Admin → Home Feed." />

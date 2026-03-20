@@ -138,7 +138,7 @@ const MediaLibraryTab = ({ token }) => {
     return `${(bytes / 1e3).toFixed(0)} KB`;
   };
 
-  const typeColors = { movie: 'bg-blue-600', tv_show: 'bg-green-600', episode: 'bg-yellow-600', mini_series: 'bg-purple-600', limited_series: 'bg-red-600' };
+  const typeColors = { movie: 'bg-blue-600', tv_show: 'bg-green-600', episode: 'bg-yellow-600', mini_series: 'bg-indigo-500', limited_series: 'bg-red-600' };
 
   return (
     <div className="space-y-6">

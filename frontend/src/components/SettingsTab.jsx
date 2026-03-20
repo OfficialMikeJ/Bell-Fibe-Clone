@@ -400,7 +400,7 @@ const SettingsTab = ({ token }) => {
       <Card className="bg-[#2a2a2a] border-gray-700">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <Lock className="w-5 h-5 text-purple-400" />
+            <Lock className="w-5 h-5 text-[#0056A8]" />
             <div>
               <CardTitle className="text-white">Account Information</CardTitle>
               <CardDescription className="text-gray-400">
@@ -582,7 +582,7 @@ const SettingsTab = ({ token }) => {
       <Card className="bg-[#2a2a2a] border-gray-700">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <Radio className="w-5 h-5 text-purple-400" />
+            <Radio className="w-5 h-5 text-[#0056A8]" />
             <div>
               <CardTitle className="text-white">OTA Auto-Update</CardTitle>
               <CardDescription className="text-gray-400">
@@ -633,7 +633,7 @@ const SettingsTab = ({ token }) => {
                 className="bg-[#2a2a2a] border-gray-600 text-white text-sm mt-1" data-testid="ota-release-notes" />
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex-1 border-2 border-dashed border-gray-700 rounded-lg p-3 text-center cursor-pointer hover:border-purple-600 transition-colors"
+              <div className="flex-1 border-2 border-dashed border-gray-700 rounded-lg p-3 text-center cursor-pointer hover:border-[#0056A8] transition-colors"
                 onClick={() => otaApkRef.current?.click()}>
                 {otaApkFile
                   ? <p className="text-green-400 text-sm">{otaApkFile.name} ({(otaApkFile.size / 1048576).toFixed(1)} MB)</p>
@@ -641,7 +641,7 @@ const SettingsTab = ({ token }) => {
               </div>
               <input ref={otaApkRef} type="file" accept=".apk" className="hidden"
                 onChange={e => setOtaApkFile(e.target.files[0] || null)} data-testid="ota-apk-input" />
-              <Button type="submit" disabled={otaCreating} className="bg-purple-700 hover:bg-purple-600 shrink-0"
+              <Button type="submit" disabled={otaCreating} className="bg-[#0056A8] hover:bg-[#0066c8] shrink-0"
                 data-testid="ota-create-btn">
                 {otaCreating ? 'Uploading...' : 'Create Release'}
               </Button>

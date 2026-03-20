@@ -73,7 +73,7 @@ const CastSection = ({ entryId, cast, token, onRefresh }) => {
         <Input value={char} onChange={e => setChar(e.target.value)}
           placeholder="Character (optional)"
           className="bg-[#2a2a2a] border-gray-600 text-white text-sm flex-1" data-testid="cast-char-input" />
-        <Button type="submit" size="sm" className="bg-purple-700 hover:bg-purple-600 shrink-0" data-testid="add-cast-btn">
+        <Button type="submit" size="sm" className="bg-[#0056A8] hover:bg-[#0066c8] shrink-0" data-testid="add-cast-btn">
           <UserPlus className="w-3.5 h-3.5" />
         </Button>
       </form>
@@ -83,10 +83,10 @@ const CastSection = ({ entryId, cast, token, onRefresh }) => {
             <div key={m.id} className="flex items-center gap-2 bg-[#1a1a1a] rounded-lg p-2 border border-gray-800">
               {m.photo_path ? (
                 <img src={imgUrl(m.photo_path)} alt={m.name}
-                  className="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-1 ring-purple-700" />
+                  className="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-1 ring-[#0056A8]/40" />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-purple-900/40 flex items-center justify-center flex-shrink-0">
-                  <span className="text-purple-300 text-xs font-bold">{m.name[0]}</span>
+                <div className="w-9 h-9 rounded-full bg-[#0056A8]/15 flex items-center justify-center flex-shrink-0">
+                  <span className="text-blue-300 text-xs font-bold">{m.name[0]}</span>
                 </div>
               )}
               <div className="flex-1 min-w-0">
@@ -98,7 +98,7 @@ const CastSection = ({ entryId, cast, token, onRefresh }) => {
                   type="button"
                   title="Upload photo"
                   onClick={() => photoRefs.current[m.id]?.click()}
-                  className="w-6 h-6 rounded flex items-center justify-center text-purple-400 hover:text-purple-300"
+                  className="w-6 h-6 rounded flex items-center justify-center text-[#0056A8] hover:text-blue-400"
                 >
                   <Upload className="w-3 h-3" />
                 </button>
@@ -145,7 +145,7 @@ const GallerySection = ({ entryId, images, token, onRefresh }) => {
       <div className="flex items-center justify-between mb-2">
         <span className="text-white text-xs font-semibold">Gallery Images</span>
         <button type="button" onClick={() => inputRef.current?.click()}
-          className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 border border-purple-800/50 px-2 py-1 rounded-lg"
+          className="flex items-center gap-1 text-xs text-[#0056A8] hover:text-blue-400 border border-gray-700 px-2 py-1 rounded-lg"
           data-testid="gallery-upload-btn">
           <Plus className="w-3 h-3" /> Add Image
         </button>
@@ -318,9 +318,9 @@ const CatalogTab = ({ token }) => {
         <div className="flex items-center gap-2">
           <Film className="w-6 h-6 text-white" />
           <h2 className="text-2xl font-semibold text-white">Media Catalog</h2>
-          <span className="bg-purple-700 text-white text-xs px-2 py-0.5 rounded-full">{entries.length}</span>
+          <span className="bg-[#0056A8] text-white text-xs px-2 py-0.5 rounded-full">{entries.length}</span>
         </div>
-        <Button onClick={openCreate} className="bg-purple-700 hover:bg-purple-600" data-testid="add-catalog-btn">
+        <Button onClick={openCreate} className="bg-[#0056A8] hover:bg-[#0066c8]" data-testid="add-catalog-btn">
           <Plus className="w-4 h-4 mr-2" /> Add Entry
         </Button>
       </div>
@@ -356,20 +356,20 @@ const CatalogTab = ({ token }) => {
       {/* Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filtered.map(entry => (
-          <Card key={entry.id} className="bg-[#2a2a2a] border-gray-700 overflow-hidden group cursor-pointer hover:border-purple-700/50 transition-colors"
+          <Card key={entry.id} className="bg-[#2a2a2a] border-gray-700 overflow-hidden group cursor-pointer hover:border-[#0056A8]/30 transition-colors"
             data-testid={`catalog-entry-${entry.id}`}>
             <div className="aspect-[2/3] bg-[#1a1a1a] relative overflow-hidden">
               {entry.poster_path ? (
                 <img src={imgUrl(entry.poster_path)} alt={entry.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-purple-900/30 to-transparent">
-                  <Film className="w-10 h-10 text-purple-700/50" />
+                <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-[#0056A8]/10 to-transparent">
+                  <Film className="w-10 h-10 text-gray-600" />
                   <span className="text-gray-600 text-xs text-center px-2">{entry.title}</span>
                 </div>
               )}
               <div className="absolute top-2 left-2">
-                <span className="bg-purple-800/80 text-purple-200 text-xs px-2 py-0.5 rounded font-mono capitalize">
+                <span className="bg-[#0056A8]/80 text-white text-xs px-2 py-0.5 rounded font-mono capitalize">
                   {entry.content_type?.replace(/_/g, ' ')}
                 </span>
               </div>
@@ -380,7 +380,7 @@ const CatalogTab = ({ token }) => {
                 {entry.release_date?.slice(0, 4) || '—'} {entry.rating && `• ${entry.rating}`}
               </p>
               {entry.genres?.length > 0 && (
-                <p className="text-purple-400/70 text-xs mt-1 truncate">{entry.genres.slice(0, 3).join(', ')}</p>
+                <p className="text-[#0056A8]/70 text-xs mt-1 truncate">{entry.genres.slice(0, 3).join(', ')}</p>
               )}
               <div className="flex gap-1.5 mt-3">
                 <Button size="sm" variant="ghost" onClick={() => openEdit(entry)}
@@ -409,8 +409,8 @@ const CatalogTab = ({ token }) => {
             <div className="grid grid-cols-2 gap-4 mb-4 p-4 rounded-xl" style={{ background: '#111' }}>
               {/* Poster */}
               <div>
-                <p className="text-white text-xs font-semibold mb-2 flex items-center gap-1"><ImageIcon className="w-3.5 h-3.5 text-purple-400" /> Poster</p>
-                <div className="aspect-[2/3] bg-[#2a2a2a] rounded-xl overflow-hidden relative cursor-pointer hover:bg-[#3a3a3a] transition-colors border-2 border-dashed border-gray-700 hover:border-purple-600"
+                <p className="text-white text-xs font-semibold mb-2 flex items-center gap-1"><ImageIcon className="w-3.5 h-3.5 text-[#0056A8]" /> Poster</p>
+                <div className="aspect-[2/3] bg-[#2a2a2a] rounded-xl overflow-hidden relative cursor-pointer hover:bg-[#3a3a3a] transition-colors border-2 border-dashed border-gray-700 hover:border-[#0056A8]"
                   onClick={() => posterRef.current?.click()} data-testid="poster-upload-area">
                   {editEntry.poster_path ? (
                     <img src={imgUrl(editEntry.poster_path)} alt="poster" className="w-full h-full object-cover" />
@@ -539,7 +539,7 @@ const CatalogTab = ({ token }) => {
 
             <DialogFooter className="gap-2">
               <Button type="button" variant="ghost" className="text-gray-400" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-purple-700 hover:bg-purple-600" disabled={saving} data-testid="save-catalog-btn">
+              <Button type="submit" className="bg-[#0056A8] hover:bg-[#0066c8]" disabled={saving} data-testid="save-catalog-btn">
                 {saving ? 'Saving...' : editId ? 'Save Changes' : 'Create Entry'}
               </Button>
             </DialogFooter>
@@ -549,7 +549,7 @@ const CatalogTab = ({ token }) => {
           {editId && editEntry && (
             <div className="mt-2 pt-4 border-t border-gray-800">
               <p className="text-white text-sm font-semibold mb-3 flex items-center gap-2">
-                <Star className="w-4 h-4 text-purple-400" />
+                <Star className="w-4 h-4 text-[#0056A8]" />
                 Cast ({(editEntry.cast || []).length} members)
               </p>
               <CastSection

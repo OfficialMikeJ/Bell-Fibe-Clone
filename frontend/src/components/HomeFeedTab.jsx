@@ -14,7 +14,7 @@ const API = `${BACKEND_URL}/api`;
 
 const CATEGORIES = [
   { value: 'app_update',       label: 'App Update',       colorClass: 'bg-blue-700' },
-  { value: 'upcoming_feature', label: 'Upcoming Feature', colorClass: 'bg-purple-700' },
+  { value: 'upcoming_feature', label: 'Upcoming Feature', colorClass: 'bg-[#0056A8]' },
 ];
 
 const EMPTY_FORM = { title: '', body: '', category: 'app_update', is_published: true, version_tag: '' };

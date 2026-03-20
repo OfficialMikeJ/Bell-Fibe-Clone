@@ -70,7 +70,7 @@ const AnalyticsTab = ({ token }) => {
         {[
           { label: 'Channels', value: counts.channels || 0, icon: Tv, color: 'text-blue-400' },
           { label: 'Media Files', value: counts.media_files || 0, icon: Film, color: 'text-green-400' },
-          { label: 'VOD Titles', value: counts.vod_items || 0, icon: Video, color: 'text-purple-400' },
+          { label: 'VOD Titles', value: counts.vod_items || 0, icon: Video, color: 'text-[#0056A8]' },
           { label: 'Recordings', value: counts.total_recordings || 0, icon: Clock, color: 'text-yellow-400' },
           { label: 'Hour Requests', value: counts.pending_hours_requests || 0, icon: AlertCircle, color: counts.pending_hours_requests > 0 ? 'text-red-400' : 'text-gray-400' },
         ].map(({ label, value, icon: Icon, color }) => (
