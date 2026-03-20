@@ -52,18 +52,20 @@ info "NFS Path:     $TRUENAS_NFS_PATH"
 info "Local mount:  $MOUNT_POINT"
 echo ""
 
-# ── Step 1: Install NFS client ────────────────────────────────────────────────
-info "Step 1/4 — Installing NFS client..."
+# ── Step 1: Install NFS client + NTP ─────────────────────────────────────────
+info "Step 1/4 — Installing NFS client and NTP time sync..."
 if command -v apt-get &>/dev/null; then
-  apt-get update -qq && apt-get install -y -qq nfs-common
+  apt-get update -qq && apt-get install -y -qq nfs-common ntp
 elif command -v dnf &>/dev/null; then
-  dnf install -y -q nfs-utils
+  dnf install -y -q nfs-utils ntp
 elif command -v yum &>/dev/null; then
-  yum install -y -q nfs-utils
+  yum install -y -q nfs-utils ntp
 else
-  warn "Could not detect package manager. Install nfs-common / nfs-utils manually."
+  warn "Could not detect package manager. Install nfs-common and ntp manually."
 fi
-success "NFS client ready"
+# Enable NTP so system time stays synced (required for media token validation)
+systemctl enable --now ntp 2>/dev/null || systemctl enable --now ntpd 2>/dev/null || true
+success "NFS client + NTP ready (time sync active)"
 
 # ── Step 2: Ping TrueNAS ──────────────────────────────────────────────────────
 info "Step 2/4 — Checking network connectivity to TrueNAS ($TRUENAS_IP)..."

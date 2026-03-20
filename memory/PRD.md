@@ -194,6 +194,10 @@ NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serve
 - NginxProxyManagerGuide.md: COMPLETE — full proxy host config, SSL, custom nginx directives, security headers, troubleshooting
 - DeploymentChecklist.md: COMPLETE — step-by-step multi-server deployment from TrueNAS to HAProxy to NPM
 - Token-Protected Media URLs: COMPLETE — HMAC-SHA256 signed tokens (4hr expiry) required on /api/uploads/media/{filename}; channels endpoint now returns signed URLs; verify_media_token in utils/security.py
+- Android README "Before You Build" checklist added (testing vs production URLs, usesCleartextTraffic guidance): COMPLETE
+- NTP added to attach-storage.sh (Step 1 now installs nfs-common + ntp + enables systemd service): COMPLETE
+- Android-Admin-App.md created (/app/android/): Full Java source for tablet admin app — Login, Dashboard, Devices, DeviceDetail (on-site diagnostics), Tickets, Health (live 5s polling), Settings. Uses all existing backend API endpoints.
+
 - Android back-button fix: COMPLETE — onBackPressed now injects JS to check data-sv-player-active attribute, dispatches Escape to close fullscreen player before falling back to WebView history
 - FullscreenPlayer data-sv-player-active attribute added for Android detection: COMPLETE
 

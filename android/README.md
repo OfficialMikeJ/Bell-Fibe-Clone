@@ -1,5 +1,21 @@
 # StreamVault Android App
 
+## Before You Build — Quick Checklist
+
+Before generating your APK, update these three values in the code:
+
+| File | Variable | Testing (local IP) | Production (HTTPS) |
+|------|----------|-------------------|-------------------|
+| `MainActivity.java` | `BASE_URL` | `http://192.168.2.101:8001` | `https://api.yourdomain.com` |
+| `MainActivity.java` | `GUIDE_URL` | `http://192.168.2.101:3000` | `https://tv.yourdomain.com` |
+| `OtaUpdateWorker.java` | `OTA_CHECK_URL` | `http://192.168.2.101:8001/api/ota/latest` | `https://api.yourdomain.com/api/ota/latest` |
+| `AndroidManifest.xml` | `usesCleartextTraffic` | `"true"` (HTTP OK for LAN) | `"false"` (HTTPS only) |
+
+> **Testing phase**: Use your server's local network IP. No domain or HTTPS needed yet.
+> **Production**: Switch to your domain URLs and flip `usesCleartextTraffic` to `"false"`.
+
+---
+
 ## App Assets (Logo & Icons)
 All generated logo assets are in `/app/android/assets/`:
 | File | Use |
@@ -137,9 +153,8 @@ import okhttp3.Response;
 public class OtaUpdateWorker extends Worker {
     private static final String TAG = "OtaUpdateWorker";
     private static final String CHANNEL_ID = "streamvault_updates";
-    // ⚠️ Replace with your server URL
-    private static final String OTA_CHECK_URL = "https://YOUR_SERVER/api/ota/latest";
-    private static final String REPORT_URL    = "https://YOUR_SERVER/api/ota/report-version";
+    private static final String OTA_CHECK_URL = "http://YOUR_SERVER_IP:8001/api/ota/latest";
+    private static final String REPORT_URL    = "http://YOUR_SERVER_IP:8001/api/ota/report-version";
 
     public OtaUpdateWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
@@ -370,8 +385,18 @@ public class MainActivity extends Activity {
     private final Handler mainHandler  = new Handler(Looper.getMainLooper());
 
     // ── Replace with your actual server IP / domain ──────────────────────────
-    private static final String BASE_URL   = "http://70.28.9.208:8001";   // or https://api.yourdomain.com
-    private static final String GUIDE_URL  = "http://70.28.9.208:3001";   // or https://guide.yourdomain.com
+    //
+    // TESTING (local IP):
+    //   BASE_URL  = "http://192.168.2.101:8001"
+    //   GUIDE_URL = "http://192.168.2.101:3000"
+    //
+    // PRODUCTION (after NPM + HTTPS is live):
+    //   BASE_URL  = "https://api.yourdomain.com"
+    //   GUIDE_URL = "https://tv.yourdomain.com"
+    //   Also set android:usesCleartextTraffic="false" in AndroidManifest.xml
+    //
+    private static final String BASE_URL   = "http://YOUR_SERVER_IP:8001";
+    private static final String GUIDE_URL  = "http://YOUR_SERVER_IP:3000";
 
     // Increment this every time you build and upload a new APK
     private static final int APP_VERSION_CODE = 1;
