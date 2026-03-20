@@ -3,7 +3,7 @@ from models.recording import Recording, RecordingCreate, RecordingUpdate
 from models.admin import Admin
 from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from utils.security import verify_token
+from utils.security import verify_token, sign_media_url
 from datetime import datetime
 
 router = APIRouter(prefix="/api/recordings", tags=["recordings"])
@@ -47,9 +47,19 @@ async def get_user_recordings(
     user_id: str,
     db: AsyncIOMotorDatabase = Depends(get_db)
 ):
-    """Public endpoint for users to fetch their recordings"""
+    """Public endpoint for users to fetch their recordings with signed playback URLs"""
     items = await db.recordings.find({"user_id": user_id}).sort("created_at", -1).to_list(100)
-    return [Recording(**item) for item in items]
+    result = []
+    for item in items:
+        rec = Recording(**item)
+        # Sign file_path so the browser can stream CVR/media recordings securely
+        if rec.file_path:
+            base_path = rec.file_path.split('?')[0]   # strip any old token
+            fname = base_path.split('/')[-1]
+            if fname:
+                rec.file_path = base_path + sign_media_url(fname)
+        result.append(rec)
+    return result
 
 @router.post("", response_model=Recording)
 async def create_recording(

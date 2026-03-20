@@ -3,7 +3,7 @@ from models.vod import VODItem, VODCreate, VODUpdate
 from models.admin import Admin
 from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from utils.security import verify_token
+from utils.security import verify_token, sign_media_url
 from datetime import datetime
 from pathlib import Path
 import shutil
@@ -46,14 +46,17 @@ async def get_vod(
     result = []
     for item in items:
         vod = VODItem(**item)
-        # Attach media info
+        # Attach media info with signed URL
         if item.get('media_id'):
             media = await db.media_items.find_one({"id": item['media_id']})
             if media:
                 vod.duration_formatted = media.get('duration_formatted')
                 if not vod.poster_path:
                     vod.poster_path = media.get('poster_path')
-                vod.media_file_path = media.get('file_path')
+                raw_path = media.get('file_path', '')
+                fname = raw_path.split('/')[-1]
+                if fname:
+                    vod.media_file_path = f"/uploads/media/{fname}" + sign_media_url(fname)
         # Attach catalog poster if available
         if item.get('catalog_id') and not vod.poster_path:
             catalog = await db.media_catalog.find_one({"id": item['catalog_id']})

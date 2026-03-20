@@ -189,7 +189,10 @@ NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serve
 - Load Balancer docker files (/app/loadbalancer/ — build-ready with .env.example, HAProxy, monitor): COMPLETE
 - docker-compose.yml guide-app service removed (dead code cleanup): COMPLETE
 - loadbalancer/README.md TrueNAS Scale correction: COMPLETE
-- Portainer CE Docker manager (/app/portainer/ folder, docker-compose.yml + README): COMPLETE — Admin dashboard header has "Docker Manager" button (opens http://server-ip:9000)
+- VOD media signing (routes/vod.py): COMPLETE — same HMAC pattern applied to VOD items
+- Recordings CVR signing (routes/recordings.py + server.py): COMPLETE — /api/uploads/cvr/{filename} added with token validation; get_user_recordings signs file_path
+- NginxProxyManagerGuide.md: COMPLETE — full proxy host config, SSL, custom nginx directives, security headers, troubleshooting
+- DeploymentChecklist.md: COMPLETE — step-by-step multi-server deployment from TrueNAS to HAProxy to NPM
 - Token-Protected Media URLs: COMPLETE — HMAC-SHA256 signed tokens (4hr expiry) required on /api/uploads/media/{filename}; channels endpoint now returns signed URLs; verify_media_token in utils/security.py
 - Android back-button fix: COMPLETE — onBackPressed now injects JS to check data-sv-player-active attribute, dispatches Escape to close fullscreen player before falling back to WebView history
 - FullscreenPlayer data-sv-player-active attribute added for Android detection: COMPLETE
