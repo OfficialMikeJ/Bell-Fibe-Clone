@@ -17,10 +17,10 @@ Internet
     ▼
 [NPM Machine]  192.168.2.50
     │
-    ├── api.yourdomain.com      →  Node A/B :8001  (StreamVault Backend)
-    ├── tv.yourdomain.com       →  Node A/B :3000  (Frontend — Admin + TV Guide)
-    ├── portainer.yourdomain.com → Any Node :9000  (Docker Manager)
-    └── lb.yourdomain.com       →  NPM itself      (NPM Admin UI — local only)
+    ├── api.streamvault.ca        →  Node A/B :8001  (StreamVault Backend)
+    ├── streamvault.ca            →  Node A/B :3000  (Frontend — Admin + TV Guide)
+    ├── portainer.streamvault.ca  → Any Node :9000  (Docker Manager)
+    └── lb.streamvault.ca         →  NPM itself      (NPM Admin UI — local only)
 ```
 
 > With the load balancer in place, NPM points to the HAProxy VIP, and HAProxy
@@ -83,7 +83,7 @@ In your router (e.g. Bell Home Hub), forward:
 
 | Field | Value |
 |-------|-------|
-| Domain | `api.yourdomain.com` |
+| Domain | `api.streamvault.ca` |
 | Scheme | `http` |
 | Forward Hostname / IP | `192.168.2.101` (Node A) or HAProxy VIP |
 | Forward Port | `8001` |
@@ -122,7 +122,7 @@ proxy_set_header X-Forwarded-Proto $scheme;
 
 | Field | Value |
 |-------|-------|
-| Domain | `tv.yourdomain.com` |
+| Domain | `streamvault.ca` |
 | Scheme | `http` |
 | Forward Hostname / IP | `192.168.2.101` (Node A) or HAProxy VIP |
 | Forward Port | `3000` |
@@ -155,7 +155,7 @@ location ~* \.(js|css|png|jpg|jpeg|ico|svg|woff2|ttf)$ {
 
 | Field | Value |
 |-------|-------|
-| Domain | `portainer.yourdomain.com` |
+| Domain | `portainer.streamvault.ca` |
 | Scheme | `http` |
 | Forward Hostname / IP | `192.168.2.101` (whichever node runs Portainer) |
 | Forward Port | `9000` |
@@ -188,10 +188,10 @@ Once NPM is live with HTTPS, update your `.env` on each application node:
 
 ```env
 # Public-facing URLs (used by the React frontend build)
-REACT_APP_BACKEND_URL=https://api.yourdomain.com
+REACT_APP_BACKEND_URL=https://api.streamvault.ca
 
 # CORS — allow the frontend domain to call the API
-CORS_ORIGINS=https://tv.yourdomain.com,https://api.yourdomain.com
+CORS_ORIGINS=https://streamvault.ca,https://api.streamvault.ca
 
 # Force HTTPS in FastAPI responses
 HTTPS_REDIRECT=true
@@ -205,8 +205,8 @@ docker compose -f docker-compose.yml -f docker-compose.storage.yml up -d --build
 
 Also update the Android app's `MainActivity.java`:
 ```java
-private static final String BASE_URL  = "https://api.yourdomain.com";
-private static final String GUIDE_URL = "https://tv.yourdomain.com";
+private static final String BASE_URL  = "https://api.streamvault.ca";
+private static final String GUIDE_URL = "https://streamvault.ca";
 ```
 
 And change `usesCleartextTraffic="false"` in `AndroidManifest.xml` once HTTPS is live.
@@ -243,9 +243,9 @@ add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
 
 | Service | Local Access | External (via NPM) |
 |---------|-------------|-------------------|
-| Backend API | http://192.168.2.101:8001 | https://api.yourdomain.com |
-| Frontend | http://192.168.2.101:3000 | https://tv.yourdomain.com |
-| Portainer | http://192.168.2.101:9000 | https://portainer.yourdomain.com (IP restricted) |
+| Backend API | http://192.168.2.101:8001 | https://api.streamvault.ca |
+| Frontend | http://192.168.2.101:3000 | https://streamvault.ca |
+| Portainer | http://192.168.2.101:9000 | https://portainer.streamvault.ca (IP restricted) |
 | NPM Admin | http://192.168.2.50:81 | Do NOT expose externally |
 | Load Balancer | http://192.168.2.50:80 | via NPM (handles routing) |
 

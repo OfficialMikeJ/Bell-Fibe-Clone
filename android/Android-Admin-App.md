@@ -154,7 +154,7 @@ public class ApiClient {
     // ── Config ────────────────────────────────────────────────────────────────
 
     public String getServerUrl() {
-        return prefs.getString(KEY_URL, "http://YOUR_SERVER_IP:8001");
+        return prefs.getString(KEY_URL, "https://api.streamvault.ca");
     }
 
     public void setServerUrl(String url) {
@@ -1136,11 +1136,11 @@ Update in `ApiClient.java`:
 // Testing (LAN):
 prefs.getString(KEY_URL, "http://192.168.2.101:8001");
 
-// Production (HTTPS):
-prefs.getString(KEY_URL, "https://api.yourdomain.com");
+// Production (live):
+prefs.getString(KEY_URL, "https://api.streamvault.ca");
 ```
 
-Or leave as `YOUR_SERVER_IP` — the Settings screen lets you change it at runtime without rebuilding.
+Or leave the default — the Settings screen lets you change the server URL at runtime without rebuilding.
 
 ---
 

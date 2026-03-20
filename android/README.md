@@ -6,9 +6,9 @@ Before generating your APK, update these three values in the code:
 
 | File | Variable | Testing (local IP) | Production (HTTPS) |
 |------|----------|-------------------|-------------------|
-| `MainActivity.java` | `BASE_URL` | `http://192.168.2.101:8001` | `https://api.yourdomain.com` |
-| `MainActivity.java` | `GUIDE_URL` | `http://192.168.2.101:3000` | `https://tv.yourdomain.com` |
-| `OtaUpdateWorker.java` | `OTA_CHECK_URL` | `http://192.168.2.101:8001/api/ota/latest` | `https://api.yourdomain.com/api/ota/latest` |
+| `MainActivity.java` | `BASE_URL` | `http://192.168.2.101:8001` | `https://api.streamvault.ca` |
+| `MainActivity.java` | `GUIDE_URL` | `http://192.168.2.101:3000` | `https://streamvault.ca` |
+| `OtaUpdateWorker.java` | `OTA_CHECK_URL` | `http://192.168.2.101:8001/api/ota/latest` | `https://api.streamvault.ca/api/ota/latest` |
 | `AndroidManifest.xml` | `usesCleartextTraffic` | `"true"` (HTTP OK for LAN) | `"false"` (HTTPS only) |
 
 > **Testing phase**: Use your server's local network IP. No domain or HTTPS needed yet.
@@ -153,8 +153,8 @@ import okhttp3.Response;
 public class OtaUpdateWorker extends Worker {
     private static final String TAG = "OtaUpdateWorker";
     private static final String CHANNEL_ID = "streamvault_updates";
-    private static final String OTA_CHECK_URL = "http://YOUR_SERVER_IP:8001/api/ota/latest";
-    private static final String REPORT_URL    = "http://YOUR_SERVER_IP:8001/api/ota/report-version";
+    private static final String OTA_CHECK_URL = "https://api.streamvault.ca/api/ota/latest";
+    private static final String REPORT_URL    = "https://api.streamvault.ca/api/ota/report-version";
 
     public OtaUpdateWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
@@ -304,7 +304,7 @@ private void reportInstalledVersion() {
                 String body = "{\"device_id\":\"" + deviceId + "\",\"installed_version\":\"" + version + "\",\"version_code\":" + versionCode + "}";
                 okhttp3.RequestBody rb = okhttp3.RequestBody.create(body, okhttp3.MediaType.parse("application/json"));
                 Request req = new Request.Builder()
-                        .url("https://YOUR_SERVER/api/ota/report-version")
+                        .url("https://api.streamvault.ca/api/ota/report-version")
                         .post(rb).build();
                 client.newCall(req).execute().close();
             } catch (Exception ignored) {}
@@ -391,12 +391,12 @@ public class MainActivity extends Activity {
     //   GUIDE_URL = "http://192.168.2.101:3000"
     //
     // PRODUCTION (after NPM + HTTPS is live):
-    //   BASE_URL  = "https://api.yourdomain.com"
-    //   GUIDE_URL = "https://tv.yourdomain.com"
+    //   BASE_URL  = "https://api.streamvault.ca"
+    //   GUIDE_URL = "https://streamvault.ca"
     //   Also set android:usesCleartextTraffic="false" in AndroidManifest.xml
     //
-    private static final String BASE_URL   = "http://YOUR_SERVER_IP:8001";
-    private static final String GUIDE_URL  = "http://YOUR_SERVER_IP:3000";
+    private static final String BASE_URL   = "https://api.streamvault.ca";
+    private static final String GUIDE_URL  = "https://streamvault.ca";
 
     // Increment this every time you build and upload a new APK
     private static final int APP_VERSION_CODE = 1;
@@ -674,7 +674,7 @@ StreamVault is distributed **privately via side-loading**. There is no Play Stor
 
 ### Method 1 — Download directly from your StreamVault server
 1. On the device, open Chrome or any browser
-2. Navigate to: `https://YOUR_SERVER/api/uploads/apk/streamvault_X_X_X.apk`
+2. Navigate to: `https://api.streamvault.ca/api/uploads/apk/streamvault_X_X_X.apk`
 3. Android prompts "Allow installs from Chrome" → tap **Allow**
 4. Tap **Install** when download completes
 

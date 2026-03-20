@@ -107,7 +107,7 @@ MONGO_URL=mongodb://streamvault:PASSWORD@192.168.2.201:27017/iptv_service?authSo
 DB_NAME=iptv_service
 
 # Public URLs (set after NPM is configured)
-REACT_APP_BACKEND_URL=https://api.yourdomain.com
+REACT_APP_BACKEND_URL=https://api.streamvault.ca
 
 # TrueNAS shared storage
 TRUENAS_IP=192.168.2.200
@@ -115,7 +115,7 @@ TRUENAS_NFS_PATH=/mnt/tank/streamvault-uploads
 
 # Security (change these!)
 JWT_SECRET=generate-a-strong-random-secret-here
-CORS_ORIGINS=https://tv.yourdomain.com
+CORS_ORIGINS=https://streamvault.ca
 
 # Service name
 SERVICE_NAME=StreamVault TV
@@ -171,8 +171,8 @@ See `NginxProxyManagerGuide.md` for full details.
 
 **Minimum setup — two proxy hosts in NPM:**
 
-1. `api.yourdomain.com` → `http://192.168.2.101:8001` (or HAProxy VIP)
-2. `tv.yourdomain.com`  → `http://192.168.2.101:3000`
+1. `api.streamvault.ca` → `http://192.168.2.101:8001` (or HAProxy VIP)
+2. `streamvault.ca`     → `http://192.168.2.101:3000`
 
 Both with Let's Encrypt SSL, Force HTTPS, Websockets enabled.
 
@@ -214,7 +214,7 @@ Run these checks after full deployment:
 # From any machine on the network:
 
 # 1. Backend health
-curl https://api.yourdomain.com/api/health
+curl https://api.streamvault.ca/api/health
 
 # 2. Storage is shared — upload a file via Node A, then check it exists on Node B
 # (do this via the Admin Dashboard → Media Library)

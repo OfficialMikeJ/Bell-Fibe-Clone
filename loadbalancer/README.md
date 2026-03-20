@@ -129,11 +129,11 @@ docker run --rm -p 80:80 \
   --email your@email.com \
   --agree-tos \
   --no-eff-email \
-  -d streamvault.yourdomain.com
+  -d streamvault.ca
 
 # Combine the cert files into the format HAProxy expects
-cat ./certs/live/streamvault.yourdomain.com/fullchain.pem \
-    ./certs/live/streamvault.yourdomain.com/privkey.pem \
+cat ./certs/live/streamvault.ca/fullchain.pem \
+    ./certs/live/streamvault.ca/privkey.pem \
     > ./certs/streamvault.pem
 ```
 
