@@ -159,7 +159,7 @@ const AppInfoPage = () => {
                 data-testid="replay-version-popup-btn"
                 className="flex-1 py-2.5 rounded-xl bg-[#0056A8] hover:bg-[#0066c8] text-white text-sm font-medium transition-colors"
               >
-                Show version popup
+                What's New
               </button>
               <button
                 onClick={() => localStorage.removeItem(LS_KEY)}
