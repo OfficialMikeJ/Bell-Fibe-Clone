@@ -12,7 +12,7 @@ import os
 import sys
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://epg-test.preview.emergentagent.com/api"
+BACKEND_URL = "https://vault-preview-38.preview.emergentagent.com/api"
 
 class IPTVAPITester:
     def __init__(self):

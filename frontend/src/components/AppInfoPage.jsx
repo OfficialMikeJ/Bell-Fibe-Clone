@@ -152,15 +152,17 @@ const AppInfoPage = () => {
           <div className="text-gray-500 text-sm">Loading...</div>
         ) : (
           <>
-            <VersionCard data={versionData} isPopup={false} />
-            <div className="mt-6 flex justify-center">
-              <button
-                onClick={replayPopup}
-                data-testid="replay-version-popup-btn"
-                className="px-6 py-2.5 rounded-xl bg-[#0056A8] hover:bg-[#0066c8] text-white text-sm font-medium transition-colors"
-              >
-                What's New
-              </button>
+            <div className="max-w-lg mx-auto">
+              <VersionCard data={versionData} isPopup={false} />
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={replayPopup}
+                  data-testid="replay-version-popup-btn"
+                  className="px-6 py-2.5 rounded-xl bg-[#0056A8] hover:bg-[#0066c8] text-white text-sm font-medium transition-colors"
+                >
+                  What's New
+                </button>
+              </div>
             </div>
           </>
         )}
