@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
@@ -7,12 +6,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
-import { Loader2, Shield, KeyRound, ArrowLeft, Copy, Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import { Loader2, Shield, ArrowLeft } from 'lucide-react';
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -24,13 +18,6 @@ const LoginPage = () => {
   const [twoFaCode, setTwoFaCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const [showReset, setShowReset] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetError, setResetError] = useState('');
-  const [newGeneratedPassword, setNewGeneratedPassword] = useState('');
-  const [showNewPassword, setShowNewPassword] = useState(false);
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -56,38 +43,6 @@ const LoginPage = () => {
     }
 
     setLoading(false);
-  };
-
-  const handlePasswordReset = async (e) => {
-    e.preventDefault();
-    setResetError('');
-    setNewGeneratedPassword('');
-    setResetLoading(true);
-    try {
-      const response = await axios.post(`${API}/auth/password-reset`, {
-        email: resetEmail
-      });
-      setNewGeneratedPassword(response.data.new_password);
-      toast.success('Password has been reset');
-    } catch (err) {
-      setResetError(err.response?.data?.detail || 'Password reset failed');
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
-  const handleCloseReset = (open) => {
-    setShowReset(open);
-    if (!open) {
-      setResetError('');
-      setResetEmail('');
-      setNewGeneratedPassword('');
-      setShowNewPassword(false);
-    }
-  };
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text).then(() => toast.success('Password copied'));
   };
 
   return (
@@ -154,16 +109,6 @@ const LoginPage = () => {
                     className="bg-[#3a3a3a] border-gray-600 text-white"
                   />
                 </div>
-                <div className="flex justify-end items-center">
-                  <button
-                    type="button"
-                    data-testid="forgot-password-link"
-                    onClick={() => { setShowReset(true); setResetError(''); setNewGeneratedPassword(''); }}
-                    className="text-xs text-blue-400 hover:text-blue-300 underline transition-colors"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
               </>
             ) : (
               <>
@@ -215,95 +160,6 @@ const LoginPage = () => {
           </CardFooter>
         </form>
       </Card>
-
-      {/* Password Reset Dialog */}
-      <Dialog open={showReset} onOpenChange={handleCloseReset}>
-        <DialogContent className="bg-[#1a1a1a] border-gray-700 max-w-md" data-testid="password-reset-dialog">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <KeyRound className="w-6 h-6 text-blue-400" />
-              <DialogTitle className="text-xl text-white">
-                {newGeneratedPassword ? 'New Password Generated' : 'Reset Password'}
-              </DialogTitle>
-            </div>
-          </DialogHeader>
-
-          {newGeneratedPassword ? (
-            <div className="space-y-4 py-2">
-              <p className="text-gray-400 text-sm">
-                Your password has been reset. Save this new password — it will not be shown again.
-              </p>
-              <div className="bg-[#2a2a2a] border border-gray-600 rounded-lg p-4">
-                <Label className="text-gray-400 text-xs mb-2 block">New Password</Label>
-                <div className="flex items-center gap-3">
-                  <code
-                    className="text-green-400 text-lg font-mono tracking-wider flex-1"
-                    data-testid="generated-password"
-                  >
-                    {showNewPassword ? newGeneratedPassword : '••••••••••'}
-                  </code>
-                  <button
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="text-gray-500 hover:text-gray-300"
-                    data-testid="toggle-password-visibility"
-                  >
-                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={() => copyToClipboard(newGeneratedPassword)}
-                    className="text-gray-500 hover:text-gray-300"
-                    data-testid="copy-password-btn"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={() => handleCloseReset(false)} className="bg-[#0056A8] hover:bg-[#0066c8]">
-                  Done
-                </Button>
-              </DialogFooter>
-            </div>
-          ) : (
-            <form onSubmit={handlePasswordReset} className="space-y-4 py-2">
-              <p className="text-gray-400 text-sm">
-                Enter your admin email. A new random password will be generated.
-              </p>
-              {resetError && (
-                <Alert className="bg-red-900/20 border-red-900">
-                  <AlertDescription className="text-red-400 text-sm">{resetError}</AlertDescription>
-                </Alert>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="reset_email" className="text-white">Email</Label>
-                <Input
-                  id="reset_email"
-                  data-testid="reset-email-input"
-                  type="email"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="admin@streamvault.ca"
-                  required
-                  className="bg-[#2a2a2a] border-gray-600 text-white"
-                />
-              </div>
-              <DialogFooter>
-                <Button type="button" onClick={() => setShowReset(false)} className="bg-gray-600 hover:bg-gray-700">
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  data-testid="reset-password-btn"
-                  disabled={resetLoading || !resetEmail}
-                  className="bg-[#0056A8] hover:bg-[#0066c8]"
-                >
-                  {resetLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Reset Password'}
-                </Button>
-              </DialogFooter>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

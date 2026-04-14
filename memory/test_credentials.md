@@ -2,16 +2,14 @@
 
 ## Admin Account
 - **Email:** admin@streamvault.ca
-- **Password:** vubs2V4mzl
+- **Password:** brEtymFerg
 - **Role:** Admin
 
-## Test Admin Account
-- **Email:** test@streamvault.ca
-- **Password:** BXPSzBOvID
-- **Role:** Admin
+## Password Reset
+- CLI only: `cd /app/backend && python3 reset_password.py admin@streamvault.ca`
 
 ## Auth Endpoints
 - POST /api/auth/login (email + password)
-- POST /api/auth/register (email only, password auto-generated)
-- POST /api/auth/password-reset (email, returns new random password)
+- POST /api/auth/register (admin-only, requires Bearer token)
+- POST /api/auth/password-reset (admin-only, requires Bearer token)
 - GET /api/auth/verify (Bearer token)
