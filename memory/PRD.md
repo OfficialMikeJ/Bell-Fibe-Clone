@@ -161,17 +161,13 @@ NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serve
 - Admin: email=admin@streamvault.ca, password=auto-generated (see /app/memory/test_credentials.md)
 - Customer accounts: generated via /register, credentials in Admin → Users tab
 
-## P1 Upcoming (User Tasks)
+## User Tasks (Deployment)
 - Android App build: Take code from /app/android/README.md, create Android Studio project, compile APK
 - Nginx Proxy Manager config: proxy hosts for backend (:8001) and frontend (:3000)
 - Populate App Version changelog via Admin → Settings or direct API call to `PUT /api/app-version`
 
-## P2 Backlog
-- TV Tuner Integration (Free-to-Air channels with actual stream URLs)
-- VOD Content Ingestion system (file uploads for movies/shows — partial: catalog+media linking done)
-- Live TV channels: connect actual HLS/RTSP stream URLs to channels
-- CVR automated recording (background job)
-- Credential rotation option (admin-triggered)
+## Full Release Features
+- See `/app/Full-Release-Features.md` — TV Tuner, CVR Recording, Push Notifications, Watch History, Admin App Enhancements, and more. These are deferred until the service is ready for full public release.
 
 ## Completion Status (as of 2026-03)
 - Home Feed: COMPLETE & TESTED (iteration_12: 100%)
