@@ -6,6 +6,8 @@ import os
 import hmac
 import hashlib
 import time
+import string
+import secrets
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -55,6 +57,11 @@ def verify_media_token(filename: str, t: Optional[str], s: Optional[str]) -> boo
     expected = hmac.new(_media_secret(), msg, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, s)
 
+
+def generate_random_password(length: int = 10) -> str:
+    """Generate a random alphanumeric password of the given length."""
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)

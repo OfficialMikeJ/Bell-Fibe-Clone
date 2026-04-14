@@ -11,14 +11,6 @@ import { toast } from 'sonner';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const SECURITY_QUESTIONS = [
-  "What was the name of your first pet?",
-  "What city were you born in?",
-  "What is your mother's maiden name?",
-  "What was the name of your first school?",
-  "What is your favorite movie?"
-];
-
 const SetupWizard = ({ onComplete }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -32,14 +24,8 @@ const SetupWizard = ({ onComplete }) => {
   const [domainName, setDomainName] = useState('');
   
   // Step 3: Admin Account
-  const [adminUsername, setAdminUsername] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [securityQuestions, setSecurityQuestions] = useState([
-    { question: SECURITY_QUESTIONS[0], answer: '' },
-    { question: SECURITY_QUESTIONS[1], answer: '' },
-    { question: SECURITY_QUESTIONS[2], answer: '' }
-  ]);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [generatedPassword, setGeneratedPassword] = useState('');
   
   // Step 4: Channels
   const [channelCount, setChannelCount] = useState(25);
@@ -100,39 +86,20 @@ const SetupWizard = ({ onComplete }) => {
   };
 
   const handleAdminSetup = async () => {
-    if (!adminUsername || !adminPassword) {
-      toast.error('Username and password are required');
-      return;
-    }
-    
-    if (adminPassword !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-    
-    if (adminPassword.length < 8) {
-      toast.error('Password must be at least 8 characters');
-      return;
-    }
-    
-    const unanswered = securityQuestions.filter(q => !q.answer.trim());
-    if (unanswered.length > 0) {
-      toast.error('Please answer all security questions');
+    if (!adminEmail || !adminEmail.includes('@')) {
+      toast.error('A valid email address is required');
       return;
     }
     
     setLoading(true);
     try {
-      await axios.post(`${API}/setup/admin`, null, {
+      const res = await axios.post(`${API}/setup/admin`, null, {
         params: {
-          username: adminUsername,
-          password: adminPassword
-        },
-        data: {
-          security_questions: securityQuestions
+          email: adminEmail
         }
       });
-      toast.success('Admin account created');
+      setGeneratedPassword(res.data.password);
+      toast.success('Admin account created — save the password shown below');
       setStep(4);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create admin');
@@ -170,12 +137,6 @@ const SetupWizard = ({ onComplete }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const updateSecurityQuestion = (index, field, value) => {
-    const updated = [...securityQuestions];
-    updated[index][field] = value;
-    setSecurityQuestions(updated);
   };
 
   return (
@@ -302,55 +263,22 @@ const SetupWizard = ({ onComplete }) => {
             <div className="space-y-4">
               <h3 className="text-xl text-white font-semibold">Create Admin Account</h3>
               
+              <Alert className="bg-blue-900/20 border-blue-900">
+                <AlertDescription className="text-blue-400">
+                  A secure 10-character password will be auto-generated for you.
+                </AlertDescription>
+              </Alert>
+              
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-white">Username *</Label>
+                <Label htmlFor="admin-email" className="text-white">Admin Email *</Label>
                 <Input
-                  id="username"
-                  value={adminUsername}
-                  onChange={(e) => setAdminUsername(e.target.value)}
-                  placeholder="admin"
+                  id="admin-email"
+                  type="email"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  placeholder="admin@streamvault.ca"
                   className="bg-[#1a1a1a] border-gray-600 text-white"
                 />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white">Password *</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="bg-[#1a1a1a] border-gray-600 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-white">Confirm Password *</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="bg-[#1a1a1a] border-gray-600 text-white"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-3 pt-2">
-                <p className="text-white font-medium">Security Questions</p>
-                {securityQuestions.map((sq, index) => (
-                  <div key={index} className="space-y-2">
-                    <Label className="text-white text-sm">{sq.question}</Label>
-                    <Input
-                      value={sq.answer}
-                      onChange={(e) => updateSecurityQuestion(index, 'answer', e.target.value)}
-                      placeholder="Your answer"
-                      className="bg-[#1a1a1a] border-gray-600 text-white"
-                    />
-                  </div>
-                ))}
               </div>
               
               <div className="flex justify-between pt-4">
@@ -376,6 +304,15 @@ const SetupWizard = ({ onComplete }) => {
           {step === 4 && (
             <div className="space-y-4">
               <h3 className="text-xl text-white font-semibold">Channel Setup</h3>
+              
+              {generatedPassword && (
+                <Alert className="bg-green-900/20 border-green-900">
+                  <AlertDescription className="text-green-400">
+                    <strong>Admin password (save this now):</strong>{' '}
+                    <code className="bg-green-900/40 px-2 py-0.5 rounded font-mono tracking-wider">{generatedPassword}</code>
+                  </AlertDescription>
+                </Alert>
+              )}
               
               <Alert className="bg-blue-900/20 border-blue-900">
                 <AlertDescription className="text-blue-400">

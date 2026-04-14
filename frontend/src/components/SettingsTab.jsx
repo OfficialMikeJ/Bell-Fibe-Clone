@@ -411,8 +411,8 @@ const SettingsTab = ({ token }) => {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded">
-            <span className="text-gray-400">Username:</span>
-            <span className="text-white font-medium">{user?.username}</span>
+            <span className="text-gray-400">Email:</span>
+            <span className="text-white font-medium">{user?.email}</span>
           </div>
           <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded">
             <span className="text-gray-400">2FA Status:</span>

@@ -23,7 +23,7 @@ async def get_current_admin_optional(authorization: Optional[str] = Header(None)
     payload = verify_token(token)
     if not payload:
         return None
-    admin = await db.admins.find_one({"username": payload.get("sub")})
+    admin = await db.admins.find_one({"email": payload.get("sub")})
     return Admin(**admin) if admin else None
 
 async def get_current_admin(authorization: Optional[str] = Header(None), db: AsyncIOMotorDatabase = Depends(get_db)):
@@ -34,7 +34,7 @@ async def get_current_admin(authorization: Optional[str] = Header(None), db: Asy
     payload = verify_token(token)
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid token")
-    admin = await db.admins.find_one({"username": payload.get("sub")})
+    admin = await db.admins.find_one({"email": payload.get("sub")})
     if not admin:
         raise HTTPException(status_code=401, detail="Admin not found")
     return Admin(**admin)
@@ -107,41 +107,36 @@ async def configure_service(
 
 @router.post("/admin")
 async def create_initial_admin(
-    username: str,
-    password: str,
-    security_questions: list,
+    email: str,
     db: AsyncIOMotorDatabase = Depends(get_db)
 ):
-    """Create initial admin account with security questions"""
-    # Check if admin already exists
+    """Create initial admin account with auto-generated 10-char password"""
+    from utils.security import generate_random_password
+    
     existing = await db.admins.find_one({})
     if existing:
         raise HTTPException(status_code=400, detail="Admin already configured")
     
-    # Hash security answers
-    hashed_questions = []
-    for sq in security_questions:
-        hashed_questions.append({
-            "question": sq["question"],
-            "answer_hash": get_password_hash(sq["answer"].lower().strip())
-        })
+    raw_password = generate_random_password(10)
     
-    # Create admin
     admin = Admin(
-        username=username,
-        password_hash=get_password_hash(password),
-        security_questions=hashed_questions
+        email=email.lower().strip(),
+        password_hash=get_password_hash(raw_password)
     )
     
     await db.admins.insert_one(admin.dict())
     
-    # Mark admin as configured
     await db.service_config.update_one(
         {},
         {"$set": {"admin_configured": True}}
     )
     
-    return {"message": "Admin account created successfully"}
+    return {
+        "message": "Admin account created successfully",
+        "email": admin.email,
+        "password": raw_password,
+        "note": "Save this password — it will not be shown again."
+    }
 
 @router.post("/complete")
 async def complete_setup(db: AsyncIOMotorDatabase = Depends(get_db)):

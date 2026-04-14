@@ -19,7 +19,7 @@ async def get_current_admin(authorization: Optional[str] = Header(None), db: Asy
     payload = verify_token(token)
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid token")
-    admin = await db.admins.find_one({"username": payload.get("sub")})
+    admin = await db.admins.find_one({"email": payload.get("sub")})
     if not admin:
         raise HTTPException(status_code=401, detail="Admin not found")
     return Admin(**admin)

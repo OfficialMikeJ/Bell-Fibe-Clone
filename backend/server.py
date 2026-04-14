@@ -264,19 +264,24 @@ async def startup_event():
     if not setup_check or not setup_check.get('setup_completed', False):
         logger.warning("⚠️  Setup not completed - access /setup to configure")
     
-    # Create default admin only if no admins exist and setup not completed
+    # Migrate old username-based admins to email-based and seed default admin
+    from utils.security import get_password_hash, generate_random_password
+    from models.admin import Admin
+
+    # Remove legacy username-only admin records that lack an email field
+    await db.admins.delete_many({"email": {"$exists": False}})
+
     admin_exists = await db.admins.find_one({})
     if not admin_exists:
-        if not setup_check or not setup_check.get('setup_completed'):
-            from utils.security import get_password_hash
-            from models.admin import Admin
-            default_admin = Admin(
-                username="admin",
-                password_hash=get_password_hash("admin123")
-            )
-            await db.admins.insert_one(default_admin.dict())
-            logger.info("✅ Default admin created (username: admin, password: admin123)")
-            logger.warning("⚠️  Please change default credentials through setup wizard")
+        default_email = "admin@streamvault.ca"
+        default_password = generate_random_password(10)
+        default_admin = Admin(
+            email=default_email,
+            password_hash=get_password_hash(default_password)
+        )
+        await db.admins.insert_one(default_admin.dict())
+        logger.info(f"✅ Default admin created (email: {default_email}, password: {default_password})")
+        logger.warning("⚠️  Save these credentials — they will not be shown again")
 
     # Start scheduled auto-backup (nightly at 03:00 UTC)
     start_scheduler(db)

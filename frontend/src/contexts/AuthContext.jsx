@@ -56,9 +56,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (username, password, two_fa_code = null) => {
+  const login = async (email, password, two_fa_code = null) => {
     try {
-      const body = { username, password };
+      const body = { email, password };
       if (two_fa_code) body.two_fa_code = two_fa_code;
       const response = await axios.post(`${API}/auth/login`, body);
       const { access_token } = response.data;
