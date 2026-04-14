@@ -449,7 +449,7 @@ const AdminDashboard = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <img
-                          src={`${BACKEND_URL}/api${channel.logo_path}` || 'https://via.placeholder.com/80'}
+                          src={channel.logo_path ? `${BACKEND_URL}/api${channel.logo_path}` : ''}
                           alt={channel.name}
                           className="w-16 h-16 rounded-md object-cover"
                           onError={(e) => {
