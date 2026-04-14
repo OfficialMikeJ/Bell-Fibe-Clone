@@ -140,13 +140,15 @@ async def create_initial_admin(
 
 @router.post("/complete")
 async def complete_setup(db: AsyncIOMotorDatabase = Depends(get_db)):
-    """Mark setup as completed"""
+    """Mark setup as completed — only works if setup is not already complete"""
     config = await db.service_config.find_one({})
     
     if not config:
         raise HTTPException(status_code=400, detail="Service not configured")
     
-    # Verify requirements
+    if config.get("setup_completed"):
+        raise HTTPException(status_code=400, detail="Setup already completed")
+    
     admin_exists = await db.admins.find_one({}) is not None
     
     if not admin_exists:
@@ -211,7 +213,8 @@ async def get_service_config(db: AsyncIOMotorDatabase = Depends(get_db)):
 async def create_bulk_channels(
     count: int,
     starting_number: int = 100,
-    db: AsyncIOMotorDatabase = Depends(get_db)
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    admin: Admin = Depends(get_current_admin)
 ):
     """Create multiple channels at once"""
     from models.channel import Channel

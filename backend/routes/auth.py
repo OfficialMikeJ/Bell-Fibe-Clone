@@ -29,7 +29,8 @@ async def get_current_admin(authorization: Optional[str] = Header(None), db: Asy
     return Admin(**admin)
 
 @router.post("/register")
-async def register_admin(admin: AdminCreate, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def register_admin(admin: AdminCreate, db: AsyncIOMotorDatabase = Depends(get_db), current_admin: Admin = Depends(get_current_admin)):
+    """Create a new admin — requires existing admin auth"""
     email = admin.email.lower().strip()
     existing = await db.admins.find_one({"email": email})
     if existing:
@@ -72,8 +73,8 @@ async def verify_auth(admin: Admin = Depends(get_current_admin)):
     return {"email": admin.email, "id": admin.id, "two_fa_enabled": admin.two_fa_enabled}
 
 @router.post("/password-reset")
-async def reset_password(reset_data: PasswordReset, db: AsyncIOMotorDatabase = Depends(get_db)):
-    """Reset password — generates a new random 10-char password."""
+async def reset_password(reset_data: PasswordReset, db: AsyncIOMotorDatabase = Depends(get_db), current_admin: Admin = Depends(get_current_admin)):
+    """Reset password — admin-only, generates a new random 10-char password."""
     email = reset_data.email.lower().strip()
     admin = await db.admins.find_one({"email": email})
     

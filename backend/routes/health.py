@@ -5,11 +5,31 @@ on the LB machine can make smart weight decisions.
 """
 import os
 import psutil
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Header, HTTPException
+from typing import Optional
+from motor.motor_asyncio import AsyncIOMotorDatabase
+from models.admin import Admin
+from utils.security import verify_token
 
 router = APIRouter(prefix="/api/health", tags=["health"])
 
 UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+
+async def get_db():
+    from server import db
+    return db
+
+async def get_current_admin(authorization: Optional[str] = Header(None), db: AsyncIOMotorDatabase = Depends(get_db)):
+    if not authorization or not authorization.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization.replace('Bearer ', '')
+    payload = verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    admin = await db.admins.find_one({"email": payload.get("sub")})
+    if not admin:
+        raise HTTPException(status_code=401, detail="Admin not found")
+    return Admin(**admin)
 
 # Sub-folders inside the uploads directory and their display names
 UPLOAD_FOLDERS = [
@@ -59,7 +79,7 @@ async def health_check():
 
 
 @router.get("/metrics")
-async def get_metrics():
+async def get_metrics(admin: Admin = Depends(get_current_admin)):
     """
     Returns live system load metrics.
     Called every POLL_INTERVAL seconds by the Load Monitor on the LB machine.
@@ -92,7 +112,7 @@ async def get_metrics():
 
 
 @router.get("/storage")
-async def get_storage_stats():
+async def get_storage_stats(admin: Admin = Depends(get_current_admin)):
     """
     Admin storage overview.
     Returns full server disk stats + per-folder StreamVault upload sizes.
