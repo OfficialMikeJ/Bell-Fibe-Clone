@@ -23,6 +23,7 @@ import AnalyticsTab from './AnalyticsTab';
 const CATEGORY_COLORS = {
   entertainment: { accent: '#3a7fc4', badgeBg: '#0f1e2e', badgeText: '#7ab3d8', label: 'Entertainment' },
   movies:        { accent: '#b07a3a', badgeBg: '#2a1c0a', badgeText: '#c49050', label: 'Cinema'        },
+  action:        { accent: '#c04a2a', badgeBg: '#2c100a', badgeText: '#d07050', label: 'Action'        },
   sports:        { accent: '#3a8f4a', badgeBg: '#0d2414', badgeText: '#72b07e', label: 'Sports'        },
   news:          { accent: '#a84040', badgeBg: '#280f0f', badgeText: '#c07272', label: 'News'          },
   kids:          { accent: '#a0a030', badgeBg: '#262610', badgeText: '#b8b052', label: 'Kids'          },
@@ -32,6 +33,14 @@ const CATEGORY_COLORS = {
   drama:         { accent: '#7a3ab0', badgeBg: '#1c0d2e', badgeText: '#a470c4', label: 'Drama'         },
   lifestyle:     { accent: '#3a9470', badgeBg: '#0d261e', badgeText: '#68b094', label: 'Lifestyle'     },
   gaming:        { accent: '#8a5030', badgeBg: '#200f08', badgeText: '#aa7050', label: 'Gaming'        },
+  family:        { accent: '#4a90c0', badgeBg: '#0f2030', badgeText: '#80b8d8', label: 'Family'        },
+  sitcom:        { accent: '#5aaa6a', badgeBg: '#102818', badgeText: '#82c492', label: 'Sitcom'        },
+  science:       { accent: '#2a8a9a', badgeBg: '#0a2428', badgeText: '#60b0b8', label: 'Science'       },
+  gameshow:      { accent: '#c09030', badgeBg: '#2a200a', badgeText: '#d0a850', label: 'Gameshow'      },
+  comedy:        { accent: '#d0803a', badgeBg: '#2c1c0a', badgeText: '#e0a060', label: 'Comedy'        },
+  latenight:     { accent: '#505090', badgeBg: '#141428', badgeText: '#8080b0', label: 'Late Night'    },
+  holiday:       { accent: '#c04040', badgeBg: '#2c0f0f', badgeText: '#d87070', label: 'Holiday'       },
+  crime:         { accent: '#606060', badgeBg: '#1a1a1a', badgeText: '#909090', label: 'Crime'         },
 };
 const getCatColor = (cat) => CATEGORY_COLORS[cat] || CATEGORY_COLORS.entertainment;
 import TicketsTab from './admin/TicketsTab';
@@ -106,7 +115,7 @@ const AdminDashboard = () => {
 
   const fetchChannels = async () => {
     try {
-      const response = await axios.get(`${API}/channels`, { headers: getHeaders() });
+      const response = await axios.get(`${API}/channels/admin/all`, { headers: getHeaders() });
       setChannels(response.data);
     } catch (error) {
       console.error('Error fetching channels:', error);

@@ -27,7 +27,7 @@ async def create_channel(channel: ChannelCreate, db: AsyncIOMotorDatabase = Depe
 
 @router.get("", response_model=List[Channel])
 async def get_channels(db: AsyncIOMotorDatabase = Depends(get_db)):
-    channels = await db.channels.find().sort("number", 1).to_list(1000)
+    channels = await db.channels.find({"hidden": {"$ne": True}}).sort("number", 1).to_list(1000)
     result = []
     for ch in channels:
         obj = Channel(**ch)
@@ -40,6 +40,23 @@ async def get_channels(db: AsyncIOMotorDatabase = Depends(get_db)):
                 obj.media_file_path = f"/uploads/media/{fname}" + sign_media_url(fname)
         result.append(obj)
     return result
+
+@router.get("/admin/all", response_model=List[Channel])
+async def get_all_channels(db: AsyncIOMotorDatabase = Depends(get_db)):
+    """Admin: returns ALL channels including hidden ones"""
+    channels = await db.channels.find().sort("number", 1).to_list(1000)
+    result = []
+    for ch in channels:
+        obj = Channel(**ch)
+        if ch.get("media_id"):
+            media = await db.media_items.find_one({"id": ch["media_id"]}, {"_id": 0})
+            if media:
+                raw_path = media.get("file_path", "")
+                fname = raw_path.split("/")[-1]
+                obj.media_file_path = f"/uploads/media/{fname}" + sign_media_url(fname)
+        result.append(obj)
+    return result
+
 
 @router.get("/{channel_id}", response_model=Channel)
 async def get_channel(channel_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):

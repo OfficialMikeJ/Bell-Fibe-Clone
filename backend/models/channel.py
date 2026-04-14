@@ -13,7 +13,9 @@ class ChannelBase(BaseModel):
     stream_url: Optional[str] = None      # Reserved for future HLS/RTSP use
     media_id: Optional[str] = None        # Direct uploaded media file for this channel
     coming_soon: Optional[bool] = False
+    hidden: Optional[bool] = False         # Hidden channels are invisible in the guide
     category: Optional[str] = "entertainment"
+    genre_rotation: Optional[str] = None   # For music channels: current playlist theme
 
 class ChannelCreate(ChannelBase):
     pass
