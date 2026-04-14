@@ -1,3 +1,8 @@
+/* Hide Emergent badge */
+#emergent-badge {
+    display: none !important;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
