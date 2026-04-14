@@ -54,8 +54,9 @@ NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serve
 ## Core Features — Implemented & Tested
 
 ### Authentication & Security
-- JWT admin authentication
-- Password reset via security questions
+- JWT admin authentication via **email + auto-generated 10-char randomized passwords**
+- Password reset generates new random 10-char password (no security questions)
+- Admin registration auto-generates password and returns it once
 - Master Admin PIN for sidebar locking
 - Canada-only geo-fencing for device activation (configurable)
 
@@ -157,7 +158,7 @@ NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serve
 - `GET /api/admin/auto-backups/{filename}` — download backup file
 
 ## Test Credentials
-- Admin: username=admin, password=admin123
+- Admin: email=admin@streamvault.ca, password=auto-generated (see /app/memory/test_credentials.md)
 - Customer accounts: generated via /register, credentials in Admin → Users tab
 
 ## P1 Upcoming (User Tasks)
@@ -206,3 +207,13 @@ NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serve
 - FullscreenPlayer data-sv-player-active attribute added for Android detection: COMPLETE
 
 - Storage monitoring widget (Admin → Statistics tab): COMPLETE — /api/health/storage endpoint returns full disk stats + per-folder uploads breakdown in human-readable format (B/KB/MB/GB/TB); frontend StorageWidget.jsx shows visual bar, color-coded health badges (ok/watch/warn/critical), per-folder breakdown with file counts
+
+- **Auth System Overhaul (email + randomized passwords)**: COMPLETE & TESTED (iteration_17: 100% backend 17/17, 100% frontend)
+  - Admin model changed from `username` to `email`
+  - Login uses email+password; JWT sub claim = email
+  - Registration auto-generates 10-char alphanumeric password
+  - Password reset generates new 10-char random password (security questions removed)
+  - All 18+ route files updated: admin lookup via `{email: payload.sub}`
+  - Frontend LoginPage: email field, new password reset dialog showing generated password
+  - SetupWizard: email-only admin creation with auto-generated password display
+  - SettingsTab: shows Email instead of Username
