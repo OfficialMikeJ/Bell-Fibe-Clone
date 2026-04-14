@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 class Recording(BaseModel):
@@ -19,7 +19,7 @@ class Recording(BaseModel):
     file_path: Optional[str] = None
     file_size: Optional[int] = None
     thumbnail_path: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Config:
         from_attributes = True

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 class UserBase(BaseModel):
@@ -23,7 +23,7 @@ class User(UserBase):
     notes: Optional[str] = None
     recording_hours_limit: int = 95  # Default 95 hours CVR storage
     recording_hours_used: float = 0.0
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_login: Optional[datetime] = None
 
     class Config:

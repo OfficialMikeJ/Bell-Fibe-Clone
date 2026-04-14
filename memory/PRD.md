@@ -213,3 +213,11 @@ NOTE: docker-compose.yml guide-app service removed (Feb 2026) — frontend serve
   - Frontend LoginPage: email field, new password reset dialog showing generated password
   - SetupWizard: email-only admin creation with auto-generated password display
   - SettingsTab: shows Email instead of Username
+
+- **Code Cleanup & Polish (2026-04)**: COMPLETE
+  - Fixed all `datetime.utcnow()` deprecation → `datetime.now(timezone.utc)` across 17+ files
+  - Backend lint: zero issues (migration.py multi-import, stats.py duplicate key, server.py unused imports, system_check.py unused vars — all fixed)
+  - Frontend lint: zero issues
+  - Removed dead files: `backend_test.py`, `mock.js`, `tests/__init__.py`
+  - Removed stale docs: `COMPLETION_STATUS.md`, `IMPLEMENTATION_STATUS.md`, `IMPLEMENTATION_SUMMARY.md`, `FUTURE_DEVELOPMENT.md`, `contracts.md`, `test_result.md` (superseded by PRD.md + Full-Release-Features.md)
+  - Created `/app/Full-Release-Features.md` for deferred full-release features

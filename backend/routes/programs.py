@@ -4,7 +4,7 @@ from models.admin import Admin
 from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from utils.security import verify_token
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 router = APIRouter(prefix="/api/programs", tags=["programs"])
 
@@ -87,7 +87,7 @@ async def get_channel_programs(
     days: int = 7,
     db: AsyncIOMotorDatabase = Depends(get_db)
 ):
-    today = datetime.now().date()
+    today = datetime.now(timezone.utc).date()
     date_list = [(today + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(days)]
     programs = await db.programs.find({
         "channel_id": channel_id,

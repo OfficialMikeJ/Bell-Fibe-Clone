@@ -4,7 +4,7 @@ from models.admin import Admin
 from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from utils.security import verify_token
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/faq", tags=["faq"])
 
@@ -64,7 +64,7 @@ async def update_faq(
         raise HTTPException(status_code=404, detail="FAQ item not found")
 
     update_fields = {k: v for k, v in update.dict().items() if v is not None}
-    update_fields["updated_at"] = datetime.utcnow()
+    update_fields["updated_at"] = datetime.now(timezone.utc)
 
     await db.faq.update_one({"id": faq_id}, {"$set": update_fields})
     updated = await db.faq.find_one({"id": faq_id}, {"_id": 0})

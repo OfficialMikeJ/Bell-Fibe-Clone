@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 class SecurityLog(BaseModel):
@@ -9,7 +9,7 @@ class SecurityLog(BaseModel):
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
     message: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Config:
         from_attributes = True
@@ -23,7 +23,7 @@ class HoursRequest(BaseModel):
     reason: Optional[str] = None
     status: str = "pending"  # pending, approved, denied
     admin_note: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
     class Config:

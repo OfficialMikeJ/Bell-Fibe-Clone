@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 TICKET_TYPES = [
@@ -21,7 +21,7 @@ class TicketMessage(BaseModel):
     sender_id: str
     is_admin: bool = False
     message: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class TicketCreate(BaseModel):
@@ -43,8 +43,8 @@ class Ticket(BaseModel):
     status: str = "open"
     priority: str = "medium"
     messages: List[TicketMessage] = []
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Config:
         from_attributes = True

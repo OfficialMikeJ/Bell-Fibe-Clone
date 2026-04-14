@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 class VODItem(BaseModel):
@@ -18,7 +18,7 @@ class VODItem(BaseModel):
     duration_formatted: Optional[str] = None
     is_featured: bool = False
     view_count: int = 0
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Config:
         from_attributes = True

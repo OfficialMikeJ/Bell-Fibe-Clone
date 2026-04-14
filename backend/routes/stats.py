@@ -63,7 +63,7 @@ async def get_analytics(
 
     # 2. Genre distribution across media library + VOD
     genre_pipeline = [
-        {"$match": {"genre": {"$ne": None, "$ne": ""}}},
+        {"$match": {"genre": {"$nin": [None, ""]}}},
         {"$group": {"_id": "$genre", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
         {"$limit": 12}

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
 from models.channel import Channel, ChannelCreate, ChannelUpdate
 from typing import List
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 import uuid
 from pathlib import Path
@@ -67,7 +67,7 @@ async def update_channel(
     
     update_data = channel_update.dict(exclude_unset=True)
     if update_data:
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = datetime.now(timezone.utc)
         await db.channels.update_one({"id": channel_id}, {"$set": update_data})
     
     updated_channel = await db.channels.find_one({"id": channel_id})

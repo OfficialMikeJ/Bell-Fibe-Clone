@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import secrets
 import random
@@ -89,7 +89,7 @@ class CustomerAccount(BaseModel):
     device_id: Optional[str] = None
     qr_code_path: Optional[str] = None
     status: str = "pending"  # pending, active, suspended
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_active_at: Optional[datetime] = None
 
     class Config:

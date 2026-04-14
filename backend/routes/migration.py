@@ -4,7 +4,13 @@ Server Migration / Backup & Restore System
 - POST /api/admin/restore       → upload backup archive and restore
 - GET  /api/admin/backup-status → check restore progress
 """
-import os, io, json, tarfile, tempfile, shutil, asyncio
+import os
+import io
+import json
+import tarfile
+import tempfile
+import shutil
+import asyncio
 from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Depends, Header, UploadFile, File
@@ -135,7 +141,7 @@ async def restore_backup(
             # Validate manifest
             try:
                 mf = tar.getmember("manifest.json")
-                manifest = json.loads(tar.extractfile(mf).read())
+                json.loads(tar.extractfile(mf).read())  # validate manifest exists
             except KeyError:
                 raise HTTPException(status_code=400, detail="Invalid backup: missing manifest.json")
 

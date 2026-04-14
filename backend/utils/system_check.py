@@ -81,7 +81,7 @@ def check_system_requirements():
             requirements["nodejs"]["message"] = f"Node.js {version} installed"
         else:
             requirements["nodejs"]["message"] = "Node.js not found"
-    except Exception as e:
+    except Exception:
         requirements["nodejs"]["message"] = "Node.js not found"
     
     # Check Yarn
@@ -93,7 +93,7 @@ def check_system_requirements():
             requirements["yarn"]["message"] = f"Yarn {version} installed"
         else:
             requirements["yarn"]["message"] = "Yarn not found"
-    except Exception as e:
+    except Exception:
         requirements["yarn"]["message"] = "Yarn not found"
     
     # Check disk space
@@ -106,7 +106,7 @@ def check_system_requirements():
             requirements["disk_space"]["message"] = f"{free_gb:.1f}GB free"
         else:
             requirements["disk_space"]["message"] = f"{free_gb:.1f}GB free - Need 5GB+"
-    except Exception as e:
+    except Exception:
         requirements["disk_space"]["message"] = "Could not check disk space"
     
     return requirements

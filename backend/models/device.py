@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import secrets
 
@@ -24,7 +24,7 @@ class Device(DeviceBase):
     last_geo_check: Optional[dict] = None
     activated_at: Optional[datetime] = None
     last_access: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Config:
         from_attributes = True

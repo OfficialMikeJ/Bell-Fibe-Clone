@@ -6,7 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from utils.security import verify_token
 from utils.media_utils import analyze_media_file, is_ffmpeg_available
 from utils.guide_state import bump_guide_timestamp
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import shutil
 import uuid
@@ -149,7 +149,7 @@ async def upload_poster(
 
     await db.media_items.update_one(
         {"id": media_id},
-        {"$set": {"poster_path": server_path, "updated_at": datetime.utcnow()}}
+        {"$set": {"poster_path": server_path, "updated_at": datetime.now(timezone.utc)}}
     )
     return {"poster_path": server_path}
 
@@ -175,7 +175,7 @@ async def update_media(
     if not item:
         raise HTTPException(status_code=404, detail="Media item not found")
     update_data = update.dict(exclude_unset=True)
-    update_data["updated_at"] = datetime.utcnow()
+    update_data["updated_at"] = datetime.now(timezone.utc)
     await db.media_items.update_one({"id": media_id}, {"$set": update_data})
     updated = await db.media_items.find_one({"id": media_id})
     return MediaItem(**updated)
@@ -210,6 +210,6 @@ async def reanalyze_media(
     full_path = f"/app/backend{item['file_path']}"
     meta = analyze_media_file(full_path)
     if meta:
-        await db.media_items.update_one({"id": media_id}, {"$set": {**meta, "updated_at": datetime.utcnow()}})
+        await db.media_items.update_one({"id": media_id}, {"$set": {**meta, "updated_at": datetime.now(timezone.utc)}})
     updated = await db.media_items.find_one({"id": media_id})
     return MediaItem(**updated)

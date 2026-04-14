@@ -6,7 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from utils.qr_generator import generate_qr_code
 from utils.geo_location import get_geo_location, is_canada_ip, get_client_ip
 from utils.security import verify_token
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 
 router = APIRouter(prefix="/api/devices", tags=["devices"])
@@ -149,7 +149,7 @@ async def activate_device(
     # Prepare IP history entry
     ip_entry = {
         "ip": client_ip,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "country": geo_data.get('country') if geo_data else None,
         "region": geo_data.get('region') if geo_data else None,
         "city": geo_data.get('city') if geo_data else None,
@@ -159,10 +159,10 @@ async def activate_device(
     # Update device
     update_data = {
         "status": "active",
-        "activated_at": datetime.utcnow(),
+        "activated_at": datetime.now(timezone.utc),
         "current_ip": client_ip,
         "last_geo_check": geo_data,
-        "last_access": datetime.utcnow()
+        "last_access": datetime.now(timezone.utc)
     }
     
     # If device UUID provided during activation, update it
@@ -271,7 +271,7 @@ async def get_device_guide(
     if client_ip != device.get("current_ip"):
         ip_entry = {
             "ip": client_ip,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "country": geo_data.get('country') if geo_data else None,
             "region": geo_data.get('region') if geo_data else None,
             "city": geo_data.get('city') if geo_data else None,
@@ -284,7 +284,7 @@ async def get_device_guide(
                 "$set": {
                     "current_ip": client_ip,
                     "last_geo_check": geo_data,
-                    "last_access": datetime.utcnow()
+                    "last_access": datetime.now(timezone.utc)
                 },
                 "$push": {"ip_history": ip_entry}
             }
@@ -296,7 +296,7 @@ async def get_device_guide(
             {
                 "$set": {
                     "last_geo_check": geo_data,
-                    "last_access": datetime.utcnow()
+                    "last_access": datetime.now(timezone.utc)
                 }
             }
         )
@@ -305,7 +305,7 @@ async def get_device_guide(
     channels = await db.channels.find({}, {"_id": 0}).to_list(1000)
     
     # Get programs for next 7 days (exclude MongoDB _id field)
-    today = datetime.now().date()
+    today = datetime.now(timezone.utc).date()
     date_list = [(today + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
     programs = await db.programs.find({"date": {"$in": date_list}}, {"_id": 0}).to_list(10000)
     
@@ -319,6 +319,6 @@ async def get_device_guide(
         "access_info": {
             "ip": client_ip,
             "location": geo_data,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     }

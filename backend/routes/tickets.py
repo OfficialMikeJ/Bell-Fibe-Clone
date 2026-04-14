@@ -5,7 +5,7 @@ from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from utils.security import verify_token
 from utils.geo_location import get_client_ip
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/tickets", tags=["tickets"])
 
@@ -122,7 +122,7 @@ async def update_ticket(
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
-    update_fields = {"updated_at": datetime.utcnow()}
+    update_fields = {"updated_at": datetime.now(timezone.utc)}
     if update.status:
         update_fields["status"] = update.status
     if update.priority:
@@ -170,7 +170,7 @@ async def reply_to_ticket(
         {"id": ticket_id},
         {
             "$push": {"messages": message.dict()},
-            "$set": {"updated_at": datetime.utcnow(), **status_update},
+            "$set": {"updated_at": datetime.now(timezone.utc), **status_update},
         },
     )
 

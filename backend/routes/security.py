@@ -4,7 +4,7 @@ from models.admin import Admin
 from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from utils.security import verify_token
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/security", tags=["security"])
 
@@ -108,7 +108,7 @@ async def update_hours_request(
 
     update_data = {
         "status": update.status,
-        "updated_at": datetime.utcnow()
+        "updated_at": datetime.now(timezone.utc)
     }
     if update.admin_note:
         update_data["admin_note"] = update.admin_note
