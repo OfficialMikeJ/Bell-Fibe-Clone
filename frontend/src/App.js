@@ -191,7 +191,7 @@ const Home = () => {
       <VersionPopup />
       <ControlsHint />
       <Sidebar activeView={activeView} onViewChange={handleViewChange} />
-      <div className="pl-20 flex-1 flex flex-col">
+      <div className="pl-24 flex-1 flex flex-col">
         {renderView()}
       </div>
     </div>

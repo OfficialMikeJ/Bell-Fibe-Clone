@@ -11,13 +11,13 @@ const Sidebar = ({ activeView, onViewChange }) => {
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'guide', label: 'Guide', icon: Tv },
-    { id: 'ondemand', label: 'On Demand', icon: Video },
+    { id: 'guide', label: 'TV Guide', icon: Tv },
+    { id: 'ondemand', label: 'On-Demand', icon: Video },
     { id: 'recordings', label: 'Recordings', icon: Radio },
-    { id: 'notifications', label: "What's New", icon: Bell },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'saved', label: 'Saved', icon: BookMarked },
     { id: 'user-settings', label: 'Settings', icon: SlidersHorizontal },
-    { id: 'app-info', label: 'App Info', icon: Info },
+    { id: 'app-info', label: 'Version', icon: Info },
     { id: 'settings', label: 'Admin', icon: Settings, adminOnly: true },
     { id: 'tuner', label: 'Live TV', icon: Signal, comingSoon: true },
   ];
@@ -56,7 +56,7 @@ const Sidebar = ({ activeView, onViewChange }) => {
 
   return (
     <>
-      <div className="fixed left-0 top-0 h-full w-20 bg-[#1a1a1a] border-r border-gray-800 flex flex-col items-center py-6 z-50">
+      <div className="fixed left-0 top-0 h-full w-24 bg-[#1a1a1a] border-r border-gray-800 flex flex-col items-center py-6 z-50">
         {/* Logo */}
         <div className="w-12 h-12 bg-[#0056A8] rounded-xl flex items-center justify-center mb-8 shadow-lg flex-shrink-0">
           <Tv className="w-6 h-6 text-white" />
@@ -92,7 +92,7 @@ const Sidebar = ({ activeView, onViewChange }) => {
                     <Lock className="w-2.5 h-2.5 absolute -top-1 -right-1 text-yellow-400" />
                   )}
                 </div>
-                <span className="text-[9px] font-medium leading-tight text-center">{item.label.split(' ')[0]}</span>
+                <span className="text-[10px] font-medium leading-tight text-center">{item.label}</span>
                 {isComingSoon && (
                   <span className="absolute top-0.5 right-0.5 text-[6px] text-gray-500 font-bold">SOON</span>
                 )}
