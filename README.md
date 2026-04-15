@@ -1,8 +1,8 @@
-# TV Service System - Complete Installation Guide
+# StreamVault — Installation & Setup Guide
 
-A comprehensive TV service management platform with IPTV functionality, EPG guide, device activation, user management, and geo-location validation.
+A self-hosted IPTV service with Live TV Guide (EPG), Video on Demand, cloud recordings, device activation, and admin dashboard.
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [System Requirements](#system-requirements)
 - [Quick Start](#quick-start)
@@ -13,13 +13,14 @@ A comprehensive TV service management platform with IPTV functionality, EPG guid
 - [API Documentation](#api-documentation)
 - [Troubleshooting](#troubleshooting)
 - [Production Deployment](#production-deployment)
+- [Admin CLI Tools](#admin-cli-tools)
 
 ---
 
-## 🖥️ System Requirements
+## System Requirements
 
 ### Minimum Requirements
-- **OS**: Ubuntu 20.04+ / Debian 11+ / macOS 12+ / Windows 10+ (with WSL2)
+- **OS**: Ubuntu 22.04+ / Debian 12+
 - **CPU**: 2 cores
 - **RAM**: 4GB
 - **Disk**: 10GB free space
@@ -29,102 +30,94 @@ A comprehensive TV service management platform with IPTV functionality, EPG guid
 - **Python**: 3.11 or higher
 - **Node.js**: 18.x or higher
 - **Yarn**: 1.22.x or higher
-- **MongoDB**: 5.0 or higher
-- **Supervisor**: For process management (Linux/macOS)
-
-### Optional
-- **SSL Certificate**: For HTTPS (Let's Encrypt recommended)
-- **Reverse Proxy**: Nginx or Apache (for production)
+- **MongoDB**: 8.0
+- **Supervisor**: For process management
+- **Git**: For pulling the code
 
 ---
 
-## 🚀 Quick Start
-
-### For Development (Linux/macOS)
+## Quick Start
 
 ```bash
-# Clone or navigate to project directory
-cd /path/to/app
+# 1. Clone the repository
+git clone https://github.com/YOUR_USERNAME/streamvault.git
+cd streamvault
 
-# 1. Install System Dependencies
+# 2. Install system dependencies
 sudo apt-get update
-sudo apt-get install -y python3.11 python3.11-venv python3-pip nodejs npm mongodb supervisor
-
-# Install Yarn
+sudo apt-get install -y python3.11 python3.11-venv python3-pip nodejs npm supervisor git
 sudo npm install -g yarn
 
-# 2. Setup Backend
+# 3. Setup Backend
 cd backend
 python3.11 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Setup Frontend
+# 4. Setup Frontend
 cd ../frontend
 yarn install
 
-# 4. Start MongoDB
-sudo systemctl start mongodb
-sudo systemctl enable mongodb
+# 5. Start MongoDB
+sudo systemctl start mongod
+sudo systemctl enable mongod
 
-# 5. Configure Environment
+# 6. Configure Environment
 cd ../backend
 cp .env.example .env
-# Edit .env with your settings
+# Edit .env with your settings (see Configuration section below)
 
-# 6. Start Services
+# 7. Start Services
 sudo supervisorctl reload
 sudo supervisorctl start all
 
-# 7. Access the application
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:8001
-# API Docs: http://localhost:8001/docs
+# 8. Access the application
+# Frontend:  http://your-server-ip:3000
+# Admin:     http://your-server-ip:3000/admin/login
+# API Docs:  http://your-server-ip:8001/docs
 ```
 
 ---
 
-## 📦 Detailed Installation
+## Detailed Installation
 
-### Step 1: Install Python 3.11+
+### Step 1: Install Git and Clone the Repository
 
-#### Ubuntu/Debian
 ```bash
 sudo apt-get update
+sudo apt-get install -y git
+
+# Clone StreamVault
+git clone https://github.com/YOUR_USERNAME/streamvault.git
+cd streamvault
+```
+
+> Replace `YOUR_USERNAME` with your GitHub username or organization after you push the code via "Save to GitHub" in Emergent.
+
+### Step 2: Install Python 3.11+
+
+```bash
 sudo apt-get install -y software-properties-common
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt-get update
 sudo apt-get install -y python3.11 python3.11-venv python3.11-dev
 ```
 
-#### macOS
-```bash
-brew install python@3.11
-```
+### Step 3: Install Node.js and Yarn
 
-### Step 2: Install Node.js and Yarn
-
-#### Ubuntu/Debian
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
 sudo npm install -g yarn
 ```
 
-#### macOS
-```bash
-brew install node@18
-brew install yarn
-```
+### Step 4: Install MongoDB
 
-### Step 3: Install MongoDB
-
-#### Ubuntu/Debian
 ```bash
 # Install dependencies
 sudo apt-get install -y gnupg curl
 
-# Import MongoDB 8.0 GPG key (modern method — apt-key is deprecated)
+# Import MongoDB 8.0 GPG key
 curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor
 
 # Add repository (replace 'noble' with your Ubuntu codename: jammy=22.04, noble=24.04)
@@ -137,99 +130,138 @@ sudo systemctl start mongod
 sudo systemctl enable mongod
 ```
 
-### Step 4: Install Supervisor
+### Step 5: Install Supervisor
 
-#### Ubuntu/Debian
 ```bash
 sudo apt-get install -y supervisor
 sudo systemctl enable supervisor
 sudo systemctl start supervisor
 ```
 
-#### macOS
+### Step 6: Setup Backend
+
 ```bash
-brew install supervisor
-brew services start supervisor
+cd backend
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### Step 7: Setup Frontend
+
+```bash
+cd ../frontend
+yarn install
 ```
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 ### Backend Configuration
 
-Edit `/app/backend/.env`:
+Edit `backend/.env`:
 
 ```bash
 MONGO_URL="mongodb://localhost:27017"
-DB_NAME="tv_service"
-JWT_SECRET="change-this-to-secure-random-string"
+DB_NAME="iptv_service"
+JWT_SECRET="change-this-to-a-secure-random-string"
 CORS_ORIGINS="*"
-ACTIVATION_DOMAIN="http://localhost:3000"
+ACTIVATION_DOMAIN="http://your-server-ip:3000"
+ENVIRONMENT="development"
+PUBLIC_BASE_URL="http://your-server-ip:3000"
 ```
 
-**Generate Secure JWT Secret:**
+**Generate a secure JWT secret:**
 ```bash
 python3 -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
+### Frontend Configuration
+
+Edit `frontend/.env`:
+
+```bash
+REACT_APP_BACKEND_URL=http://your-server-ip:3000
+WDS_SOCKET_PORT=443
+```
+
 ---
 
-## 🎯 First-Time Setup
+## First-Time Setup
 
-1. Navigate to `http://localhost:3000`
-2. Complete 5-step setup wizard:
+1. Navigate to `http://your-server-ip:3000`
+2. Complete the setup wizard:
    - Step 1: System requirements check
    - Step 2: Service name configuration
-   - Step 3: Admin account creation
+   - Step 3: Admin account creation (enter email — a 10-character password is auto-generated, save it immediately)
    - Step 4: Bulk channel creation (25-100)
    - Step 5: Completion
-3. Login at `/admin/login` with your credentials
+3. Login at `/admin/login` with the email and generated password
 
 ---
 
-## ✨ Features
+## Features
 
-### Admin Dashboard
+### TV Guide (EPG)
+- Live channel grid with 30-minute time slots
+- Category-coded channels (Family, Action, Drama, Comedy, Kids, Music, etc.)
+- Immediate fullscreen playback — no on-screen controls
+- Arrow key channel surfing (remote-friendly)
+- HLS stream support with auto-volume
+
+### Admin Dashboard (16 tabs)
 - Channel management with logo upload
-- EPG program scheduling (7-day, 30-min intervals)
+- EPG program scheduling
+- Media library with file upload and FFmpeg metadata
+- VOD catalog with rich metadata linking
 - Device management with QR codes
-- User account management
-- Device QR refresh/reset
-- Statistics overview
-- 2FA with Google Authenticator
-
-### Device Management
-- Auto-generate activation QR codes
-- **Refresh QR**: Regenerate QR (same code)
-- **Reset Code**: New code + QR
-- Canada geo-location validation
-- IP tracking and history
-- MAC address binding
+- User and customer account management
+- Support tickets with admin reply
+- Notifications, FAQ, Statistics, Analytics
+- System health monitoring (CPU/RAM/Disk)
+- Storage overview with per-folder breakdown
+- Server backup/restore and scheduled auto-backup
+- OTA update management for Android app
+- Home feed announcements
+- Branding and service configuration
 
 ### Security
-- JWT authentication
-- 2FA support
-- Security question password reset
-- Session management
+- JWT authentication with email + auto-generated 10-char passwords
+- All admin endpoints require Bearer token
+- HMAC-signed media URLs to prevent hotlinking
+- 2FA with Google Authenticator
+- IP-based brute force lockout on device activation
+- Password reset via CLI only (not exposed on web)
+
+### Customer Portal
+- Public registration page at `/register`
+- Customer login at `/customer-login`
+- Device activation with admin-generated credentials
+- Support ticket submission
 
 ---
 
-## 📡 API Documentation
+## API Documentation
 
-Interactive docs: `http://localhost:8001/docs`
+Interactive docs: `http://your-server-ip:8001/docs`
 
 ### Key Endpoints
-- `/api/setup/*` - Setup wizard
-- `/api/auth/*` - Authentication & 2FA
-- `/api/channels/*` - Channel management
-- `/api/programs/*` - EPG management
-- `/api/devices/*` - Device & QR management
-- `/api/users/*` - User management
+- `/api/auth/*` — Admin authentication (login, register, verify, 2FA)
+- `/api/channels/*` — Channel management
+- `/api/programs/*` — EPG program management
+- `/api/vod/*` — Video on Demand
+- `/api/devices/*` — Device management
+- `/api/users/*` — User management
+- `/api/customer/*` — Customer accounts and device activation
+- `/api/media/*` — Media library
+- `/api/catalog/*` — Media catalog (IMDB-like metadata)
+- `/api/health/*` — System health and storage (admin-only)
+- `/api/admin/*` — Backup, restore, auto-backups
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Check Service Status
 ```bash
@@ -238,8 +270,11 @@ sudo supervisorctl status
 
 ### View Logs
 ```bash
-# Backend
+# Backend errors
 tail -f /var/log/supervisor/backend.err.log
+
+# Backend output
+tail -f /var/log/supervisor/backend.out.log
 
 # Frontend
 tail -f /var/log/supervisor/frontend.out.log
@@ -250,81 +285,92 @@ tail -f /var/log/supervisor/frontend.out.log
 sudo supervisorctl restart all
 ```
 
-### Reset to Default Admin
+### Check MongoDB
 ```bash
-mongosh tv_service --eval "db.admins.deleteMany({})"
-sudo supervisorctl restart backend
-# Login: admin / admin123
-```
-
----
-
-## 🚀 Production Deployment
-
-### 1. Update Security Settings
-```bash
-# Change JWT secret
-JWT_SECRET="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
-
-# Configure CORS
-CORS_ORIGINS="https://yourdomain.com"
-```
-
-### 2. Setup SSL with Let's Encrypt
-```bash
-sudo apt-get install certbot python3-certbot-nginx
-sudo certbot --nginx -d yourdomain.com
-```
-
-### 3. Configure Nginx
-See detailed Nginx configuration in full documentation.
-
-### 4. Enable MongoDB Authentication
-```bash
-mongosh
-use admin
-db.createUser({user:"admin", pwd:"strongpass", roles:["root"]})
-```
-
-### 5. Setup Automated Backups
-```bash
-# MongoDB backup script
-mongodump --db tv_service --out /backup/$(date +%Y%m%d)
-
-# Schedule with cron
-0 2 * * * /opt/backup_mongodb.sh
-```
-
----
-
-## 📞 Support & Documentation
-
-### Files
-- Implementation Status: `/app/IMPLEMENTATION_STATUS.md`
-- Device Auth: `/app/DEVICE_AUTHENTICATION.md`
-- Future Features: `/app/FUTURE_DEVELOPMENT.md`
-
-### Common Commands
-```bash
-# Restart all
-sudo supervisorctl restart all
-
-# View status
-sudo supervisorctl status
-
-# Check MongoDB
 sudo systemctl status mongod
 ```
 
 ---
 
-## 🎉 Quick Reference
+## Admin CLI Tools
 
-| Component | URL | Default Login |
-|-----------|-----|---------------|
-| Frontend | http://localhost:3000 | N/A |
-| Admin | http://localhost:3000/admin/login | admin / admin123 |
-| API | http://localhost:8001 | N/A |
-| Docs | http://localhost:8001/docs | N/A |
+### Reset Admin Password
+Run from your server terminal (SSH/Termius):
 
-**⚠️ Change default credentials after first login!**
+```bash
+cd /path/to/streamvault/backend
+source venv/bin/activate
+python3 reset_password.py admin@streamvault.ca
+```
+
+This generates a new 10-character random password and prints it to the terminal. No web access required.
+
+---
+
+## Production Deployment
+
+### 1. Secure JWT Secret
+```bash
+# Generate and set in backend/.env
+JWT_SECRET="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+```
+
+### 2. Configure CORS
+```bash
+# In backend/.env, restrict to your domain
+CORS_ORIGINS="https://yourdomain.com"
+```
+
+### 3. Setup Nginx Proxy Manager
+See `NginxProxyManagerGuide.md` for full proxy host configuration, SSL setup, and security headers.
+
+### 4. Deployment Checklist
+See `DeploymentChecklist.md` for the step-by-step multi-server deployment guide.
+
+### 5. Enable MongoDB Authentication
+```bash
+mongosh
+use admin
+db.createUser({user: "svadmin", pwd: "your-strong-password", roles: ["root"]})
+```
+
+Then update `backend/.env`:
+```bash
+MONGO_URL="mongodb://svadmin:your-strong-password@localhost:27017"
+```
+
+### 6. Automated Backups
+StreamVault includes built-in auto-backup via the admin dashboard (Settings tab). Runs nightly at 03:00 UTC, keeps last 7 backups.
+
+Manual backup:
+```bash
+mongodump --db iptv_service --out /backup/$(date +%Y%m%d)
+```
+
+---
+
+## Documentation Files
+
+| File | Description |
+|------|-------------|
+| `README.md` | This file — installation and setup |
+| `NginxProxyManagerGuide.md` | Nginx Proxy Manager configuration |
+| `DeploymentChecklist.md` | Multi-server deployment steps |
+| `StorageSetup.md` | TrueNAS NFS shared storage setup |
+| `Full-Release-Features.md` | Features planned for full release |
+| `DEVICE_AUTHENTICATION.md` | Device auth flow documentation |
+| `android/README.md` | Android WebView app source code |
+| `android/Android-Admin-App.md` | Android admin tablet app source |
+
+---
+
+## Quick Reference
+
+| Component | URL | Access |
+|-----------|-----|--------|
+| TV Guide | http://your-server-ip:3000 | Public |
+| Admin Login | http://your-server-ip:3000/admin/login | Email + Password |
+| Customer Registration | http://your-server-ip:3000/register | Public |
+| Customer Login | http://your-server-ip:3000/customer-login | Email + Password |
+| API Docs | http://your-server-ip:8001/docs | Public |
+| Support Portal | http://your-server-ip:3000/portal | Public |
