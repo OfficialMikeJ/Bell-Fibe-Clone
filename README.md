@@ -39,39 +39,46 @@ A self-hosted IPTV service with Live TV Guide (EPG), Video on Demand, cloud reco
 ## Quick Start
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/streamvault.git
+# 1. Navigate to where you want to install StreamVault
+#    Use /opt for a system-wide install, or ~ for your home directory
+cd /opt
+
+# 2. Clone the repository (public repo — no username or password required)
+sudo git clone https://github.com/YOUR_GITHUB_USERNAME/Bell-Fibe-Clone.git streamvault
 cd streamvault
 
-# 2. Install system dependencies
+# 3. Set ownership to your user so you don't need sudo for everything
+sudo chown -R $USER:$USER /opt/streamvault
+
+# 4. Install system dependencies
 sudo apt-get update
 sudo apt-get install -y python3.11 python3.11-venv python3-pip nodejs npm supervisor git
 sudo npm install -g yarn
 
-# 3. Setup Backend
+# 5. Setup Backend
 cd backend
 python3.11 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# 4. Setup Frontend
+# 6. Setup Frontend
 cd ../frontend
 yarn install
 
-# 5. Start MongoDB
+# 7. Start MongoDB
 sudo systemctl start mongod
 sudo systemctl enable mongod
 
-# 6. Configure Environment
+# 8. Configure Environment
 cd ../backend
 cp .env.example .env
 # Edit .env with your settings (see Configuration section below)
 
-# 7. Start Services
+# 9. Start Services
 sudo supervisorctl reload
 sudo supervisorctl start all
 
-# 8. Access the application
+# 10. Access the application
 # Frontend:  http://your-server-ip:3000
 # Admin:     http://your-server-ip:3000/admin/login
 # API Docs:  http://your-server-ip:8001/docs
@@ -86,13 +93,32 @@ sudo supervisorctl start all
 ```bash
 sudo apt-get update
 sudo apt-get install -y git
-
-# Clone StreamVault
-git clone https://github.com/YOUR_USERNAME/streamvault.git
-cd streamvault
 ```
 
-> Replace `YOUR_USERNAME` with your GitHub username or organization after you push the code via "Save to GitHub" in Emergent.
+**Clone the repository into `/opt/streamvault`:**
+```bash
+cd /opt
+sudo git clone https://github.com/YOUR_GITHUB_USERNAME/Bell-Fibe-Clone.git streamvault
+cd streamvault
+
+# Set ownership to your user
+sudo chown -R $USER:$USER /opt/streamvault
+```
+
+> **Replace `YOUR_GITHUB_USERNAME`** with your actual GitHub username. The repo name on GitHub is `Bell-Fibe-Clone` — the command above clones it into a local folder called `streamvault`.
+
+> **No username or password required.** Public GitHub repositories can be cloned over HTTPS without any credentials. If Git asks you for a username/password, your system has cached old credentials. Clear them with:
+> ```bash
+> git config --global --unset credential.helper
+> ```
+> Then run the clone command again.
+
+**Pulling future updates:**
+```bash
+cd /opt/streamvault
+git pull origin main
+```
+This also requires no credentials for public repos.
 
 ### Step 2: Install Python 3.11+
 
