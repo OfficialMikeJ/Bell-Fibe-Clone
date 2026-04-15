@@ -73,10 +73,13 @@ yarn install
 sudo systemctl start mongod
 sudo systemctl enable mongod
 
-# 8. Configure Environment
+# 8. Configure Environment (files are pre-populated — just update your server IP)
 cd ../backend
 nano .env
-# Edit MONGO_URL, JWT_SECRET, PUBLIC_BASE_URL for your server (see Configuration section below)
+# Replace 'localhost' with your server IP in PUBLIC_BASE_URL and ACTIVATION_DOMAIN
+cd ../frontend
+nano .env
+# Replace 'localhost' with your server IP in REACT_APP_BACKEND_URL
 
 # 9. Start Services
 sudo supervisorctl reload
@@ -197,7 +200,7 @@ yarn install
 
 ## Configuration
 
-The `.env` files are already included in the repo. You just need to edit them for your server.
+The `.env` files come pre-populated with working localhost defaults. After cloning, you only need to update the IP/domain to match your server.
 
 ### Backend Configuration
 
@@ -205,16 +208,21 @@ The `.env` files are already included in the repo. You just need to edit them fo
 nano backend/.env
 ```
 
-Update these values:
+The file is already populated with:
 ```bash
 MONGO_URL="mongodb://localhost:27017"
 DB_NAME="iptv_service"
-JWT_SECRET="change-this-to-a-secure-random-string"
 CORS_ORIGINS="*"
-ACTIVATION_DOMAIN="http://your-server-ip:3000"
+JWT_SECRET="iptv-secret-key-change-in-production-2025"
+ACTIVATION_DOMAIN="http://localhost:3000"
 ENVIRONMENT="development"
-PUBLIC_BASE_URL="http://your-server-ip:3000"
+PUBLIC_BASE_URL="http://localhost:3000"
 ```
+
+**What to change:**
+- `JWT_SECRET` — Replace with a secure random string (required for production)
+- `PUBLIC_BASE_URL` — Replace `localhost` with your server IP or domain
+- `ACTIVATION_DOMAIN` — Same as PUBLIC_BASE_URL
 
 **Generate a secure JWT secret:**
 ```bash
@@ -227,11 +235,14 @@ python3 -c "import secrets; print(secrets.token_urlsafe(32))"
 nano frontend/.env
 ```
 
-Update:
+The file is already populated with:
 ```bash
-REACT_APP_BACKEND_URL=http://your-server-ip:3000
+REACT_APP_BACKEND_URL=http://localhost:3000
 WDS_SOCKET_PORT=443
 ```
+
+**What to change:**
+- `REACT_APP_BACKEND_URL` — Replace `localhost` with your server IP or domain (e.g. `http://192.168.1.100:3000` or `https://streamvault.ca`)
 
 ---
 
