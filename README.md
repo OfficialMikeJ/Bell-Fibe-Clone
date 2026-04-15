@@ -44,7 +44,7 @@ cd /opt
 
 # 2. Clone the repository (public repo — no username or password required)
 #    This creates /opt/Bell-Fibe-Clone/ with all files inside
-sudo git clone https://github.com/YOUR_GITHUB_USERNAME/Bell-Fibe-Clone.git
+sudo git clone https://github.com/OffiialMikeJ/Bell-Fibe-Clone.git
 
 # 3. Set ownership to your user so you don't need sudo for everything
 sudo chown -R $USER:$USER /opt/Bell-Fibe-Clone
@@ -131,7 +131,7 @@ sudo apt-get install -y git
 **Clone the repository into `/opt`:**
 ```bash
 cd /opt
-sudo git clone https://github.com/YOUR_GITHUB_USERNAME/Bell-Fibe-Clone.git
+sudo git clone https://github.com/OffiialMikeJ/Bell-Fibe-Clone.git
 cd Bell-Fibe-Clone
 
 # Set ownership to your user
@@ -500,7 +500,7 @@ fatal: could not create work tree dir 'streamvault': Permission denied
 You're cloning into a directory where your user doesn't have write access. Use `sudo` for the clone, then set ownership:
 ```bash
 cd /opt
-sudo git clone https://github.com/YOUR_GITHUB_USERNAME/Bell-Fibe-Clone.git streamvault
+sudo git clone https://github.com/OffiialMikeJ/Bell-Fibe-Clone.git
 sudo chown -R $USER:$USER /opt/Bell-Fibe-Clone
 ```
 
