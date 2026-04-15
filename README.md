@@ -75,8 +75,8 @@ sudo systemctl enable mongod
 
 # 8. Configure Environment
 cd ../backend
-cp .env.example .env
-# Edit .env with your settings (see Configuration section below)
+nano .env
+# Edit MONGO_URL, JWT_SECRET, PUBLIC_BASE_URL for your server (see Configuration section below)
 
 # 9. Start Services
 sudo supervisorctl reload
@@ -197,10 +197,15 @@ yarn install
 
 ## Configuration
 
+The `.env` files are already included in the repo. You just need to edit them for your server.
+
 ### Backend Configuration
 
-Edit `backend/.env`:
+```bash
+nano backend/.env
+```
 
+Update these values:
 ```bash
 MONGO_URL="mongodb://localhost:27017"
 DB_NAME="iptv_service"
@@ -218,8 +223,11 @@ python3 -c "import secrets; print(secrets.token_urlsafe(32))"
 
 ### Frontend Configuration
 
-Edit `frontend/.env`:
+```bash
+nano frontend/.env
+```
 
+Update:
 ```bash
 REACT_APP_BACKEND_URL=http://your-server-ip:3000
 WDS_SOCKET_PORT=443
