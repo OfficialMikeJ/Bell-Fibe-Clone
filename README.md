@@ -85,7 +85,14 @@ nano .env
 sudo supervisorctl reload
 sudo supervisorctl start all
 
-# 10. Access the application
+# 10. Open firewall ports (if UFW is enabled)
+sudo ufw allow 3000/tcp    # Frontend
+sudo ufw allow 8001/tcp    # Backend API
+# For production with Nginx Proxy Manager, also open:
+# sudo ufw allow 80/tcp
+# sudo ufw allow 443/tcp
+
+# 11. Access the application
 # Frontend:  http://your-server-ip:3000
 # Admin:     http://your-server-ip:3000/admin/login
 # API Docs:  http://your-server-ip:8001/docs
@@ -195,6 +202,28 @@ pip install -r requirements.txt
 cd ../frontend
 yarn install
 ```
+
+### Step 8: Open Firewall Ports (if UFW is enabled)
+
+If your server has UFW firewall active, open the required ports:
+
+```bash
+# Check if UFW is active
+sudo ufw status
+
+# Open frontend and backend ports
+sudo ufw allow 3000/tcp    # Frontend (TV Guide)
+sudo ufw allow 8001/tcp    # Backend API
+
+# For production with Nginx Proxy Manager or reverse proxy:
+sudo ufw allow 80/tcp      # HTTP
+sudo ufw allow 443/tcp     # HTTPS
+
+# Verify open ports
+sudo ufw status numbered
+```
+
+**Do NOT expose MongoDB externally.** It listens on `localhost:27017` by default and should stay that way. No UFW rule needed for MongoDB.
 
 ---
 
