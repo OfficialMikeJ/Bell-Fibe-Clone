@@ -52,7 +52,11 @@ sudo chown -R $USER:$USER /opt/streamvault
 
 # 4. Install system dependencies
 sudo apt-get update
-sudo apt-get install -y python3.11 python3.11-venv python3-pip nodejs npm supervisor git
+sudo apt-get install -y python3.11 python3.11-venv python3-pip supervisor git
+
+# 5. Install Node.js 18 (includes npm — do NOT install npm separately)
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
 sudo npm install -g yarn
 
 # 5. Setup Backend
@@ -131,10 +135,19 @@ sudo apt-get install -y python3.11 python3.11-venv python3.11-dev
 
 ### Step 3: Install Node.js and Yarn
 
+NodeSource's `nodejs` package already includes `npm`. Do **not** install `npm` separately — it will conflict.
+
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
 sudo npm install -g yarn
+```
+
+Verify:
+```bash
+node -v   # should show v18.x
+npm -v    # should show 9.x or 10.x
+yarn -v   # should show 1.22.x
 ```
 
 ### Step 4: Install MongoDB
