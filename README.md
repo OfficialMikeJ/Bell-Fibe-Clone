@@ -329,6 +329,50 @@ sudo supervisorctl restart all
 sudo systemctl status mongod
 ```
 
+### Node.js Version Too Old (yarn install fails)
+If you see an error like:
+```
+error react-router-dom@7.x: The engine "node" is incompatible with this module. Expected version ">=20.0.0". Got "18.x.x"
+```
+You need Node.js 20 or higher. Upgrade:
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+node -v   # confirm v20.x
+cd /opt/streamvault/frontend && yarn install
+```
+
+### npm Conflicts with NodeSource nodejs
+If you see broken dependency errors when installing `npm`:
+```
+nodejs : Conflicts: npm
+npm : Depends: node-agent-base but it is not going to be installed
+```
+**Do not install `npm` separately.** NodeSource's `nodejs` package already includes `npm`. Just install `nodejs` and skip `npm`:
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+### Git Clone Permission Denied
+If you see:
+```
+fatal: could not create work tree dir 'streamvault': Permission denied
+```
+You're cloning into a directory where your user doesn't have write access. Use `sudo` for the clone, then set ownership:
+```bash
+cd /opt
+sudo git clone https://github.com/YOUR_GITHUB_USERNAME/Bell-Fibe-Clone.git streamvault
+sudo chown -R $USER:$USER /opt/streamvault
+```
+
+### Git Asks for Username/Password on Public Repo
+Public repos should never require credentials. If Git prompts you, clear cached credentials:
+```bash
+git config --global --unset credential.helper
+```
+Then run the clone or pull command again.
+
 ---
 
 ## Admin CLI Tools
