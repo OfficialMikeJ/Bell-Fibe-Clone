@@ -137,13 +137,6 @@ sudo systemctl start mongod
 sudo systemctl enable mongod
 ```
 
-#### macOS
-```bash
-brew tap mongodb/brew
-brew install mongodb-community@8.0
-brew services start mongodb-community@8.0
-```
-
 ### Step 4: Install Supervisor
 
 #### Ubuntu/Debian

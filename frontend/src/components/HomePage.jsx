@@ -173,7 +173,7 @@ const HomePage = ({ onViewChange }) => {
           }
         >
           {movies.length === 0 ? (
-            <Empty message="No movies in the library yet. Add movies in Admin → VOD to see them here." />
+            <Empty message="No movies available yet." />
           ) : (
             <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
               {movies.map(m => (
@@ -198,7 +198,7 @@ const HomePage = ({ onViewChange }) => {
           }
         >
           {shows.length === 0 ? (
-            <Empty message="No TV shows in the library yet. Add shows in Admin → VOD to see them here." />
+            <Empty message="No TV shows available yet." />
           ) : (
             <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
               {shows.map(s => (
@@ -214,7 +214,7 @@ const HomePage = ({ onViewChange }) => {
           icon={<Zap className="w-5 h-5 text-blue-400" />}
         >
           {appUpdates.length === 0 ? (
-            <Empty message="No app updates posted yet. Add announcements in Admin → Home Feed." />
+            <Empty message="No app updates yet." />
           ) : (
             <div className="space-y-3">
               {appUpdates.map(p => <PostCard key={p.id} post={p} />)}
@@ -228,7 +228,7 @@ const HomePage = ({ onViewChange }) => {
           icon={<Star className="w-5 h-5 text-[#0056A8]" />}
         >
           {upcomingFeatures.length === 0 ? (
-            <Empty message="No upcoming features posted yet. Add announcements in Admin → Home Feed." />
+            <Empty message="No upcoming features yet." />
           ) : (
             <div className="space-y-3">
               {upcomingFeatures.map(p => <PostCard key={p.id} post={p} />)}

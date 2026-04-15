@@ -133,7 +133,7 @@ const GuideView = ({ onViewChange }) => {
         ) : (
           <div className="text-center text-gray-400 mt-20">
             <p className="text-xl">No channels available</p>
-            <p className="text-sm mt-2">Contact administrator to add channels</p>
+            <p className="text-sm mt-2">No channels available at this time</p>
           </div>
         )}
       </div>
