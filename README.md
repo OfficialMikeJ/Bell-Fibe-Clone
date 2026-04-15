@@ -121,8 +121,16 @@ brew install yarn
 
 #### Ubuntu/Debian
 ```bash
-wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+# Install dependencies
+sudo apt-get install -y gnupg curl
+
+# Import MongoDB 8.0 GPG key (modern method — apt-key is deprecated)
+curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor
+
+# Add repository (replace 'noble' with your Ubuntu codename: jammy=22.04, noble=24.04)
+echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+
+# Install
 sudo apt-get update
 sudo apt-get install -y mongodb-org
 sudo systemctl start mongod
@@ -132,8 +140,8 @@ sudo systemctl enable mongod
 #### macOS
 ```bash
 brew tap mongodb/brew
-brew install mongodb-community@6.0
-brew services start mongodb-community@6.0
+brew install mongodb-community@8.0
+brew services start mongodb-community@8.0
 ```
 
 ### Step 4: Install Supervisor
