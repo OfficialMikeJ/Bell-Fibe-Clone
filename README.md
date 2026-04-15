@@ -81,9 +81,24 @@ cd ../frontend
 nano .env
 # Replace 'localhost' with your server IP in REACT_APP_BACKEND_URL
 
-# 9. Start Services
-sudo supervisorctl reload
+# 9. Setup Supervisor to run backend and frontend
+sudo cp streamvault-supervisor.conf /etc/supervisor/conf.d/streamvault.conf
+
+# If you installed Python in a venv, update the backend command path in the config:
+# sudo nano /etc/supervisor/conf.d/streamvault.conf
+# Change the backend command to point to your venv:
+#   command=/opt/streamvault/backend/venv/bin/uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --reload
+
+# Create log directory
+sudo mkdir -p /var/log/supervisor
+
+# Load and start services
+sudo supervisorctl reread
+sudo supervisorctl update
 sudo supervisorctl start all
+
+# Verify both are running
+sudo supervisorctl status
 
 # 10. Open firewall ports (if UFW is enabled)
 sudo ufw allow 3000/tcp    # Frontend
@@ -203,7 +218,58 @@ cd ../frontend
 yarn install
 ```
 
-### Step 8: Open Firewall Ports (if UFW is enabled)
+### Step 8: Configure Supervisor (Process Manager)
+
+Supervisor keeps the backend and frontend running and auto-restarts them if they crash.
+
+```bash
+# Copy the included config file
+sudo cp /opt/streamvault/streamvault-supervisor.conf /etc/supervisor/conf.d/streamvault.conf
+```
+
+**If you used a Python venv** (Step 6), edit the config to point to your venv's uvicorn:
+```bash
+sudo nano /etc/supervisor/conf.d/streamvault.conf
+```
+Change the backend `command` line to:
+```
+command=/opt/streamvault/backend/venv/bin/uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --reload
+```
+
+**If you installed Python system-wide** (no venv), change it to:
+```
+command=uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --reload
+```
+
+Then load and start the services:
+```bash
+# Create log directory
+sudo mkdir -p /var/log/supervisor
+
+# Tell Supervisor to pick up the new config
+sudo supervisorctl reread
+sudo supervisorctl update
+
+# Start both services
+sudo supervisorctl start all
+
+# Verify both are running
+sudo supervisorctl status
+```
+
+You should see:
+```
+backend     RUNNING   pid 12345, uptime 0:00:05
+frontend    RUNNING   pid 12346, uptime 0:00:04
+```
+
+If a service shows `FATAL` or `STOPPED`, check the logs:
+```bash
+tail -50 /var/log/supervisor/backend.err.log
+tail -50 /var/log/supervisor/frontend.err.log
+```
+
+### Step 9: Open Firewall Ports (if UFW is enabled)
 
 If your server has UFW firewall active, open the required ports:
 
@@ -354,6 +420,34 @@ Interactive docs: `http://your-server-ip:8001/docs`
 ```bash
 sudo supervisorctl status
 ```
+
+If this shows nothing, Supervisor hasn't loaded the StreamVault config yet:
+```bash
+# Make sure the config file is in place
+ls /etc/supervisor/conf.d/streamvault.conf
+
+# If missing, copy it from the repo
+sudo cp /opt/streamvault/streamvault-supervisor.conf /etc/supervisor/conf.d/streamvault.conf
+
+# Reload and start
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start all
+```
+
+### Services Show FATAL or Won't Start
+
+Check the error logs:
+```bash
+tail -50 /var/log/supervisor/backend.err.log
+tail -50 /var/log/supervisor/frontend.err.log
+```
+
+Common causes:
+- **Backend**: Python venv path wrong in supervisor config — update the `command` line
+- **Backend**: Missing Python packages — run `cd backend && source venv/bin/activate && pip install -r requirements.txt`
+- **Frontend**: Missing node_modules — run `cd frontend && yarn install`
+- **Frontend**: Node version too old — need Node 20+ (see Node.js troubleshooting below)
 
 ### View Logs
 ```bash
