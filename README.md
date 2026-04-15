@@ -40,15 +40,15 @@ A self-hosted IPTV service with Live TV Guide (EPG), Video on Demand, cloud reco
 
 ```bash
 # 1. Navigate to where you want to install StreamVault
-#    Use /opt for a system-wide install, or ~ for your home directory
 cd /opt
 
 # 2. Clone the repository (public repo — no username or password required)
-sudo git clone https://github.com/YOUR_GITHUB_USERNAME/Bell-Fibe-Clone.git streamvault
-cd streamvault
+#    This creates /opt/Bell-Fibe-Clone/ with all files inside
+sudo git clone https://github.com/YOUR_GITHUB_USERNAME/Bell-Fibe-Clone.git
 
 # 3. Set ownership to your user so you don't need sudo for everything
-sudo chown -R $USER:$USER /opt/streamvault
+sudo chown -R $USER:$USER /opt/Bell-Fibe-Clone
+cd /opt/Bell-Fibe-Clone
 
 # 4. Install system dependencies
 sudo apt-get update
@@ -84,10 +84,14 @@ nano .env
 # 9. Setup Supervisor to run backend and frontend
 sudo cp streamvault-supervisor.conf /etc/supervisor/conf.d/streamvault.conf
 
-# If you installed Python in a venv, update the backend command path in the config:
-# sudo nano /etc/supervisor/conf.d/streamvault.conf
-# Change the backend command to point to your venv:
-#   command=/opt/streamvault/backend/venv/bin/uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --reload
+# IMPORTANT: Edit the config to match YOUR install path
+sudo nano /etc/supervisor/conf.d/streamvault.conf
+# Update the two 'directory=' lines to match where you cloned:
+#   directory=/opt/Bell-Fibe-Clone/backend
+#   directory=/opt/Bell-Fibe-Clone/frontend
+# Update the backend command to your Python path:
+#   With venv:    command=/opt/Bell-Fibe-Clone/backend/venv/bin/uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --reload
+#   Without venv: command=uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --reload
 
 # Create log directory
 sudo mkdir -p /var/log/supervisor
@@ -124,17 +128,17 @@ sudo apt-get update
 sudo apt-get install -y git
 ```
 
-**Clone the repository into `/opt/streamvault`:**
+**Clone the repository into `/opt`:**
 ```bash
 cd /opt
-sudo git clone https://github.com/YOUR_GITHUB_USERNAME/Bell-Fibe-Clone.git streamvault
-cd streamvault
+sudo git clone https://github.com/YOUR_GITHUB_USERNAME/Bell-Fibe-Clone.git
+cd Bell-Fibe-Clone
 
 # Set ownership to your user
-sudo chown -R $USER:$USER /opt/streamvault
+sudo chown -R $USER:$USER /opt/Bell-Fibe-Clone
 ```
 
-> **Replace `YOUR_GITHUB_USERNAME`** with your actual GitHub username. The repo name on GitHub is `Bell-Fibe-Clone` — the command above clones it into a local folder called `streamvault`.
+> **Replace `YOUR_GITHUB_USERNAME`** with your actual GitHub username.
 
 > **No username or password required.** Public GitHub repositories can be cloned over HTTPS without any credentials. If Git asks you for a username/password, your system has cached old credentials. Clear them with:
 > ```bash
@@ -144,7 +148,7 @@ sudo chown -R $USER:$USER /opt/streamvault
 
 **Pulling future updates:**
 ```bash
-cd /opt/streamvault
+cd /opt/Bell-Fibe-Clone
 git pull origin main
 ```
 This also requires no credentials for public repos.
@@ -224,22 +228,14 @@ Supervisor keeps the backend and frontend running and auto-restarts them if they
 
 ```bash
 # Copy the included config file
-sudo cp /opt/streamvault/streamvault-supervisor.conf /etc/supervisor/conf.d/streamvault.conf
+sudo cp /opt/Bell-Fibe-Clone/streamvault-supervisor.conf /etc/supervisor/conf.d/streamvault.conf
 ```
 
-**If you used a Python venv** (Step 6), edit the config to point to your venv's uvicorn:
+The config file is pre-set to use `/opt/Bell-Fibe-Clone/` paths. If you cloned to a different location, edit the paths:
 ```bash
 sudo nano /etc/supervisor/conf.d/streamvault.conf
 ```
-Change the backend `command` line to:
-```
-command=/opt/streamvault/backend/venv/bin/uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --reload
-```
-
-**If you installed Python system-wide** (no venv), change it to:
-```
-command=uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --reload
-```
+Update the `directory=` and `command=` lines to match your install path.
 
 Then load and start the services:
 ```bash
@@ -427,7 +423,7 @@ If this shows nothing, Supervisor hasn't loaded the StreamVault config yet:
 ls /etc/supervisor/conf.d/streamvault.conf
 
 # If missing, copy it from the repo
-sudo cp /opt/streamvault/streamvault-supervisor.conf /etc/supervisor/conf.d/streamvault.conf
+sudo cp /opt/Bell-Fibe-Clone/streamvault-supervisor.conf /etc/supervisor/conf.d/streamvault.conf
 
 # Reload and start
 sudo supervisorctl reread
@@ -481,7 +477,7 @@ You need Node.js 20 or higher. Upgrade:
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 node -v   # confirm v20.x
-cd /opt/streamvault/frontend && yarn install
+cd /opt/Bell-Fibe-Clone/frontend && yarn install
 ```
 
 ### npm Conflicts with NodeSource nodejs
@@ -505,7 +501,7 @@ You're cloning into a directory where your user doesn't have write access. Use `
 ```bash
 cd /opt
 sudo git clone https://github.com/YOUR_GITHUB_USERNAME/Bell-Fibe-Clone.git streamvault
-sudo chown -R $USER:$USER /opt/streamvault
+sudo chown -R $USER:$USER /opt/Bell-Fibe-Clone
 ```
 
 ### Git Asks for Username/Password on Public Repo
@@ -523,7 +519,7 @@ Then run the clone or pull command again.
 Run from your server terminal (SSH/Termius):
 
 ```bash
-cd /path/to/streamvault/backend
+cd /opt/Bell-Fibe-Clone/backend
 source venv/bin/activate
 python3 reset_password.py admin@streamvault.ca
 ```
