@@ -28,7 +28,7 @@ A self-hosted IPTV service with Live TV Guide (EPG), Video on Demand, cloud reco
 
 ### Required Software
 - **Python**: 3.11 or higher
-- **Node.js**: 18.x or higher
+- **Node.js**: 20.x or higher
 - **Yarn**: 1.22.x or higher
 - **MongoDB**: 8.0
 - **Supervisor**: For process management
@@ -54,8 +54,8 @@ sudo chown -R $USER:$USER /opt/streamvault
 sudo apt-get update
 sudo apt-get install -y python3.11 python3.11-venv python3-pip supervisor git
 
-# 5. Install Node.js 18 (includes npm — do NOT install npm separately)
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+# 5. Install Node.js 20 (includes npm — do NOT install npm separately)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 sudo npm install -g yarn
 
@@ -138,15 +138,15 @@ sudo apt-get install -y python3.11 python3.11-venv python3.11-dev
 NodeSource's `nodejs` package already includes `npm`. Do **not** install `npm` separately — it will conflict.
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 sudo npm install -g yarn
 ```
 
 Verify:
 ```bash
-node -v   # should show v18.x
-npm -v    # should show 9.x or 10.x
+node -v   # should show v20.x
+npm -v    # should show 10.x
 yarn -v   # should show 1.22.x
 ```
 
