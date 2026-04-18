@@ -73,13 +73,30 @@ yarn install
 sudo systemctl start mongod
 sudo systemctl enable mongod
 
-# 8. Configure Environment (files are pre-populated — just update your server IP)
+# 8. Configure Environment
+#    The .env files come pre-populated. Edit them to replace 'localhost' with your server IP.
+
+# Backend .env — contains:
+#   MONGO_URL="mongodb://localhost:27017"
+#   DB_NAME="iptv_service"
+#   CORS_ORIGINS="*"
+#   JWT_SECRET="iptv-secret-key-change-in-production-2025"
+#   ACTIVATION_DOMAIN="http://localhost:3000"
+#   ENVIRONMENT="development"
+#   PUBLIC_BASE_URL="http://localhost:3000"
 cd ../backend
 nano .env
-# Replace 'localhost' with your server IP in PUBLIC_BASE_URL and ACTIVATION_DOMAIN
+# Replace 'localhost' in PUBLIC_BASE_URL and ACTIVATION_DOMAIN with your server IP
+# Replace JWT_SECRET with a secure random string:
+#   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# Frontend .env — contains:
+#   REACT_APP_BACKEND_URL=http://localhost:3000
+#   WDS_SOCKET_PORT=443
 cd ../frontend
 nano .env
-# Replace 'localhost' with your server IP in REACT_APP_BACKEND_URL
+# Replace 'localhost' in REACT_APP_BACKEND_URL with your server IP
+# Example: REACT_APP_BACKEND_URL=http://192.168.1.100:3000
 
 # 9. Setup Supervisor to run backend and frontend
 sudo cp streamvault-supervisor.conf /etc/supervisor/conf.d/streamvault.conf
