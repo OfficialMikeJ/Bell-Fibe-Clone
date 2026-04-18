@@ -99,6 +99,7 @@ nano .env
 # Example: REACT_APP_BACKEND_URL=http://192.168.1.100:3000
 
 # 9. Setup Supervisor to run backend and frontend
+cd /opt/Bell-Fibe-Clone
 sudo cp streamvault-supervisor.conf /etc/supervisor/conf.d/streamvault.conf
 
 # IMPORTANT: Edit the config to match YOUR install path
