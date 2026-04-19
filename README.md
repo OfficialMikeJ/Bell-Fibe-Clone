@@ -31,8 +31,8 @@ A self-hosted IPTV service with Live TV Guide (EPG), Video on Demand, cloud reco
 - **Node.js**: 20.x or higher
 - **Yarn**: 1.22.x or higher
 - **MongoDB**: 8.0
+- **git**: For downloading the code
 - **Supervisor**: For process management
-- **curl + unzip**: For downloading the code
 
 ---
 
@@ -41,15 +41,12 @@ A self-hosted IPTV service with Live TV Guide (EPG), Video on Demand, cloud reco
 ```bash
 # 1. Download the repository (no credentials required)
 cd /home/streamvault
-curl -L -o repo.zip https://github.com/OfficialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
-unzip repo.zip
-mv Bell-Fibe-Clone-main streamvault
-rm repo.zip
+git clone https://github.com/OfficialMikeJ/Bell-Fibe-Clone.git streamvault
 cd streamvault
 
 # 4. Install system dependencies
 sudo apt-get update
-sudo apt-get install -y python3.11 python3.11-venv python3-pip supervisor curl unzip
+sudo apt-get install -y python3.11 python3.11-venv python3-pip supervisor git
 
 # 5. Install Node.js 20 (includes npm — do NOT install npm separately)
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
@@ -140,29 +137,20 @@ sudo ufw allow 8001/tcp    # Backend API
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y curl unzip
+sudo apt-get install -y git
 
 cd /home/streamvault
-curl -L -o repo.zip https://github.com/OfficialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
-unzip repo.zip
-mv Bell-Fibe-Clone-main streamvault
-rm repo.zip
+git clone https://github.com/OfficialMikeJ/Bell-Fibe-Clone.git streamvault
 cd streamvault
 ```
 
-> **No username or password required.** This downloads the code directly from GitHub as a zip file.
+> **No username or password required.** The repo is public.
 
 **Pulling future updates:**
 ```bash
-cd /home/streamvault
-rm -rf streamvault
-curl -L -o repo.zip https://github.com/OfficialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
-unzip repo.zip
-mv Bell-Fibe-Clone-main streamvault
-rm repo.zip
+cd /home/streamvault/streamvault
+git pull
 ```
-
-> After re-downloading, you will need to re-run `pip install -r requirements.txt` and `yarn install` if any dependencies changed. Your `.env` files and database are not affected.
 
 ### Step 2: Install Python 3.11+
 
