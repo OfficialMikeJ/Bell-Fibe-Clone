@@ -232,16 +232,15 @@ app.mount("/api/uploads", StaticFiles(directory=str(uploads_dir)), name="api_upl
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 # Add security middleware (HTTPS enforcement and security headers)
-app.add_middleware(SecureHeadersMiddleware)
-app.add_middleware(HTTPSRedirectMiddleware)
-
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(SecureHeadersMiddleware)
 
 # Configure logging
 logging.basicConfig(
