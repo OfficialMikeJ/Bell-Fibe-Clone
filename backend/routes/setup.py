@@ -72,10 +72,14 @@ async def configure_service(
     hours_request_min: Optional[int] = None,
     hours_request_max: Optional[int] = None,
     uptime_kuma_url: Optional[str] = None,
-    db: AsyncIOMotorDatabase = Depends(get_db),
-    admin: Admin = Depends(get_current_admin)
+    db: AsyncIOMotorDatabase = Depends(get_db)
 ):
-    """Configure basic service settings - all fields optional, only provided fields updated"""
+    """Configure basic service settings — allowed during initial setup without auth"""
+    config = await db.service_config.find_one({})
+    
+    # If setup is already completed, require admin auth
+    if config and config.get("setup_completed"):
+        raise HTTPException(status_code=401, detail="Setup already completed. Use admin dashboard to change settings.")
     config = await db.service_config.find_one({})
 
     update_fields = {}
@@ -213,9 +217,12 @@ async def get_service_config(db: AsyncIOMotorDatabase = Depends(get_db)):
 async def create_bulk_channels(
     count: int,
     starting_number: int = 100,
-    db: AsyncIOMotorDatabase = Depends(get_db),
-    admin: Admin = Depends(get_current_admin)
+    db: AsyncIOMotorDatabase = Depends(get_db)
 ):
+    """Create channels in bulk — allowed during initial setup without auth"""
+    config = await db.service_config.find_one({})
+    if config and config.get("setup_completed"):
+        raise HTTPException(status_code=401, detail="Setup already completed. Use admin dashboard to manage channels.")
     """Create multiple channels at once"""
     from models.channel import Channel
     from datetime import datetime
