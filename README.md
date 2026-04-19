@@ -32,22 +32,24 @@ A self-hosted IPTV service with Live TV Guide (EPG), Video on Demand, cloud reco
 - **Yarn**: 1.22.x or higher
 - **MongoDB**: 8.0
 - **Supervisor**: For process management
-- **Git**: For pulling the code
+- **curl + unzip**: For downloading the code
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. Clone the repository (public repo — no username or password required)
+# 1. Download the repository (no credentials required)
 cd /home/streamvault
-sudo git clone https://github.com/OffiialMikeJ/Bell-Fibe-Clone.git streamvault
-sudo chown -R $USER:$USER /home/streamvault/streamvault
-cd /home/streamvault/streamvault
+curl -L -o repo.zip https://github.com/OffiialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
+unzip repo.zip
+mv Bell-Fibe-Clone-main streamvault
+rm repo.zip
+cd streamvault
 
 # 4. Install system dependencies
 sudo apt-get update
-sudo apt-get install -y python3.11 python3.11-venv python3-pip supervisor git
+sudo apt-get install -y python3.11 python3.11-venv python3-pip supervisor curl unzip
 
 # 5. Install Node.js 20 (includes npm — do NOT install npm separately)
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
@@ -134,37 +136,33 @@ sudo ufw allow 8001/tcp    # Backend API
 
 ## Detailed Installation
 
-### Step 1: Install Git and Clone the Repository
+### Step 1: Download the Repository
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y git
-```
+sudo apt-get install -y curl unzip
 
-**Clone the repository:**
-```bash
 cd /home/streamvault
-sudo git clone https://github.com/OffiialMikeJ/Bell-Fibe-Clone.git streamvault
+curl -L -o repo.zip https://github.com/OffiialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
+unzip repo.zip
+mv Bell-Fibe-Clone-main streamvault
+rm repo.zip
 cd streamvault
-
-# Set ownership to your user
-sudo chown -R $USER:$USER /home/streamvault/streamvault
 ```
 
-> **Replace `YOUR_GITHUB_USERNAME`** with your actual GitHub username.
-
-> **No username or password required.** Public GitHub repositories can be cloned over HTTPS without any credentials. If Git asks you for a username/password, your system has cached old credentials. Clear them with:
-> ```bash
-> git config --global --unset credential.helper
-> ```
-> Then run the clone command again.
+> **No username or password required.** This downloads the code directly from GitHub as a zip file.
 
 **Pulling future updates:**
 ```bash
-cd /home/streamvault/streamvault
-git pull origin main
+cd /home/streamvault
+rm -rf streamvault
+curl -L -o repo.zip https://github.com/OffiialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
+unzip repo.zip
+mv Bell-Fibe-Clone-main streamvault
+rm repo.zip
 ```
-This also requires no credentials for public repos.
+
+> After re-downloading, you will need to re-run `pip install -r requirements.txt` and `yarn install` if any dependencies changed. Your `.env` files and database are not affected.
 
 ### Step 2: Install Python 3.11+
 
@@ -505,24 +503,15 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-### Git Clone Permission Denied
-If you see:
-```
-fatal: could not create work tree dir 'streamvault': Permission denied
-```
-You're cloning into a directory where your user doesn't have write access. Use `sudo` for the clone, then set ownership:
+### Git Clone Permission Denied / Asks for Credentials
+Skip git entirely. Download as a zip instead:
 ```bash
-cd /opt
-sudo git clone https://github.com/OffiialMikeJ/Bell-Fibe-Clone.git
-sudo chown -R $USER:$USER /home/streamvault/streamvault
+cd /home/streamvault
+curl -L -o repo.zip https://github.com/OffiialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
+unzip repo.zip
+mv Bell-Fibe-Clone-main streamvault
+rm repo.zip
 ```
-
-### Git Asks for Username/Password on Public Repo
-Public repos should never require credentials. If Git prompts you, clear cached credentials:
-```bash
-git config --global --unset credential.helper
-```
-Then run the clone or pull command again.
 
 ---
 
