@@ -9,7 +9,7 @@ import time
 import string
 import secrets
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
 
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
 ALGORITHM = "HS256"
