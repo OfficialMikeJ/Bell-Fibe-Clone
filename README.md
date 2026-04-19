@@ -585,3 +585,342 @@ mongodump --db iptv_service --out /backup/$(date +%Y%m%d)
 | Customer Login | http://your-server-ip:3000/customer-login | Email + Password |
 | API Docs | http://your-server-ip:8001/docs | Public |
 | Support Portal | http://your-server-ip:3000/portal | Public |
+
+
+---
+
+## Complete Step-by-Step Setup Walkthrough
+
+This section covers every step from a fresh Ubuntu server to a fully running StreamVault instance, based on real deployment experience.
+
+### Step 1: Update System and Install Dependencies
+
+```bash
+sudo apt-get update
+sudo apt-get install -y git python3-venv supervisor curl
+```
+
+### Step 2: Install Node.js 20 and Yarn
+
+Node.js 20+ is required (`react-router-dom` requires `>=20.0.0`). Do **NOT** install `npm` separately — NodeSource's `nodejs` already includes it.
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+sudo npm install -g yarn
+```
+
+Verify:
+```bash
+node -v   # should show v20.x
+npm -v    # should show 10.x
+yarn -v   # should show 1.22.x
+```
+
+### Step 3: Install MongoDB
+
+```bash
+sudo apt-get install -y gnupg
+curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor
+echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+sudo apt-get update
+sudo apt-get install -y mongodb-org
+sudo systemctl start mongod
+sudo systemctl enable mongod
+```
+
+### Step 4: Clone the Repository
+
+```bash
+cd /home/streamvault
+git clone https://github.com/OfficialMikeJ/Bell-Fibe-Clone.git streamvault
+cd streamvault
+```
+
+No username or password required — the repo is public.
+
+### Step 5: Setup Backend (Python)
+
+```bash
+cd /home/streamvault/streamvault/backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+If `pip install` fails with "externally-managed-environment", make sure you have `python3-venv` installed:
+```bash
+sudo apt-get install -y python3-venv
+```
+
+After `pip install` completes, verify uvicorn is installed:
+```bash
+ls venv/bin/uvicorn
+```
+
+If uvicorn is missing, install it manually:
+```bash
+source venv/bin/activate
+pip install uvicorn
+```
+
+### Step 6: Setup Frontend (Node.js)
+
+If your server has limited RAM (4GB or less), set the heap size first:
+```bash
+export NODE_OPTIONS="--max-old-space-size=2048"
+```
+
+If it still runs out of memory, create swap space:
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+```
+
+Then install:
+```bash
+cd /home/streamvault/streamvault/frontend
+yarn install
+```
+
+### Step 7: Configure Environment Files
+
+The `.env` files come pre-populated with localhost defaults. Update them with your domain.
+
+**Backend:**
+```bash
+nano /home/streamvault/streamvault/backend/.env
+```
+
+Change these values:
+```
+MONGO_URL="mongodb://localhost:27017"
+DB_NAME="iptv_service"
+CORS_ORIGINS="*"
+JWT_SECRET="change-this-to-a-secure-random-string"
+ACTIVATION_DOMAIN="https://yourdomain.com"
+ENVIRONMENT="development"
+PUBLIC_BASE_URL="https://api.yourdomain.com"
+```
+
+Generate a secure JWT secret:
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+**Frontend:**
+```bash
+nano /home/streamvault/streamvault/frontend/.env
+```
+
+Change:
+```
+REACT_APP_BACKEND_URL=https://api.yourdomain.com
+WDS_SOCKET_PORT=443
+```
+
+### Step 8: Setup Supervisor
+
+Supervisor keeps the backend and frontend running and auto-restarts them if they crash.
+
+Copy and paste this entire block into your terminal:
+```bash
+sudo tee /etc/supervisor/conf.d/streamvault.conf << 'EOF'
+[program:backend]
+command=/home/streamvault/streamvault/backend/venv/bin/uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --reload
+directory=/home/streamvault/streamvault/backend
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/supervisor/backend.err.log
+stdout_logfile=/var/log/supervisor/backend.out.log
+stopsignal=TERM
+stopwaitsecs=30
+stopasgroup=true
+killasgroup=true
+
+[program:frontend]
+command=yarn start
+environment=HOST="0.0.0.0",PORT="3000"
+directory=/home/streamvault/streamvault/frontend
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/supervisor/frontend.err.log
+stdout_logfile=/var/log/supervisor/frontend.out.log
+stopsignal=TERM
+stopwaitsecs=50
+stopasgroup=true
+killasgroup=true
+EOF
+```
+
+If you cloned to a different path, update the `directory=` and `command=` lines to match.
+
+Start services:
+```bash
+sudo mkdir -p /var/log/supervisor
+sudo supervisorctl reload
+sudo supervisorctl status
+```
+
+Both should show `RUNNING`. If backend shows `FATAL`, check logs:
+```bash
+tail -50 /var/log/supervisor/backend.err.log
+```
+
+### Step 9: Setup Nginx Proxy Manager
+
+You need two proxy hosts in NPM:
+
+**Frontend (main site):**
+- Domain: `yourdomain.com`
+- Scheme: `http`
+- Forward Hostname/IP: `localhost`
+- Forward Port: `3000`
+- SSL: Request Let's Encrypt certificate, Force SSL ON
+
+**Backend (API):**
+- Domain: `api.yourdomain.com`
+- Scheme: `http`
+- Forward Hostname/IP: `localhost`
+- Forward Port: `8001`
+- SSL: Request Let's Encrypt certificate, Force SSL ON
+
+### Step 10: Cloudflare SSL Settings
+
+If you use Cloudflare, set SSL/TLS encryption mode to **Full** (not "Full (strict)"). This fixes error 526.
+
+### Step 11: Firewall (UFW)
+
+Only expose ports that go through Nginx Proxy Manager:
+```bash
+sudo ufw allow 80/tcp      # HTTP (certificate renewal)
+sudo ufw allow 443/tcp     # HTTPS (all traffic)
+sudo ufw allow 81/tcp      # NPM admin panel (optional)
+```
+
+Do NOT open ports 3000 or 8001 — traffic should only go through NPM.
+
+### Step 12: Complete the Setup Wizard
+
+1. Open `https://yourdomain.com` in your browser
+2. The setup wizard will check system requirements — all should be green
+3. Enter your service name and domain
+4. Create your admin account — **save the auto-generated password immediately, it is only shown once**
+5. Create channels
+
+If the admin was auto-created on server startup, reset the password via CLI:
+```bash
+cd /home/streamvault/streamvault/backend
+source venv/bin/activate
+python3 reset_password.py admin@streamvault.ca
+```
+
+Then complete the setup:
+```bash
+curl -X POST "http://localhost:8001/api/setup/complete"
+```
+
+### Step 13: Login to Admin Dashboard
+
+Go to `https://yourdomain.com/admin/login` and sign in with your admin email and password.
+
+---
+
+## Common Issues During Setup
+
+### Backend won't start — "No module named 'fastapi'"
+The pip install didn't work. Re-run:
+```bash
+cd /home/streamvault/streamvault/backend
+source venv/bin/activate
+pip install -r requirements.txt
+sudo supervisorctl restart backend
+```
+
+### Backend won't start — "No module named 'requests'" or similar
+Install the missing package directly:
+```bash
+source venv/bin/activate
+pip install requests pyotp
+sudo supervisorctl restart backend
+```
+
+### Backend won't start — bcrypt "password cannot be longer than 72 bytes"
+You have bcrypt 5.x which is incompatible with passlib. Downgrade:
+```bash
+source venv/bin/activate
+pip install bcrypt==4.1.3
+sudo supervisorctl restart backend
+```
+
+### Backend won't start — MongoDB "Connection refused"
+MongoDB isn't running:
+```bash
+sudo systemctl start mongod
+sudo systemctl enable mongod
+sudo supervisorctl restart backend
+```
+
+### Frontend — "JavaScript heap out of memory" during yarn install
+Your server needs more memory:
+```bash
+export NODE_OPTIONS="--max-old-space-size=2048"
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+yarn install
+```
+
+### Frontend — "node engine incompatible, expected >=20.0.0"
+Upgrade Node.js:
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+### Browser shows CORS errors
+The CORS middleware order may be wrong, or the backend isn't reachable through your domain. Test locally:
+```bash
+curl http://localhost:8001/api/setup/status
+```
+If this works but the browser doesn't, check your Nginx Proxy Manager config for `api.yourdomain.com`.
+
+### Browser shows error 526
+Cloudflare can't verify your SSL. In Cloudflare, set SSL/TLS mode to **Full** (not "Full (strict)").
+
+### Setup wizard buttons don't work / Continue is grayed out
+Check browser console (F12) for errors. If you see 401 errors, the setup endpoints may need auth removed for initial setup. Test:
+```bash
+curl -X POST "http://localhost:8001/api/setup/service-config?service_name=StreamVault&domain_name=yourdomain.com"
+```
+If it returns `{"detail":"Not authenticated"}`, the setup routes need to be patched to allow unauthenticated access during initial setup.
+
+### "Admin already configured" during setup wizard
+The default admin was auto-created. Reset the password:
+```bash
+cd /home/streamvault/streamvault/backend
+source venv/bin/activate
+python3 reset_password.py admin@streamvault.ca
+```
+Then skip to setup completion:
+```bash
+curl -X POST "http://localhost:8001/api/setup/complete"
+```
+
+### supervisorctl shows nothing / command not found
+Supervisor isn't installed:
+```bash
+sudo apt-get install -y supervisor
+sudo systemctl enable supervisor
+sudo systemctl start supervisor
+```
+
+### Pulling Updates
+```bash
+cd /home/streamvault/streamvault
+git pull origin main
+sudo supervisorctl restart all
+```
