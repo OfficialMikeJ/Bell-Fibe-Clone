@@ -41,7 +41,7 @@ A self-hosted IPTV service with Live TV Guide (EPG), Video on Demand, cloud reco
 ```bash
 # 1. Download the repository (no credentials required)
 cd /home/streamvault
-curl -L -o repo.zip https://github.com/OffiialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
+curl -L -o repo.zip https://github.com/OfficialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
 unzip repo.zip
 mv Bell-Fibe-Clone-main streamvault
 rm repo.zip
@@ -143,7 +143,7 @@ sudo apt-get update
 sudo apt-get install -y curl unzip
 
 cd /home/streamvault
-curl -L -o repo.zip https://github.com/OffiialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
+curl -L -o repo.zip https://github.com/OfficialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
 unzip repo.zip
 mv Bell-Fibe-Clone-main streamvault
 rm repo.zip
@@ -156,7 +156,7 @@ cd streamvault
 ```bash
 cd /home/streamvault
 rm -rf streamvault
-curl -L -o repo.zip https://github.com/OffiialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
+curl -L -o repo.zip https://github.com/OfficialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
 unzip repo.zip
 mv Bell-Fibe-Clone-main streamvault
 rm repo.zip
@@ -507,7 +507,7 @@ sudo apt-get install -y nodejs
 Skip git entirely. Download as a zip instead:
 ```bash
 cd /home/streamvault
-curl -L -o repo.zip https://github.com/OffiialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
+curl -L -o repo.zip https://github.com/OfficialMikeJ/Bell-Fibe-Clone/archive/refs/heads/main.zip
 unzip repo.zip
 mv Bell-Fibe-Clone-main streamvault
 rm repo.zip
