@@ -18,6 +18,7 @@ import NotificationsTab from './NotificationsTab';
 import CVRTab from './CVRTab';
 import BrandingTab from './BrandingTab';
 import AnalyticsTab from './AnalyticsTab';
+import BackupTab from './BackupTab';
 
 // Shared category color map (keep in sync with EPGGrid)
 const CATEGORY_COLORS = {
@@ -431,6 +432,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="faq" className="data-[state=active]:bg-[#0056A8]" data-testid="faq-tab-trigger">FAQ</TabsTrigger>
             <TabsTrigger value="stats" className="data-[state=active]:bg-[#0056A8]" data-testid="stats-tab-trigger">Statistics</TabsTrigger>
             <TabsTrigger value="system" className="data-[state=active]:bg-[#0056A8]" data-testid="system-tab-trigger">System Health</TabsTrigger>
+            <TabsTrigger value="backup" className="data-[state=active]:bg-[#0056A8]" data-testid="backup-tab-trigger">Backups</TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-[#0056A8]" data-testid="analytics-tab-trigger">Analytics</TabsTrigger>
             <TabsTrigger value="branding" className="data-[state=active]:bg-[#0056A8]" data-testid="branding-tab-trigger">Branding</TabsTrigger>
             <TabsTrigger value="catalog" className="data-[state=active]:bg-[#0056A8]" data-testid="catalog-tab-trigger">Media Catalog</TabsTrigger>
@@ -795,6 +797,10 @@ const AdminDashboard = () => {
               <h3 className="text-lg font-semibold text-white mb-3">Storage Breakdown</h3>
               <StorageWidget token={token} />
             </div>
+          </TabsContent>
+
+          <TabsContent value="backup">
+            <BackupTab token={token} />
           </TabsContent>
         </Tabs>
 

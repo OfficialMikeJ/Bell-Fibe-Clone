@@ -35,6 +35,7 @@ from routes.app_version import router as app_version_router
 from routes.migration import router as migration_router
 from routes.ota import router as ota_router
 from routes.health import router as health_router
+from routes.backup import router as backup_router
 
 # Scheduler
 from utils.scheduler import start_scheduler
@@ -129,6 +130,7 @@ app.include_router(app_version_router)
 app.include_router(migration_router)
 app.include_router(ota_router)
 app.include_router(health_router)
+app.include_router(backup_router)
 
 # Mount uploads directory for serving files with proper caching headers
 uploads_dir = Path("/app/backend/uploads")
