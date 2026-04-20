@@ -11,7 +11,8 @@ import uuid
 
 router = APIRouter(prefix="/api/vod", tags=["vod"])
 
-POSTER_DIR = Path("/app/backend/uploads/posters")
+BACKEND_DIR = Path(__file__).parent.parent
+POSTER_DIR = BACKEND_DIR / "uploads" / "posters"
 POSTER_DIR.mkdir(parents=True, exist_ok=True)
 
 async def get_db():

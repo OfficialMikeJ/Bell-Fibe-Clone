@@ -93,15 +93,16 @@ async def get_analytics(
     vod_chart = [{"title": v.get("title", "?")[:30], "views": v.get("view_count", 0), "category": v.get("category", "")} for v in popular_vod]
 
     # 5. Storage calculations
-    media_path = "/app/backend/uploads/media"
-    cvr_path = "/app/backend/uploads/cvr"
-    posters_path = "/app/backend/uploads/posters"
+    backend_dir = str(Path(__file__).parent.parent)
+    media_path = f"{backend_dir}/uploads/media"
+    cvr_path = f"{backend_dir}/uploads/cvr"
+    posters_path = f"{backend_dir}/uploads/posters"
 
     media_used_gb = get_dir_size_gb(media_path)
     cvr_used_gb = get_dir_size_gb(cvr_path)
     posters_used_gb = get_dir_size_gb(posters_path)
-    total_uploads_gb = get_dir_size_gb("/app/backend/uploads")
-    disk_free_gb = get_disk_free_gb("/app/backend/uploads")
+    total_uploads_gb = get_dir_size_gb(f"{backend_dir}/uploads")
+    disk_free_gb = get_disk_free_gb(f"{backend_dir}/uploads")
 
     config = await db.service_config.find_one({})
     cvr_total_gb = config.get("cvr_total_storage_gb", 500) if config else 500

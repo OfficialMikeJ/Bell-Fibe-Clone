@@ -133,7 +133,7 @@ app.include_router(health_router)
 app.include_router(backup_router)
 
 # Mount uploads directory for serving files with proper caching headers
-uploads_dir = Path("/app/backend/uploads")
+uploads_dir = ROOT_DIR / "uploads"
 for subdir in ["media", "posters", "logos", "qr_codes", "branding", "notifications", "cvr", "apk",
                "catalog/posters", "catalog/backdrops", "catalog/cast", "catalog/gallery"]:
     (uploads_dir / subdir).mkdir(parents=True, exist_ok=True)

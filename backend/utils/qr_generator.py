@@ -2,7 +2,8 @@ import qrcode
 import os
 from pathlib import Path
 
-QR_DIR = Path("/app/backend/uploads/qr_codes")
+BACKEND_DIR = Path(__file__).parent.parent
+QR_DIR = BACKEND_DIR / "uploads" / "qr_codes"
 
 def generate_qr_code(activation_code: str, device_id: str) -> str:
     """

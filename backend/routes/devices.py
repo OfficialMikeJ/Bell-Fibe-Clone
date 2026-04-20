@@ -78,7 +78,7 @@ async def refresh_device_qr(
     
     # Delete old QR code file
     if device.get("qr_code_path"):
-        old_qr_path = Path(f"/app/backend{device['qr_code_path']}")
+        old_qr_path = Path(__file__).parent.parent / device['qr_code_path'].lstrip('/')
         if old_qr_path.exists():
             old_qr_path.unlink()
     

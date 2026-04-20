@@ -15,8 +15,9 @@ import re
 
 router = APIRouter(prefix="/api/media", tags=["media"])
 
-MEDIA_DIR = Path("/app/backend/uploads/media")
-POSTER_DIR = Path("/app/backend/uploads/posters")
+BACKEND_DIR = Path(__file__).parent.parent
+MEDIA_DIR = BACKEND_DIR / "uploads" / "media"
+POSTER_DIR = BACKEND_DIR / "uploads" / "posters"
 MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 POSTER_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -192,7 +193,7 @@ async def delete_media(
     # Delete physical files
     for path_field in ['file_path', 'poster_path']:
         if item.get(path_field):
-            full_path = Path(f"/app/backend{item[path_field]}")
+            full_path = BACKEND_DIR / item[path_field].lstrip('/')
             if full_path.exists():
                 full_path.unlink()
     await db.media_items.delete_one({"id": media_id})
@@ -207,7 +208,7 @@ async def reanalyze_media(
     item = await db.media_items.find_one({"id": media_id})
     if not item or not item.get('file_path'):
         raise HTTPException(status_code=404, detail="Media item or file not found")
-    full_path = f"/app/backend{item['file_path']}"
+    full_path = str(BACKEND_DIR / item['file_path'].lstrip('/'))
     meta = analyze_media_file(full_path)
     if meta:
         await db.media_items.update_one({"id": media_id}, {"$set": {**meta, "updated_at": datetime.now(timezone.utc)}})

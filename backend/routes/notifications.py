@@ -11,7 +11,8 @@ import uuid
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
 
-NOTIF_IMG_DIR = Path("/app/backend/uploads/notifications")
+BACKEND_DIR = Path(__file__).parent.parent
+NOTIF_IMG_DIR = BACKEND_DIR / "uploads" / "notifications"
 NOTIF_IMG_DIR.mkdir(parents=True, exist_ok=True)
 
 async def get_db():

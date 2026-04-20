@@ -13,7 +13,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 logger = logging.getLogger(__name__)
 
-BACKUPS_DIR = Path("/app/backend/uploads/backups")
+BACKEND_DIR = Path(__file__).parent.parent
+BACKUPS_DIR = BACKEND_DIR / "uploads" / "backups"
 MAX_BACKUPS = 7
 
 BACKUP_COLLECTIONS = [
@@ -24,7 +25,7 @@ BACKUP_COLLECTIONS = [
     "pin_attempt_log",
 ]
 
-UPLOADS_DIR = Path("/app/backend/uploads")
+UPLOADS_DIR = BACKEND_DIR / "uploads"
 
 
 async def run_scheduled_backup(db):

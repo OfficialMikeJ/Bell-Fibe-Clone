@@ -179,7 +179,7 @@ async def upload_service_logo(
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="File must be an image (.png, .jpg, .jpeg, .webp)")
     
-    branding_dir = Path("/app/backend/uploads/branding")
+    branding_dir = Path(__file__).parent.parent / "uploads" / "branding"
     branding_dir.mkdir(parents=True, exist_ok=True)
     
     suffix = Path(file.filename).suffix.lower()

@@ -19,7 +19,8 @@ import shutil
 
 router = APIRouter(prefix="/api/ota", tags=["ota"])
 
-APK_DIR = Path("/app/backend/uploads/apk")
+BACKEND_DIR = Path(__file__).parent.parent
+APK_DIR = BACKEND_DIR / "uploads" / "apk"
 APK_DIR.mkdir(parents=True, exist_ok=True)
 
 

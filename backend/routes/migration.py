@@ -22,7 +22,8 @@ from typing import Optional
 
 router = APIRouter(prefix="/api/admin", tags=["migration"])
 
-UPLOADS_DIR = Path("/app/backend/uploads")
+BACKEND_DIR = Path(__file__).parent.parent
+UPLOADS_DIR = BACKEND_DIR / "uploads"
 _restore_status = {"running": False, "message": "", "done": False, "error": ""}
 
 

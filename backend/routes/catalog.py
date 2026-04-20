@@ -11,7 +11,8 @@ from pathlib import Path
 
 router = APIRouter(prefix="/api/catalog", tags=["catalog"])
 
-CATALOG_DIR = Path("/app/backend/uploads/catalog")
+BACKEND_DIR = Path(__file__).parent.parent
+CATALOG_DIR = BACKEND_DIR / "uploads" / "catalog"
 for _d in ["posters", "backdrops", "cast", "gallery"]:
     (CATALOG_DIR / _d).mkdir(parents=True, exist_ok=True)
 

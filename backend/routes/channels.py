@@ -12,7 +12,8 @@ from utils.security import sign_media_url, verify_token
 
 router = APIRouter(prefix="/api/channels", tags=["channels"])
 
-UPLOAD_DIR = Path("/app/backend/uploads/logos")
+BACKEND_DIR = Path(__file__).parent.parent
+UPLOAD_DIR = BACKEND_DIR / "uploads" / "logos"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 async def get_db():
