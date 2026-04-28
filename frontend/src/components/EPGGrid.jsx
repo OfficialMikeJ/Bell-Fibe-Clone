@@ -134,7 +134,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
   };
 
   return (
-    <div className="overflow-x-auto pl-2" ref={containerRef} tabIndex={-1}>
+    <div className="overflow-x-auto pl-4" ref={containerRef} tabIndex={-1}>
       {showComingSoon && <ComingSoonModal onClose={() => setShowComingSoon(false)} />}
 
       {/* Time Header */}
@@ -184,14 +184,16 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
             >
               {/* Channel Info */}
               <div
-                className={`w-44 sm:w-52 lg:w-60 flex-shrink-0 flex items-center gap-3 pl-4 sm:pl-5 pr-2 py-2 rounded-l-lg relative ${
+                className={`w-44 sm:w-52 lg:w-60 flex-shrink-0 flex items-center gap-3 pr-2 py-2 rounded-l-lg relative ${
                   isSelected ? 'ring-2 ring-white/70' : isFocused ? 'ring-2 ring-blue-500/60' : ''
                 }`}
-                style={{
-                  background: '#202020',
-                  borderLeft: `3px solid ${isVOD ? '#7c3aed' : isComingSoon ? '#374151' : getCategoryColors(channel.category).accent}`,
-                }}
+                style={{ background: '#202020' }}
               >
+                {/* Category color bar */}
+                <div
+                  className="w-1 self-stretch rounded-l-lg flex-shrink-0"
+                  style={{ backgroundColor: isVOD ? '#7c3aed' : isComingSoon ? '#374151' : getCategoryColors(channel.category).accent }}
+                />
                 <div className="w-11 h-11 sm:w-12 sm:h-12 bg-[#333] rounded-md overflow-hidden flex-shrink-0 relative">
                   {logoSrc ? (
                     <>
