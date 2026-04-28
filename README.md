@@ -1019,3 +1019,78 @@ git pull origin main-testing
 sudo supervisorctl restart all
 ```
 After pulling, **always purge Cloudflare cache** and test in a private window.
+
+### High RAM Usage (Production Optimization)
+
+If your server is using too much RAM, the React dev server (`yarn start`) is the biggest consumer (~800MB-1GB). Switch to a production build:
+
+```bash
+cd /home/streamvault/streamvault/frontend
+
+# Fix permissions if needed
+sudo chown -R $USER:$USER /home/streamvault/streamvault/frontend
+
+# Build static production bundle
+export NODE_OPTIONS="--max-old-space-size=1536"
+yarn build
+
+# Install lightweight static file server
+sudo npm install -g serve
+```
+
+Then update Supervisor to use `serve` instead of `yarn start`:
+```bash
+sudo nano /etc/supervisor/conf.d/streamvault.conf
+```
+
+Change the frontend `command` line from:
+```
+command=yarn start
+```
+To:
+```
+command=serve -s build -l 3000
+```
+
+Save and reload:
+```bash
+sudo supervisorctl reload
+```
+
+This drops RAM usage by ~800MB-1GB.
+
+> **Note:** After switching to production build, you must run `yarn build` again after any code updates (git pull). The dev server auto-reloads; the production build does not.
+
+### Services Not Running After Server Reboot
+
+StreamVault starts automatically on boot IF both Supervisor and MongoDB are enabled as system services. Verify:
+
+```bash
+sudo systemctl is-enabled mongod
+sudo systemctl is-enabled supervisor
+```
+
+Both should say `enabled`. If either says `disabled`, enable them:
+
+```bash
+sudo systemctl enable mongod
+sudo systemctl enable supervisor
+```
+
+**Boot order:** Ubuntu starts → systemd starts MongoDB + Supervisor → Supervisor starts backend + frontend.
+
+If services aren't running after a reboot:
+```bash
+sudo systemctl start mongod
+sudo systemctl start supervisor
+sudo supervisorctl status
+```
+
+### Permission Denied Errors (yarn build or node_modules)
+
+If you see `EACCES: permission denied, mkdir '/home/streamvault/...'`:
+```bash
+sudo chown -R $USER:$USER /home/streamvault/streamvault
+```
+Then retry the command.
+
