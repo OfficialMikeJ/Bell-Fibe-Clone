@@ -20,6 +20,7 @@ import { VersionPopup } from "./components/AppInfoPage";
 import RecordingsPage from "./components/RecordingsPage";
 import NotificationsPage from "./components/NotificationsPage";
 import ControlsHint from "./components/ControlsHint";
+import ViewerAuthGate from "./components/ViewerAuthGate";
 import ActivatePage from "./pages/ActivatePage";
 import PortalLayout from "./pages/PortalLayout";
 import PortalHome from "./pages/PortalHome";
@@ -244,7 +245,7 @@ function AppContent() {
     <div className="App">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<ViewerAuthGate><Home /></ViewerAuthGate>} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/customer-login" element={<CustomerLoginPage />} />
           <Route path="/my-account" element={<MyAccountPage />} />
