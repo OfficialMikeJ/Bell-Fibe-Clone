@@ -19,6 +19,7 @@ import CVRTab from './CVRTab';
 import BrandingTab from './BrandingTab';
 import AnalyticsTab from './AnalyticsTab';
 import BackupTab from './BackupTab';
+import CustomerManagementTab from './CustomerManagementTab';
 
 // Shared category color map (keep in sync with EPGGrid)
 const CATEGORY_COLORS = {
@@ -433,6 +434,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="stats" className="data-[state=active]:bg-[#0056A8]" data-testid="stats-tab-trigger">Statistics</TabsTrigger>
             <TabsTrigger value="system" className="data-[state=active]:bg-[#0056A8]" data-testid="system-tab-trigger">System Health</TabsTrigger>
             <TabsTrigger value="backup" className="data-[state=active]:bg-[#0056A8]" data-testid="backup-tab-trigger">Backups</TabsTrigger>
+            <TabsTrigger value="customers" className="data-[state=active]:bg-[#0056A8]" data-testid="customers-tab-trigger">Customers</TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-[#0056A8]" data-testid="analytics-tab-trigger">Analytics</TabsTrigger>
             <TabsTrigger value="branding" className="data-[state=active]:bg-[#0056A8]" data-testid="branding-tab-trigger">Branding</TabsTrigger>
             <TabsTrigger value="catalog" className="data-[state=active]:bg-[#0056A8]" data-testid="catalog-tab-trigger">Media Catalog</TabsTrigger>
@@ -801,6 +803,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="backup">
             <BackupTab token={token} />
+          </TabsContent>
+
+          <TabsContent value="customers">
+            <CustomerManagementTab token={token} />
           </TabsContent>
         </Tabs>
 

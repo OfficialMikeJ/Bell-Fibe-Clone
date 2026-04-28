@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Request, Header
+from pydantic import BaseModel
 from models.customer import (
     CustomerAccount, CustomerCreate, CustomerLogin,
     CredentialsActivateRequest, generate_app_username, generate_app_password,
@@ -9,7 +10,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from utils.security import (
     verify_password, get_password_hash, create_access_token, verify_token
 )
-from utils.geo_location import get_client_ip
+from utils.geo_location import get_client_ip, get_geo_location
 from datetime import datetime, timedelta, timezone
 import os
 
@@ -316,6 +317,85 @@ async def admin_reset_credentials(
         "app_username": new_username,
         "app_password": new_password,
     }
+
+
+class AdminCreateCustomer(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+    device_brand: Optional[str] = "Other"
+    device_type: Optional[str] = "Other/Not Listed"
+
+@router.post("/admin/create")
+async def admin_create_customer(
+    data: AdminCreateCustomer,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    admin: Admin = Depends(get_current_admin),
+):
+    """Admin: create a customer account with auto-generated credentials"""
+    email = data.email.lower().strip()
+    existing = await db.customer_accounts.find_one({"email": email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    new_username = generate_app_username()
+    while await db.customer_accounts.find_one({"app_username": new_username}):
+        new_username = generate_app_username()
+
+    new_password = generate_app_password()
+
+    customer = CustomerAccount(
+        first_name=data.first_name.strip(),
+        last_name=data.last_name.strip(),
+        email=email,
+        password_hash="admin-created",
+        device_brand=data.device_brand or "Other",
+        device_type=data.device_type or "Other/Not Listed",
+        app_username=new_username,
+        app_password=new_password,
+        status="active",
+    )
+
+    await db.customer_accounts.insert_one(customer.dict())
+
+    return {
+        "message": "Customer created",
+        "id": customer.id,
+        "first_name": customer.first_name,
+        "last_name": customer.last_name,
+        "email": email,
+        "app_username": new_username,
+        "app_password": new_password,
+    }
+
+@router.get("/admin/{customer_id}/location")
+async def admin_get_customer_location(
+    customer_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    admin: Admin = Depends(get_current_admin),
+):
+    """Admin: get geo-location for a customer based on their last known IP"""
+    customer = await db.customer_accounts.find_one({"id": customer_id}, {"_id": 0})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    # Check device for IP
+    device = await db.devices.find_one({"user_id": customer_id}, {"_id": 0})
+    ip = None
+    if device:
+        ip = device.get("current_ip")
+    if not ip:
+        ip = customer.get("current_ip")
+
+    if not ip:
+        return {"ip": None, "location": None, "message": "No IP recorded yet"}
+
+    geo = get_geo_location(ip)
+    return {
+        "ip": ip,
+        "location": geo,
+    }
+
 
 
 @router.put("/admin/{customer_id}/status")
