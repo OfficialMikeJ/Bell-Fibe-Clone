@@ -787,9 +787,23 @@ You need two proxy hosts in NPM:
 - Forward Port: `8001`
 - SSL: Request Let's Encrypt certificate, Force SSL ON
 
-### Step 10: Cloudflare SSL Settings
+### Step 10: Cloudflare Setup (Highly Recommended)
 
-If you use Cloudflare, set SSL/TLS encryption mode to **Full** (not "Full (strict)"). This fixes error 526.
+Using Cloudflare as your DNS provider is **highly recommended** for security, caching, and DDoS protection.
+
+**DNS Records (in Cloudflare):**
+- `A` record: `yourdomain.com` → your server's public IP (Proxied/Orange cloud ON)
+- `A` record: `api.yourdomain.com` → your server's public IP (Proxied/Orange cloud ON)
+
+**SSL/TLS Settings (in Cloudflare):**
+- Go to **SSL/TLS** → **Overview**
+- Set encryption mode to **Full** (NOT "Full (strict)")
+- This is required — "Full (strict)" causes error 526
+
+**Caching:**
+- After any code changes or frontend restart, you MUST purge Cloudflare's cache
+- Go to **Caching** → **Configuration** → **Purge Everything**
+- Otherwise your browser will load stale JavaScript bundles
 
 ### Step 11: Firewall (UFW)
 
@@ -797,12 +811,45 @@ Only expose ports that go through Nginx Proxy Manager:
 ```bash
 sudo ufw allow 80/tcp      # HTTP (certificate renewal)
 sudo ufw allow 443/tcp     # HTTPS (all traffic)
-sudo ufw allow 81/tcp      # NPM admin panel (optional)
+sudo ufw allow 81/tcp      # NPM admin panel (optional, remove after setup)
 ```
 
 Do NOT open ports 3000 or 8001 — traffic should only go through NPM.
 
-### Step 12: Complete the Setup Wizard
+### Step 12: Configure Frontend Environment
+
+**This step is critical.** The frontend `.env` file tells the app where to find the backend API.
+
+```bash
+nano /home/streamvault/streamvault/frontend/.env
+```
+
+Set it to your API subdomain:
+```
+REACT_APP_BACKEND_URL=https://api.exampledomain.com
+WDS_SOCKET_PORT=443
+```
+
+> Replace `api.exampledomain.com` with YOUR actual API domain from Step 9.
+
+After changing `.env`, you MUST clear the cache and restart:
+```bash
+cd /home/streamvault/streamvault/frontend
+rm -rf node_modules/.cache
+sudo supervisorctl restart frontend
+```
+
+Wait 60 seconds for the frontend to rebuild, then verify:
+```bash
+curl -s http://localhost:3000/static/js/bundle.js | grep -o "api.exampledomain" | head -1
+```
+If this shows your domain, the env var is working. If it shows `localhost`, restart again.
+
+**After restarting frontend, ALWAYS purge Cloudflare cache:**
+- Cloudflare Dashboard → your domain → Caching → Configuration → Purge Everything
+- Then test in a **private/incognito window** (Ctrl+Shift+N)
+
+### Step 13: Complete the Setup Wizard
 
 1. Open `https://yourdomain.com` in your browser
 2. The setup wizard will check system requirements — all should be green
@@ -810,19 +857,33 @@ Do NOT open ports 3000 or 8001 — traffic should only go through NPM.
 4. Create your admin account — **save the auto-generated password immediately, it is only shown once**
 5. Create channels
 
+If the setup wizard "Recheck" or "Continue" buttons don't work:
+- Open browser console (F12 → Console)
+- If you see `ERR_CONNECTION_REFUSED localhost:3000/api/...` — your frontend `.env` is wrong. Go back to Step 12.
+- If you see CORS errors — check Nginx Proxy Manager config for `api.yourdomain.com`
+
 If the admin was auto-created on server startup, reset the password via CLI:
 ```bash
 cd /home/streamvault/streamvault/backend
 source venv/bin/activate
-python3 reset_password.py admin@streamvault.ca
+python3 reset_password.py youremail@yourdomain.com
 ```
 
-Then complete the setup:
+Then force-complete the setup:
 ```bash
-curl -X POST "http://localhost:8001/api/setup/complete"
+cd /home/streamvault/streamvault/backend
+source venv/bin/activate
+python3 -c "
+from pymongo import MongoClient
+client = MongoClient('mongodb://localhost:27017')
+db = client['iptv_service']
+db.service_config.update_one({}, {'\$set': {'setup_completed': True}}, upsert=True)
+print('Setup marked as complete')
+client.close()
+"
 ```
 
-### Step 13: Login to Admin Dashboard
+### Step 14: Login to Admin Dashboard
 
 Go to `https://yourdomain.com/admin/login` and sign in with your admin email and password.
 
@@ -881,34 +942,66 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
+### Browser shows `ERR_CONNECTION_REFUSED localhost:3000/api/...`
+Your `REACT_APP_BACKEND_URL` is wrong or the cache wasn't cleared. Fix:
+```bash
+# 1. Check your .env
+cat /home/streamvault/streamvault/frontend/.env
+# Should show: REACT_APP_BACKEND_URL=https://api.yourdomain.com
+
+# 2. Clear cache and restart
+cd /home/streamvault/streamvault/frontend
+rm -rf node_modules/.cache
+sudo supervisorctl restart frontend
+
+# 3. Wait 60 seconds, verify bundle
+curl -s http://localhost:3000/static/js/bundle.js | grep -o "api.yourdomain" | head -1
+
+# 4. Purge Cloudflare cache
+# Go to Cloudflare → Caching → Purge Everything
+
+# 5. Test in private/incognito window
+```
+
 ### Browser shows CORS errors
-The CORS middleware order may be wrong, or the backend isn't reachable through your domain. Test locally:
+The backend can't respond to cross-origin requests. Check:
 ```bash
 curl http://localhost:8001/api/setup/status
 ```
-If this works but the browser doesn't, check your Nginx Proxy Manager config for `api.yourdomain.com`.
+If this works locally but not from the browser, verify your NPM proxy host for `api.yourdomain.com` is pointing to `localhost:8001`.
 
 ### Browser shows error 526
-Cloudflare can't verify your SSL. In Cloudflare, set SSL/TLS mode to **Full** (not "Full (strict)").
+Cloudflare can't verify your server's SSL certificate. Fix:
+1. In Nginx Proxy Manager: edit your proxy hosts → SSL tab → Request Let's Encrypt certificate
+2. In Cloudflare: set SSL/TLS mode to **Full** (not "Full (strict)")
+
+### Setup wizard still shows after setup is complete
+Cloudflare is serving a cached version of the page. Fix:
+1. Purge Cloudflare cache (Caching → Configuration → Purge Everything)
+2. Open in a private/incognito window
+3. If still showing, clear the frontend cache:
+```bash
+cd /home/streamvault/streamvault/frontend
+rm -rf node_modules/.cache
+sudo supervisorctl restart frontend
+```
+Wait 60 seconds, purge Cloudflare again, try incognito window.
 
 ### Setup wizard buttons don't work / Continue is grayed out
-Check browser console (F12) for errors. If you see 401 errors, the setup endpoints may need auth removed for initial setup. Test:
+Check browser console (F12) for errors. If you see 401 errors on `setup/service-config`, test:
 ```bash
 curl -X POST "http://localhost:8001/api/setup/service-config?service_name=StreamVault&domain_name=yourdomain.com"
 ```
-If it returns `{"detail":"Not authenticated"}`, the setup routes need to be patched to allow unauthenticated access during initial setup.
+If it returns `{"detail":"Not authenticated"}`, the setup routes need fixing — contact the developer.
 
 ### "Admin already configured" during setup wizard
-The default admin was auto-created. Reset the password:
+The default admin was auto-created on first boot. Reset the password:
 ```bash
 cd /home/streamvault/streamvault/backend
 source venv/bin/activate
-python3 reset_password.py admin@streamvault.ca
+python3 reset_password.py youremail@yourdomain.com
 ```
-Then skip to setup completion:
-```bash
-curl -X POST "http://localhost:8001/api/setup/complete"
-```
+Then force-complete setup (see Step 13 above).
 
 ### supervisorctl shows nothing / command not found
 Supervisor isn't installed:
@@ -921,6 +1014,8 @@ sudo systemctl start supervisor
 ### Pulling Updates
 ```bash
 cd /home/streamvault/streamvault
-git pull origin main
+git stash
+git pull origin main-testing
 sudo supervisorctl restart all
 ```
+After pulling, **always purge Cloudflare cache** and test in a private window.
