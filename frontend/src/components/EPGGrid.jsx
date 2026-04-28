@@ -134,12 +134,12 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
   };
 
   return (
-    <div className="overflow-x-auto" ref={containerRef} tabIndex={-1}>
+    <div className="overflow-x-auto pl-2" ref={containerRef} tabIndex={-1}>
       {showComingSoon && <ComingSoonModal onClose={() => setShowComingSoon(false)} />}
 
       {/* Time Header */}
       <div className="flex mb-3 sticky top-0 z-10">
-        <div className="w-40 sm:w-48 lg:w-56 flex-shrink-0 px-3 sm:px-4 py-2 bg-[#1a1a1a]">
+        <div className="w-44 sm:w-52 lg:w-60 flex-shrink-0 px-4 sm:px-5 py-2 bg-[#1a1a1a]">
           <span className="text-base text-gray-400 font-light">Today</span>
         </div>
         <div className="flex gap-0">
@@ -184,7 +184,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
             >
               {/* Channel Info */}
               <div
-                className={`w-40 sm:w-48 lg:w-56 flex-shrink-0 flex items-center gap-2 pl-3 sm:pl-4 pr-2 py-2 rounded-l-lg overflow-hidden relative ${
+                className={`w-44 sm:w-52 lg:w-60 flex-shrink-0 flex items-center gap-3 pl-4 sm:pl-5 pr-2 py-2 rounded-l-lg relative ${
                   isSelected ? 'ring-2 ring-white/70' : isFocused ? 'ring-2 ring-blue-500/60' : ''
                 }`}
                 style={{
@@ -192,7 +192,7 @@ const EPGGrid = ({ channels, programs, timeSlots, selectedChannelId, onChannelSe
                   borderLeft: `3px solid ${isVOD ? '#7c3aed' : isComingSoon ? '#374151' : getCategoryColors(channel.category).accent}`,
                 }}
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#333] rounded-md overflow-hidden flex-shrink-0 relative">
+                <div className="w-11 h-11 sm:w-12 sm:h-12 bg-[#333] rounded-md overflow-hidden flex-shrink-0 relative">
                   {logoSrc ? (
                     <>
                       <img
